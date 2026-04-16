@@ -24,7 +24,7 @@ export async function getCitas() {
 export async function createCita(formData: FormData) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "No autenticado" };
+  if (!user) { console.error("No autenticado"); return; }
 
   const cliente_id = formData.get("cliente_id") as string;
   const servicio_id = formData.get("servicio_id") as string;
@@ -32,7 +32,7 @@ export async function createCita(formData: FormData) {
   const fecha = formData.get("fecha") as string;
   const hora = formData.get("hora") as string;
 
-  if (!cliente_id || !servicio_id || !fecha || !hora) return { error: "Faltan datos" };
+  if (!cliente_id || !servicio_id || !fecha || !hora) { console.error("Faltan datos"); return; }
 
   // Fetch the service price to save it historically
   const { data: svc } = await supabase.from("servicios").select("precio").eq("id", servicio_id).single();
@@ -51,13 +51,12 @@ export async function createCita(formData: FormData) {
 
   if (error) {
     console.error(error);
-    return { error: error.message };
+    return;
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard/clientes");
-  return { success: true };
 }
 
 export async function deleteCita(id: string) {
