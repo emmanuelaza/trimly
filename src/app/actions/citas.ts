@@ -66,3 +66,15 @@ export async function createCita(formData: FormData): Promise<void> {
   revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard/clientes");
 }
+
+export async function deleteCita(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("citas").delete().eq("id", id);
+  if (error) {
+    console.error(error);
+  } else {
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/agenda");
+    revalidatePath("/dashboard/clientes");
+  }
+}
