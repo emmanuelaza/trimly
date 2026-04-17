@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { Home, Calendar, Users, LogOut } from 'lucide-react';
+import { Home, Calendar, Users, LogOut, Scissors, DollarSign, TrendingUp, UserCircle, Settings } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
@@ -23,17 +23,37 @@ export default async function DashboardLayout({ children }: { children: React.Re
         </div>
         
         <nav style={{ flex: 1, padding: '1.5rem 1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+          <Link href="/dashboard" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
             <Home size={20} />
             <span>Inicio</span>
           </Link>
-          <Link href="/dashboard/agenda" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+          <Link href="/dashboard/agenda" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
             <Calendar size={20} />
             <span>Agenda</span>
           </Link>
-          <Link href="/dashboard/clientes" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+          <Link href="/dashboard/clientes" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
             <Users size={20} />
             <span>Clientes</span>
+          </Link>
+          <Link href="/dashboard/servicios" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+            <Scissors size={20} />
+            <span>Servicios</span>
+          </Link>
+          <Link href="/dashboard/ingresos" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+            <DollarSign size={20} />
+            <span>Ingresos</span>
+          </Link>
+          <Link href="/dashboard/retencion" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+            <TrendingUp size={20} />
+            <span>Retención</span>
+          </Link>
+          <Link href="/dashboard/barberos" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+            <UserCircle size={20} />
+            <span>Barberos</span>
+          </Link>
+          <Link href="/dashboard/configuracion" className="nav-link" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: 'var(--foreground)', fontWeight: 500, transition: 'background 0.2s' }}>
+            <Settings size={20} />
+            <span>Configuración</span>
           </Link>
         </nav>
 

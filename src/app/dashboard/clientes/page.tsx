@@ -1,17 +1,9 @@
 import { getClientes, createCliente } from '@/app/actions/clientes';
-import { MessageCircle, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import ClientesList from './ClientesList';
 
 export default async function ClientesPage() {
   const clientes = await getClientes();
-
-  const getRetentionStatus = (dateString?: string | null) => {
-    if (!dateString) return null;
-    const days = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 3600 * 24));
-    if (days >= 60) return { label: 'Riesgo Alto (60+)', color: 'var(--error)' };
-    if (days >= 30) return { label: 'Cuidado (30+)', color: '#F59E0B' };
-    if (days >= 15) return { label: 'Toca Corte (15)', color: 'var(--primary)' };
-    return { label: 'Frecuente', color: 'var(--success)' };
-  };
 
   return (
     <div>
@@ -36,53 +28,7 @@ export default async function ClientesPage() {
         </form>
       </div>
 
-      <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#F9FAFB' }}>
-              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--secondary)', fontWeight: 600 }}>Cliente</th>
-              <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--secondary)', fontWeight: 600 }}>Estado (Retención)</th>
-              <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--secondary)', fontWeight: 600 }}>Contacto</th>
-            </tr>
-          </thead>
-          <tbody>
-            {clientes.map((c: any) => {
-              const retention = getRetentionStatus(c.ultima_visita);
-              const message = `Hola ${c.nombre}, hace tiempo no nos visitas. ¡Te esperamos en Trimly para tu próximo corte! 💈`;
-              const wpUrl = c.telefono ? `https://wa.me/${c.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : '#';
-
-              return (
-                <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                  <td style={{ padding: '1.5rem' }}>
-                    <div style={{ fontWeight: 600, fontSize: '1.125rem', color: 'var(--foreground)' }}>{c.nombre}</div>
-                    <div style={{ color: 'var(--secondary)', fontSize: '0.875rem' }}>{c.telefono || 'Sin número'}</div>
-                  </td>
-                  <td style={{ padding: '1.5rem' }}>
-                    {retention ? (
-                      <span style={{ backgroundColor: retention.color, color: 'white', padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                        {retention.label}
-                      </span>
-                    ) : (
-                      <span style={{ color: 'var(--secondary)', fontSize: '0.875rem' }}>Nuevo</span>
-                    )}
-                  </td>
-                  <td style={{ padding: '1.5rem', textAlign: 'right' }}>
-                    {c.telefono ? (
-                      <a href={wpUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ color: '#059669', borderColor: '#10B981', textDecoration: 'none' }}>
-                        <MessageCircle size={18} />
-                        WhatsApp
-                      </a>
-                    ) : (
-                      <span className="text-gray text-sm">N/A</span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {clientes.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--secondary)' }}>Aún no tienes clientes registrados.</div>}
-      </div>
+      <ClientesList clientes={clientes} />
     </div>
   );
 }

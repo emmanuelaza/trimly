@@ -3,15 +3,24 @@ import { getClientes } from '@/app/actions/clientes';
 import { getServicios } from '@/app/actions/servicios';
 import { Plus, MessageCircle, Trash2 } from 'lucide-react';
 
-export default async function AgendaPage() {
-  const citas = await getCitas();
+export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
+  const params = await searchParams;
+  const filterDate = params.date || new Date().toISOString().split('T')[0];
+  
+  const allCitas = await getCitas();
+  const citas = allCitas.filter((c: any) => c.fecha === filterDate);
   const clientes = await getClientes();
   const servicios = await getServicios();
 
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Agenda Diaria</h1>
+        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Agenda</h1>
+        <form method="get" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <label style={{ fontWeight: 600 }}>Día:</label>
+          <input type="date" name="date" className="input-field" defaultValue={filterDate} style={{ marginBottom: 0, padding: '0.5rem' }} />
+          <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem' }}>Ver</button>
+        </form>
       </div>
 
       <div className="card" style={{ marginBottom: '2rem' }}>
