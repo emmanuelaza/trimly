@@ -1,6 +1,5 @@
 import { getClientes } from '@/app/actions/clientes';
 import { getCitas, createCita, deleteCita } from '@/app/actions/citas';
-import { getClientes } from '@/app/actions/clientes';
 import { getServicios } from '@/app/actions/servicios';
 import { Plus, MessageCircle, Trash2 } from 'lucide-react';
 

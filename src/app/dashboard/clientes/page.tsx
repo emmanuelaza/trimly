@@ -1,3 +1,4 @@
+import { getClientes, createCliente } from '@/app/actions/clientes';
 import { Plus } from 'lucide-react';
 import ClientesList from './ClientesList';
 
