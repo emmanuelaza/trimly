@@ -1,3 +1,4 @@
+import { getClientes } from '@/app/actions/clientes';
 import { getCitas, createCita, deleteCita } from '@/app/actions/citas';
 import { getClientes } from '@/app/actions/clientes';
 import { getServicios } from '@/app/actions/servicios';
@@ -8,7 +9,7 @@ export const revalidate = 60;
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const params = await searchParams;
   const filterDate = params.date || new Date().toISOString().split('T')[0];
-  
+
   const allCitas = await getCitas();
   const citas = allCitas.filter((c: any) => c.fecha === filterDate);
   const clientes = await getClientes();
@@ -28,7 +29,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
       <div className="card" style={{ marginBottom: '2rem' }}>
         <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>+ Agendar Nueva Cita</h2>
         <form action={createCita} style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-          
+
           <div className="input-group" style={{ marginBottom: 0, flex: '1 1 200px' }}>
             <label className="input-label" htmlFor="cliente_id">Cliente</label>
             <select id="cliente_id" name="cliente_id" className="input-field" required>
@@ -67,7 +68,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         {citas.map((cita: any) => {
           const horaStr = cita.hora.substring(0, 5); // Remueve los segundos
           const message = `Hola ${cita.cliente.nombre}, te recordamos tu cita el ${cita.fecha} a las ${horaStr} hrs en Trimly Barbers. ¡Te esperamos!`;
-          const wpUrl = cita.cliente.telefono ? `https://wa.me/${cita.cliente.telefono.replace(/\D/g,'')}?text=${encodeURIComponent(message)}` : '#';
+          const wpUrl = cita.cliente.telefono ? `https://wa.me/${cita.cliente.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(message)}` : '#';
 
           return (
             <div key={cita.id} className="card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 2rem' }}>
