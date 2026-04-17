@@ -1,5 +1,5 @@
 import { getCitas } from '@/app/actions/citas';
-import { DollarSign, Tremor } from 'lucide-react';
+import { DollarSign, BarChart, TrendingUp } from 'lucide-react';
 
 export default async function IngresosPage() {
   const citas = await getCitas();
@@ -33,7 +33,7 @@ export default async function IngresosPage() {
           <p style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--success)' }}>${ingresosHoy.toFixed(2)}</p>
           <div style={{ color: 'var(--secondary)', marginTop: '0.5rem' }}>{citasHoy.length} citas</div>
         </div>
-        
+
         <div className="card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem' }}>
           <h3 style={{ color: 'var(--secondary)', fontSize: '1rem', fontWeight: 600, textTransform: 'uppercase', marginBottom: '0.5rem' }}>Esta Semana</h3>
           <p style={{ fontSize: '3.5rem', fontWeight: 800, color: 'var(--primary)' }}>${ingresosSemana.toFixed(2)}</p>
