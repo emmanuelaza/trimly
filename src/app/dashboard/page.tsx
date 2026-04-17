@@ -2,6 +2,8 @@ import { getCitas } from '@/app/actions/citas';
 import Link from 'next/link';
 import { Plus } from 'lucide-react';
 
+export const revalidate = 60;
+
 export default async function DashboardHome() {
   const citas = await getCitas();
 

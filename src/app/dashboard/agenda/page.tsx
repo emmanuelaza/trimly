@@ -3,6 +3,8 @@ import { getClientes } from '@/app/actions/clientes';
 import { getServicios } from '@/app/actions/servicios';
 import { Plus, MessageCircle, Trash2 } from 'lucide-react';
 
+export const revalidate = 60;
+
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const params = await searchParams;
   const filterDate = params.date || new Date().toISOString().split('T')[0];

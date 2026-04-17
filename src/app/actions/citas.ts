@@ -7,7 +7,7 @@ export async function getCitas() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("citas")
-    .select("*, cliente:clientes(*), servicio:servicios(*)")
+    .select("id, fecha, hora, cliente_id, precio_cobrado, servicio_id, cliente:clientes(nombre, telefono), servicio:servicios(nombre, precio)")
     .order("fecha", { ascending: false })
     .order("hora", { ascending: true });
 

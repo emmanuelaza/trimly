@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getServicios() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("servicios").select("*").order("created_at", { ascending: true });
+  const { data, error } = await supabase.from("servicios").select("id, nombre, precio").order("created_at", { ascending: true });
   if (error) console.error(error);
   return data || [];
 }

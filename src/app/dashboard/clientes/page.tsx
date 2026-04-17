@@ -1,6 +1,7 @@
-import { getClientes, createCliente } from '@/app/actions/clientes';
 import { Plus } from 'lucide-react';
 import ClientesList from './ClientesList';
+
+export const revalidate = 60;
 
 export default async function ClientesPage() {
   const clientes = await getClientes();

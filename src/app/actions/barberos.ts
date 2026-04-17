@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 
 export async function getBarberos() {
   const supabase = await createClient();
-  const { data, error } = await supabase.from("barberos").select("*").order("created_at", { ascending: true });
+  const { data, error } = await supabase.from("barberos").select("id, nombre").order("created_at", { ascending: true });
   if (error) console.error(error);
   return data || [];
 }
