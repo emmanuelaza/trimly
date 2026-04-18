@@ -34,7 +34,7 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
           <div>
             <div className="flex items-center gap-3 mb-1">
               <h1 className="text-2xl font-bold text-text-primary">{cliente.nombre}</h1>
-              {cliente.vip && <Badge variant="info">VIP</Badge>}
+              {(cliente as any)?.vip && <Badge variant="info">VIP</Badge>}
             </div>
             <p className="text-sm text-text-secondary">{cliente.telefono}</p>
             <p className="text-xs text-text-tertiary mt-2">Cliente desde Ene 2024 · 95% asistencia</p>

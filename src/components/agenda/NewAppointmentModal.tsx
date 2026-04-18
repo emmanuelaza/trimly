@@ -24,7 +24,7 @@ export function NewAppointmentModal() {
       {/* 3 Step Wizard goes here */}
       <div className="flex flex-col space-y-4">
         <p className="text-sm text-text-secondary">
-          WIP: Sistema rápida <30s para agendar citas.
+          WIP: Sistema rápida &lt;30s para agendar citas.
         </p>
       </div>
     </Modal>

@@ -44,7 +44,7 @@ export function IngresosChart() {
           <Tooltip 
             contentStyle={{ backgroundColor: '#1F1F26', border: '1px solid #2E2E38', borderRadius: '12px' }}
             itemStyle={{ color: '#F2F2F0' }}
-            formatter={(value: number) => [`$${value.toLocaleString()}`, 'Ingresos']}
+            formatter={(value: any) => [`$${value?.toLocaleString?.() || value}`, 'Ingresos']}
           />
           <Area 
             type="monotone" 

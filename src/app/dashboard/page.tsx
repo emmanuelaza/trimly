@@ -91,7 +91,7 @@ export default async function DashboardHome() {
         <StatCard 
           label="Próxima Cita" 
           value={nextCita ? getTimeLeft(nextCita.hora) : "--"} 
-          sub={nextCita ? `${nextCita.cliente?.nombre} · ${nextCita.servicio?.nombre}` : "No hay más citas"} 
+          sub={nextCita ? `${(nextCita as any).cliente?.nombre} · ${(nextCita as any).servicio?.nombre}` : "No hay más citas"} 
         />
       </div>
 
@@ -114,9 +114,9 @@ export default async function DashboardHome() {
 
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <p className="text-xl font-semibold text-text-primary mb-1">{activeTurn.cliente?.nombre}</p>
-                    <p className="text-sm text-text-secondary">{activeTurn.servicio?.nombre} · ${Number(activeTurn.precio_cobrado).toLocaleString()}</p>
-                    <p className="text-xs text-text-tertiary mt-2">Cliente regular · {activeTurn.cliente?.notas || 'Sin notas'}</p>
+                    <p className="text-xl font-semibold text-text-primary mb-1">{(activeTurn as any).cliente?.nombre}</p>
+                    <p className="text-sm text-text-secondary">{(activeTurn as any).servicio?.nombre} · ${Number(activeTurn.precio_cobrado).toLocaleString()}</p>
+                    <p className="text-xs text-text-tertiary mt-2">Cliente regular · {(activeTurn as any).cliente?.notas || 'Sin notas'}</p>
                   </div>
                   <Button variant="primary" className="bg-success-bg text-success hover:bg-success hover:text-background-primary border border-success/20">
                     Completar <CheckCircle2 size={16} />
@@ -161,11 +161,11 @@ export default async function DashboardHome() {
                         isNext ? 'bg-background-secondary border border-border sm:translate-x-1' : 'hover:bg-background-secondary/50'
                       } ${isPast && cita.estado === 'completada' ? 'opacity-40' : ''}`}
                     >
-                      <Avatar fallback={getInitials(cita.cliente?.nombre || "C")} className="flex-shrink-0" />
+                      <Avatar fallback={getInitials((cita as any).cliente?.nombre || "C")} className="flex-shrink-0" />
                       
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">{cita.cliente?.nombre}</p>
-                        <p className="text-xs text-text-tertiary">{cita.servicio?.nombre} · {cita.hora.substring(0, 5)}</p>
+                        <p className="text-sm font-medium text-text-primary truncate">{(cita as any).cliente?.nombre}</p>
+                        <p className="text-xs text-text-tertiary">{(cita as any).servicio?.nombre} · {cita.hora.substring(0, 5)}</p>
                       </div>
 
                       <div className="text-right flex-shrink-0">
