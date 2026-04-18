@@ -1,84 +1,104 @@
 "use client";
 
-import { useState } from 'react';
-import { MessageCircle, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { Search, ChevronRight, MessageCircle } from 'lucide-react';
+import { Card, Avatar, Badge, Input } from '@/components/ui/RedesignComponents';
 
 export default function ClientesList({ clientes }: { clientes: any[] }) {
-  const [search, setSearch] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filter, setFilter] = useState('Todos');
 
-  const filteredClientes = clientes.filter((c) =>
-    c.nombre?.toLowerCase().includes(search.toLowerCase()) ||
-    c.telefono?.includes(search)
+  const filteredClientes = clientes.filter((c: any) =>
+    (c.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.telefono && c.telefono.includes(searchTerm))) &&
+    (filter === 'Todos' || (filter==='VIP' && c.vip))
   );
 
-  const getRetentionStatus = (dateString?: string | null) => {
-    if (!dateString) return null;
-    const days = Math.floor((new Date().getTime() - new Date(dateString).getTime()) / (1000 * 3600 * 24));
-    if (days >= 60) return { label: 'Riesgo Alto (60+)', color: 'var(--error)' };
-    if (days >= 30) return { label: 'Cuidado (30+)', color: '#F59E0B' };
-    if (days >= 15) return { label: 'Toca Corte (15)', color: 'var(--primary)' };
-    return { label: 'Frecuente', color: 'var(--success)' };
-  };
+  const getInitials = (n: string) => n ? n.substring(0, 2).toUpperCase() : "C";
 
   return (
-    <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-      <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        <Search size={20} className="text-gray" />
-        <input
-          type="text"
-          placeholder="Buscar por nombre o teléfono..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          style={{ border: 'none', outline: 'none', background: 'transparent', width: '100%', fontSize: '1rem' }}
-        />
+    <div className="space-y-6">
+      {/* Search and Filters bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary" size={18} />
+          <Input 
+            type="text"
+            placeholder="Buscar por nombre o teléfono..."
+            className="pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+          {['Todos', 'Regulares', 'Inactivos', 'VIP'].map((f) => (
+            <button 
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-xs font-bold border transition-colors whitespace-nowrap ${
+                filter === f 
+                ? 'bg-accent-muted text-accent border-accent/20' 
+                : 'bg-background-secondary text-text-tertiary border-border hover:text-text-secondary'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-        <thead>
-          <tr style={{ borderBottom: '1px solid var(--border)', backgroundColor: '#F9FAFB' }}>
-            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--secondary)', fontWeight: 600 }}>Cliente</th>
-            <th style={{ padding: '1rem 1.5rem', textAlign: 'left', color: 'var(--secondary)', fontWeight: 600 }}>Estado (Retención)</th>
-            <th style={{ padding: '1rem 1.5rem', textAlign: 'right', color: 'var(--secondary)', fontWeight: 600 }}>Contacto</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredClientes.map((c: any) => {
-            const retention = getRetentionStatus(c.ultima_visita);
-            const message = `Hola ${c.nombre}, hace tiempo no nos visitas. ¡Te esperamos en Trimly para tu próximo corte! 💈`;
-            const wpUrl = c.telefono ? `https://wa.me/${c.telefono.replace(/\D/g, '')}?text=${encodeURIComponent(message)}` : '#';
+      {/* Clientes Grid/Table */}
+      <div className="grid grid-cols-1 gap-3">
+        {filteredClientes.length === 0 ? (
+           <Card className="flex flex-col items-center py-12 text-center border-dashed">
+             <div className="w-12 h-12 rounded-full bg-background-tertiary flex items-center justify-center mb-4 text-text-tertiary">
+                <Search size={24} />
+             </div>
+             <p className="text-sm text-text-secondary">No hay clientes q coincidan</p>
+           </Card>
+        ) : (
+          filteredClientes.map((c: any) => (
+            <Link key={c.id} href={`/dashboard/clientes/${c.id}`} className="group block">
+              <Card className="p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:border-border-strong transition-all">
+                
+                {/* Meta info */}
+                <div className="flex items-center gap-4 flex-1">
+                  <Avatar initials={getInitials(c.nombre)} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold text-text-primary">{c.nombre}</p>
+                      {c.vip && <Badge variant="info">VIP</Badge>}
+                    </div>
+                    <p className="text-xs text-text-tertiary mt-0.5">{c.telefono || "Sin teléfono"}</p>
+                  </div>
+                </div>
 
-            return (
-              <tr key={c.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                <td style={{ padding: '1.5rem' }}>
-                  <div style={{ fontWeight: 600, fontSize: '1.125rem', color: 'var(--foreground)' }}>{c.nombre}</div>
-                  <div style={{ color: 'var(--secondary)', fontSize: '0.875rem' }}>{c.telefono || 'Sin número'}</div>
-                  {c.notas && <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>Notas: {c.notas}</div>}
-                </td>
-                <td style={{ padding: '1.5rem' }}>
-                  {retention ? (
-                    <span style={{ backgroundColor: retention.color, color: 'white', padding: '0.3rem 0.6rem', borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600 }}>
-                      {retention.label}
-                    </span>
-                  ) : (
-                    <span style={{ color: 'var(--secondary)', fontSize: '0.875rem' }}>Nuevo</span>
-                  )}
-                </td>
-                <td style={{ padding: '1.5rem', textAlign: 'right' }}>
-                  {c.telefono ? (
-                    <a href={wpUrl} target="_blank" rel="noopener noreferrer" className="btn btn-outline" style={{ color: '#059669', borderColor: '#10B981', textDecoration: 'none' }}>
-                      <MessageCircle size={18} />
-                      WhatsApp
-                    </a>
-                  ) : (
-                    <span className="text-gray text-sm">N/A</span>
-                  )}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-      {filteredClientes.length === 0 && <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--secondary)' }}>No se encontraron clientes.</div>}
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-8 w-full md:w-auto text-left md:text-right mt-4 md:mt-0">
+                  <div>
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary mb-1">Última Visita</p>
+                    <p className="text-sm text-text-secondary font-medium">Hace 2 sem</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary mb-1">Visitas</p>
+                    <p className="text-sm text-text-primary font-mono font-medium">12</p>
+                  </div>
+                  <div className="hidden md:block">
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-text-tertiary mb-1">Total Compras</p>
+                    <p className="text-sm text-text-secondary font-mono">$450,000</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="hidden md:flex items-center gap-3">
+                  <ChevronRight size={18} className="text-text-tertiary group-hover:text-text-primary transition-colors" />
+                </div>
+              </Card>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   );
 }

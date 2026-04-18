@@ -1,201 +1,89 @@
-:root {
-  --background: #F9FAFB;
-  --foreground: #111827;
-  --primary: #3B82F6;
-  --primary-hover: #2563EB;
-  --secondary: #6B7280;
-  --border: #E5E7EB;
-  --card-bg: #FFFFFF;
-  --input-bg: #FFFFFF;
-  --error: #EF4444;
-  --success: #10B981;
+@import "tailwindcss";
+
+@theme {
+  --color-background-primary: #0A0A0B;
+  --color-background-secondary: #111113;
+  --color-background-tertiary: #1A1A1F;
+  --color-background-elevated: #1F1F26;
+
+  --color-accent: #C9F53B;
+  --color-accent-muted: #1A2208;
+
+  --color-text-primary: #F2F2F0;
+  --color-text-secondary: #8A8A8A;
+  --color-text-tertiary: #4A4A4A;
+
+  --color-border: #1E1E24;
+  --color-border-strong: #2E2E38;
+
+  --color-success: #4ADE80;
+  --color-success-bg: #0D2818;
+  --color-warning: #FBBF24;
+  --color-warning-bg: #1F1A08;
+  --color-danger: #F87171;
+  --color-danger-bg: #2A1010;
+  --color-info: #60A5FA;
+  --color-info-bg: #0A1929;
+
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-dm-mono);
+
+  --radius-xl: 12px;
+  --radius-lg: 8px;
 }
 
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-inter), sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@layer base {
+  body {
+    @apply bg-background-primary text-text-primary antialiased;
+    font-family: var(--font-dm-sans), sans-serif;
+  }
 }
 
-* {
-  box-sizing: border-box;
+@layer components {
+  .card-premium {
+    @apply bg-background-secondary border border-border rounded-xl p-5;
+  }
+
+  .stat-card {
+    @apply bg-background-secondary border border-border rounded-xl p-4 transition-all hover:border-border-strong;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-background-primary font-medium text-sm px-4 py-2.5 rounded-lg hover:bg-[#D4F84A] active:scale-[0.98] transition-all flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent border border-border-strong text-text-secondary text-sm px-4 py-2.5 rounded-lg hover:bg-background-tertiary hover:text-text-primary transition-all flex items-center justify-center gap-2;
+  }
+
+  .input-premium {
+    @apply w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent transition-colors;
+  }
+
+  .badge-pilled {
+    @apply text-xs font-medium px-2.5 py-1 rounded-full;
+  }
 }
 
-a {
-  color: var(--primary);
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-a:hover {
-  text-decoration: underline;
-  color: var(--primary-hover);
-}
-
-/* Base Form Elements */
-.input-group {
-  margin-bottom: 1.5rem;
-  position: relative;
-}
-
-.input-label {
-  display: block;
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: #374151;
-}
-
-.input-field {
-  width: 100%;
-  background: var(--input-bg);
-  border: 1px solid var(--border);
-  color: var(--foreground);
-  padding: 0.875rem 1rem;
-  border-radius: 0.5rem;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  outline: none;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.input-field:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.input-field.error {
-  border-color: var(--error);
-}
-
-.error-message {
-  color: var(--error);
-  font-size: 0.75rem;
-  margin-top: 0.25rem;
-  position: absolute;
-}
-
-/* Base Buttons */
-.btn {
-  display: inline-flex;
-  justify-content: center;
-  align-items: center;
-  padding: 0.875rem 1.5rem;
-  font-size: 1rem;
-  font-weight: 500;
-  border-radius: 0.5rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: inherit;
-  gap: 0.5rem;
-}
-
-.btn:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
-
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.btn-primary:not(:disabled):hover {
-  background: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-.btn-outline {
-  background: white;
-  color: #374151;
-  border: 1px solid var(--border);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.btn-outline:not(:disabled):hover {
-  background: #F9FAFB;
-  color: #111827;
-}
-
-.btn-success {
-  background: #10B981;
-  color: white;
-}
-
-.btn-success:not(:disabled):hover {
-  background: #059669;
-}
-
-.btn-block {
-  width: 100%;
-}
-
-/* Dashboard Sidebar Layout utilities */
-.dashboard-layout {
-  display: flex;
-  min-height: 100vh;
-}
-
-.dashboard-main {
-  flex: 1;
-  padding: 2rem;
-  background-color: var(--background);
-}
-
-/* Utilities */
-.card {
-  background: var(--card-bg);
-  border: 1px solid var(--border);
-  border-radius: 0.75rem;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-}
-
-.text-center { text-align: center; }
-.mt-2 { margin-top: 0.5rem; }
-.mt-4 { margin-top: 1rem; }
-.mt-6 { margin-top: 1.5rem; }
-.mb-6 { margin-bottom: 1.5rem; }
-.text-sm { font-size: 0.875rem; }
-.text-gray { color: #6B7280; }
-
-/* Animation */
-@keyframes spin {
+/* Animations */
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-.spinner {
-  border: 2px solid rgba(255,255,255,0.3);
-  border-radius: 50%;
-  border-top-color: white;
-  width: 1rem;
-  height: 1rem;
-  animation: spin 1s linear infinite;
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
 }
 
-.spinner-dark {
-  border: 2px solid rgba(0,0,0,0.1);
-  border-top-color: #3B82F6;
+.page-fade {
+  animation: fadeIn 0.4s ease-out;
 }
 
-/* Skeleton Loading */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.skeleton {
-  background-color: var(--border);
-  border-radius: 0.5rem;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  min-height: 1rem;
+.skeleton-premium {
+  @apply bg-background-tertiary animate-pulse rounded;
 }
-

@@ -1,15 +1,22 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
+});
+
+const dmMono = DM_Mono({
+  variable: "--font-dm-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
 });
 
 export const metadata: Metadata = {
-  title: "Trimly | Convierte cada cliente en recurrente",
-  description: "SaaS premium para barberías",
+  title: "Trimly | SaaS para Barberías Premium",
+  description: "Gestión inteligente y recurrencia para tu barbería.",
 };
 
 export default function RootLayout({
@@ -18,8 +25,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={inter.variable}>
-      <body>{children}</body>
+    <html lang="es" className={`${dmSans.variable} ${dmMono.variable}`}>
+      <body className="bg-background-primary text-text-primary selection:bg-accent selection:text-background-primary transition-colors duration-300">
+        {children}
+      </body>
     </html>
   );
 }

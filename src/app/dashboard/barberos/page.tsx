@@ -1,45 +1,88 @@
 import { getBarberos, createBarbero, deleteBarbero } from '@/app/actions/barberos';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, UserCheck } from 'lucide-react';
+import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
 
 export default async function BarberosPage() {
   const barberos = await getBarberos();
 
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Equipo de Trimly</h1>
+    <div className="space-y-10">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-semibold text-text-primary">Gestión de Equipo</h1>
+        <p className="text-sm text-text-tertiary mt-1">Administra a los barberos y personal de tu negocio.</p>
       </div>
 
-      <div className="card" style={{ maxWidth: '600px', marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Añadir Barbero</h2>
-        <form action={createBarbero} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end' }}>
-          <div className="input-group" style={{ marginBottom: 0, flex: 2 }}>
-            <label className="input-label" htmlFor="nombre">Nombre del Barbero</label>
-            <input id="nombre" name="nombre" type="text" className="input-field" placeholder="Marlon" required />
-          </div>
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.875rem' }}>
-            <Plus size={20} /> Añadir
-          </button>
-        </form>
-      </div>
-
-      <div className="card" style={{ maxWidth: '600px' }}>
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Barberos Activos</h2>
-        {barberos.length === 0 ? <p className="text-gray">No hay equipo registrado.</p> : null}
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-          {barberos.map((b: any) => (
-            <li key={b.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontSize: '1.125rem', fontWeight: 600 }}>
-                {b.nombre}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
+        {/* Formulario de registro */}
+        <div className="lg:col-span-2">
+          <Card className="bg-background-secondary/30 border-dashed sticky top-8">
+            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Plus size={16} /> Registrar nuevo barbero
+            </h2>
+            <form action={createBarbero} className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
+                <Input name="nombre" placeholder="Ej. Marlon Brando" required />
               </div>
-              <form action={async () => { "use server"; await deleteBarbero(b.id); }}>
-                <button type="submit" className="btn btn-outline" style={{ padding: '0.5rem', color: 'var(--error)', borderColor: 'var(--border)' }}>
-                  <Trash2 size={18} />
-                </button>
-              </form>
-            </li>
-          ))}
-        </ul>
+              <Button type="submit" className="w-full">
+                <Plus size={18} /> Añadir al Equipo
+              </Button>
+            </form>
+          </Card>
+        </div>
+
+        {/* Lista de Barberos */}
+        <div className="lg:col-span-3 space-y-4">
+          <div className="flex items-center justify-between px-2">
+            <h2 className="text-xs font-bold text-text-tertiary uppercase tracking-widest">Personal Activo</h2>
+            <Badge variant="success">{barberos.length} Miembros</Badge>
+          </div>
+
+          <div className="space-y-3">
+            {barberos.length === 0 && (
+              <div className="py-20 border border-dashed border-border rounded-xl flex flex-col items-center justify-center text-center">
+                 <UserCheck size={32} className="text-text-tertiary mb-3 opacity-20" />
+                 <p className="text-sm text-text-secondary">No hay miembros registrados aún.</p>
+              </div>
+            )}
+            {barberos.map((b: any) => (
+              <Card key={b.id} className="group hover:border-border-strong transition-all overflow-hidden relative">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar initials={getInitials(b.nombre)} className="w-12 h-12 bg-accent-muted text-accent" />
+                    <div>
+                      <p className="text-base font-semibold text-text-primary">{b.nombre}</p>
+                      <p className="text-xs text-text-tertiary">Barbero Profesional · Activo</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <form action={async () => { "use server"; await deleteBarbero(b.id); }}>
+                      <button type="submit" className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors">
+                        <Trash2 size={18} />
+                      </button>
+                    </form>
+                  </div>
+                </div>
+                
+                {/* Micro-stats / Decoration */}
+                <div className="mt-4 pt-4 border-t border-border flex items-center gap-6">
+                   <div className="flex flex-col">
+                      <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-tighter">Productividad</span>
+                      <span className="text-sm font-mono text-text-secondary">92%</span>
+                   </div>
+                   <div className="flex flex-col">
+                      <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-tighter">Turnos Hoy</span>
+                      <span className="text-sm font-mono text-text-secondary">8 citas</span>
+                   </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
