@@ -50,7 +50,7 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
          <StatCard label="Total Visitas" value={citasCliente.length} />
          <StatCard label="Total Gastado" value={`$${totalGastado.toLocaleString()}`} />
-         <StatCard label="Frecuencia Promedio" value="14 días" sub="Muy regular" trendColor="success" />
+         <StatCard label="Frecuencia Promedio" value="14 días" sub="Muy regular" color="success" />
          <StatCard label="Próx Visita Est" value="23 Abr" sub="En 5 días" />
       </div>
 
