@@ -139,7 +139,7 @@ export default function ReportesPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 page-fade" key={periodo}>
         <StatCard label="Ingresos" value={d.ingresos} trend={d.ingTrend} sub="vs período anterior" />
         <StatCard label="Citas Completadas" value={d.citas} trend={d.citasTrend} />
-        <StatCard label="Ticket Promedio" value={d.ticket} trend={d.ticketTrend} trendColor={d.ticketTrendColor} />
+        <StatCard label="Ticket Promedio" value={d.ticket} trend={d.ticketTrend} color={d.ticketTrendColor} />
         <StatCard label="Nuevos Clientes" value={d.nuevos} trend={d.nuevosTrend} />
       </div>
 

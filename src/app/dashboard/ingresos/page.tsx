@@ -61,7 +61,7 @@ export default async function IngresosPage() {
           value={`$${ingresosMes.toLocaleString()}`} 
           sub="Basado en citas agendadas"
           trend="↓ 2%" 
-          trendColor="danger"
+          color="danger"
         />
       </div>
 
