@@ -8,80 +8,116 @@ import {
   Calendar, 
   Users, 
   Scissors, 
-  DollarSign, 
   TrendingUp, 
   UserCircle, 
   Settings,
   ChevronLeft,
   ChevronRight,
   LogOut,
-  Plus
+  Plus,
+  Zap
 } from 'lucide-react';
+import { Avatar } from '../ui/Avatar';
+import { Badge } from '../ui/Badge';
 
-const navItems = [
+const mainNavItems = [
   { href: '/dashboard', label: 'Inicio', icon: Home },
   { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
   { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
   { href: '/dashboard/servicios', label: 'Servicios', icon: Scissors },
   { href: '/dashboard/reportes', label: 'Reportes', icon: TrendingUp },
   { href: '/dashboard/barberos', label: 'Barberos', icon: UserCircle },
+];
+
+const secondaryNavItems = [
+  { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Zap, badge: 'NEW' },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
 
-export const Sidebar = ({ negocio }: { negocio: string }) => {
+export const Sidebar = ({ negocio, userName = "Owner" }: { negocio: string, userName?: string }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
-  return (
-    <aside className={`hidden md:flex flex-col bg-background-secondary border-r border-border transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[220px]'}`}>
-      {/* Header / Logo */}
-      <div className="p-4 border-b border-border flex items-center justify-between overflow-hidden min-h-[72px]">
+  const userInitials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+  const NavItemRender = ({ item }: { item: any }) => {
+    const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+    return (
+      <Link 
+        key={item.href} 
+        href={item.href}
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+          isActive 
+          ? 'bg-accent-muted text-accent font-medium' 
+          : 'text-text-tertiary hover:bg-background-tertiary hover:text-text-primary'
+        } ${isCollapsed ? 'justify-center' : ''}`}
+      >
+        <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
         {!isCollapsed && (
-          <div className="flex flex-col">
-            <span className="text-xl font-bold tracking-tighter text-text-primary">Trimly</span>
-            <span className="text-[10px] text-text-secondary uppercase tracking-widest truncate max-w-[140px]">{negocio}</span>
+          <div className="flex-1 flex items-center justify-between">
+            <span className="text-[13px]">{item.label}</span>
+            {item.badge && <span className="bg-accent-muted text-accent text-[10px] font-bold px-1.5 py-0.5 rounded-sm">{item.badge}</span>}
           </div>
         )}
-        <button 
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="p-1.5 rounded-md hover:bg-background-tertiary text-text-secondary hover:text-text-primary transition-colors mx-auto"
-        >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-        </button>
+      </Link>
+    );
+  };
+
+  return (
+    <aside className={`hidden md:flex flex-col bg-background-primary border-r border-border transition-all duration-300 ${isCollapsed ? 'w-16' : 'w-[220px]'}`}>
+      {/* Header / Logo */}
+      <div className="px-5 py-6 border-b border-border flex items-center justify-between">
+        {!isCollapsed ? (
+          <div className="flex flex-col">
+            <p className="text-base font-semibold text-text-primary">Trimly</p>
+            <p className="text-xs text-text-tertiary mt-0.5 truncate max-w-[140px]">{negocio}</p>
+          </div>
+        ) : (
+          <div className="text-base font-semibold text-text-primary text-center w-full">T</div>
+        )}
       </div>
 
+      <button 
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="w-full flex justify-center py-2 bg-background-secondary border-b border-border hover:bg-background-tertiary text-text-secondary hover:text-text-primary transition-colors"
+      >
+        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+
       {/* Navigation */}
-      <nav className="flex-1 p-3 flex flex-col gap-1.5 mt-2">
-        {navItems.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link 
-              key={item.href} 
-              href={item.href}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-                isActive 
-                ? 'bg-accent-muted text-accent font-medium' 
-                : 'text-text-secondary hover:bg-background-tertiary hover:text-text-primary'
-              }`}
-            >
-              <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
-              {!isCollapsed && <span className="text-[13px]">{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        {mainNavItems.map(item => <NavItemRender key={item.href} item={item} />)}
+        
+        <div className="pt-4 mt-4 border-t border-border space-y-1">
+          {secondaryNavItems.map(item => <NavItemRender key={item.href} item={item} />)}
+        </div>
       </nav>
 
-      {/* Footer / Sign Out */}
-      <div className="p-3 border-t border-border">
-        <form action="/auth/signout" method="post">
-          <button 
-            type="submit"
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-danger hover:bg-danger-bg transition-all duration-200 ${isCollapsed ? 'justify-center' : ''}`}
-          >
-            <LogOut size={18} />
-            {!isCollapsed && <span className="text-[13px] font-medium">Cerrar sesión</span>}
-          </button>
-        </form>
+      {/* Footer del sidebar — perfil */}
+      <div className="px-3 py-4 border-t border-border">
+        {!isCollapsed ? (
+          <div className="flex items-center justify-between group">
+            <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-background-tertiary cursor-pointer transition-colors flex-1 min-w-0">
+              <Avatar initials={userInitials} size="sm" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-text-primary truncate">{userName}</p>
+                <p className="text-[10px] text-text-tertiary uppercase tracking-wider">Owner</p>
+              </div>
+            </div>
+            
+            <form action="/auth/signout" method="post">
+              <button title="Cerrar sesión" type="submit" className="text-text-tertiary hover:text-danger p-2 rounded-lg hover:bg-danger-bg transition-colors">
+                <LogOut size={16} />
+              </button>
+            </form>
+          </div>
+        ) : (
+          <form action="/auth/signout" method="post" className="w-full flex justify-center">
+            <button title="Cerrar sesión" type="submit" className="text-text-tertiary hover:text-danger p-2 rounded-lg hover:bg-danger-bg transition-colors">
+              <LogOut size={18} />
+            </button>
+          </form>
+        )}
       </div>
     </aside>
   );
@@ -95,11 +131,11 @@ export const BottomNav = () => {
     { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
     { href: '?new=1', label: '+', icon: Plus, special: true }, // Opens Modal globally
     { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
-    { href: '/dashboard/configuracion', label: 'Más', icon: Settings },
+    { href: '/dashboard/reportes', label: 'Más', icon: TrendingUp },
   ];
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background-secondary border-t border-border flex items-center justify-around px-2 py-2 pb-safe z-40">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background-primary border-t border-border flex items-center justify-around px-2 py-2 pb-safe z-50">
       {mobileItems.map((item) => {
         const isActive = pathname === item.href;
         
@@ -108,9 +144,9 @@ export const BottomNav = () => {
             <Link 
               key={item.href} 
               href={item.href}
-              className="w-12 h-12 rounded-full bg-accent text-background-primary flex items-center justify-center -mt-6 shadow-none border-4 border-background-primary transition-transform active:scale-[0.98]"
+              className="w-12 h-12 rounded-full bg-accent text-background-primary flex items-center justify-center -mt-6 shadow-lg shadow-accent/20 active:scale-95 transition-transform"
             >
-              <item.icon size={24} strokeWidth={3} />
+              <item.icon size={24} strokeWidth={2.5} />
             </Link>
           );
         }

@@ -270,19 +270,19 @@ export const AgendaTimeline: React.FC<Props> = ({ citas, allCitas, clientes, ser
           </Button>
 
           {/* View toggle */}
-          <div className="inline-flex bg-background-secondary border border-border p-1 rounded-lg">
+          <div className="inline-flex bg-background-tertiary rounded-lg p-1">
             <button
               onClick={() => setView('dia')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                view === 'dia' ? 'bg-accent text-background-primary' : 'text-text-tertiary hover:text-text-primary'
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                view === 'dia' ? 'bg-border-strong text-text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Día
             </button>
             <button
               onClick={() => setView('semana')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-                view === 'semana' ? 'bg-accent text-background-primary' : 'text-text-tertiary hover:text-text-primary'
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                view === 'semana' ? 'bg-border-strong text-text-primary' : 'text-text-tertiary hover:text-text-secondary'
               }`}
             >
               Semana

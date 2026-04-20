@@ -1,6 +1,5 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { Card, CardContent } from "./Card"
 
 export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   label: string
@@ -8,28 +7,33 @@ export interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
   sub?: string
   subtext?: string
   trend?: string
-  trendColor?: "success" | "danger"
+  color?: "success" | "danger" | "accent" | "info" | "neutral"
 }
 
-export function StatCard({ className, label, value, sub, subtext, trend, trendColor = "success", ...props }: StatCardProps) {
+export function StatCard({ className, label, value, sub, subtext, trend, color = "success", ...props }: StatCardProps) {
   const subTextToUse = sub || subtext
   
+  const trendColorMap = {
+    success: "text-success",
+    danger: "text-danger",
+    accent: "text-accent",
+    info: "text-info",
+    neutral: "text-text-secondary"
+  }
+  
   return (
-    <Card className={cn("flex flex-col justify-center transition-all hover:border-border-strong group", className)} {...props}>
-      <CardContent className="p-0">
-        <h4 className="text-[10px] text-text-tertiary uppercase tracking-widest font-bold mb-2 group-hover:text-text-secondary transition-colors">
-          {label}
-        </h4>
-        <div className="text-2xl font-mono font-semibold text-text-primary">
-          {value}
-        </div>
-        {(subTextToUse || trend) && (
-          <div className="mt-1 flex items-center gap-2 text-xs">
-            {trend && <span className={trendColor === "success" ? "text-success" : "text-danger"}>{trend}</span>}
-            {subTextToUse && <span className="text-text-tertiary">{subTextToUse}</span>}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <div className={cn("bg-background-secondary border border-border rounded-xl p-4 transition-all hover:border-border-strong", className)} {...props}>
+      <p className="text-[11px] text-text-tertiary uppercase tracking-wider mb-2">
+        {label}
+      </p>
+      <p className="text-2xl font-semibold text-text-primary font-mono">
+        {value}
+      </p>
+      {(subTextToUse || trend) && (
+        <p className={cn("text-xs mt-1.5", trendColorMap[color])}>
+          {trend ? `${trend} ` : ''}{subTextToUse}
+        </p>
+      )}
+    </div>
   )
 }

@@ -103,34 +103,43 @@ export default async function DashboardHome() {
           <section>
             <h2 className="text-xs font-bold text-text-tertiary uppercase tracking-widest mb-4">Actualidad</h2>
             {activeTurn ? (
-              <Card className="border-accent/30 ring-1 ring-accent/10">
-                <div className="flex items-center justify-between mb-6">
+              <div className="bg-background-secondary border border-accent/30 rounded-xl p-5 mb-5">
+                <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-success animate-pulse" />
-                    <span className="text-[10px] font-bold text-success uppercase tracking-wider">En silla ahora</span>
+                    <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+                    <span className="text-xs font-medium text-success uppercase tracking-wider">
+                      En silla ahora
+                    </span>
                   </div>
-                  <span className="text-xs text-text-tertiary font-mono">Inició {activeTurn.hora.substring(0, 5)}</span>
+                  <span className="text-xs text-text-tertiary font-mono">
+                    Inició {activeTurn.hora.substring(0, 5)} · {Math.floor((now.getTime() - new Date().setHours(Number(activeTurn.hora.split(':')[0]), Number(activeTurn.hora.split(':')[1]), 0)) / 60000)} min
+                  </span>
                 </div>
-
-                <div className="flex items-end justify-between gap-4">
+                <div className="flex items-end justify-between">
                   <div>
                     <p className="text-xl font-semibold text-text-primary mb-1">{(activeTurn as any).cliente?.nombre}</p>
                     <p className="text-sm text-text-secondary">{(activeTurn as any).servicio?.nombre} · ${Number(activeTurn.precio_cobrado).toLocaleString()}</p>
-                    <p className="text-xs text-text-tertiary mt-2">Cliente regular · {(activeTurn as any).cliente?.notas || 'Sin notas'}</p>
+                    <p className="text-xs text-text-tertiary mt-1">Cliente regular · {(activeTurn as any).cliente?.notas || 'Sin notas'}</p>
                   </div>
-                  <Button variant="primary" className="bg-success-bg text-success hover:bg-success hover:text-background-primary border border-success/20">
-                    Completar <CheckCircle2 size={16} />
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="secondary" className="text-xs px-3 py-2 h-auto">
+                      Editar
+                    </Button>
+                    <button className="bg-success-bg border border-success/30 text-success text-sm font-medium px-5 py-2.5 rounded-lg hover:bg-success hover:text-background-primary transition-all cursor-pointer flex items-center gap-2">
+                      Completar <CheckCircle2 size={16} />
+                    </button>
+                  </div>
                 </div>
-              </Card>
+              </div>
             ) : (
-              <div className="bg-background-secondary/50 border border-dashed border-border rounded-xl p-10 flex flex-col items-center justify-center text-center">
-                <div className="w-12 h-12 rounded-full bg-background-tertiary flex items-center justify-center mb-4 text-text-tertiary">
-                   <Clock size={24} />
-                </div>
-                <p className="text-sm font-medium text-text-secondary">Sin turno activo</p>
-                <p className="text-xs text-text-tertiary mt-1">
-                  {nextCita ? `Próxima cita en ${getTimeLeft(nextCita.hora)}` : "Relájate, no hay más citas por ahora."}
+              <div className="bg-background-secondary border border-border rounded-xl p-5 mb-5">
+                <p className="text-sm text-text-secondary">Sin turno activo</p>
+                <p className="text-base text-text-primary mt-1">
+                  {nextCita ? (
+                    <>Próxima cita en <span className="text-accent font-mono">{getTimeLeft(nextCita.hora)}</span></>
+                  ) : (
+                    "Relájate, no hay más citas por hoy."
+                  )}
                 </p>
               </div>
             )}
@@ -145,42 +154,49 @@ export default async function DashboardHome() {
             
             <div className="space-y-1">
               {citasHoy.length === 0 ? (
-                <Card className="flex flex-col items-center py-12 text-center border-dashed">
-                   <User size={32} className="text-text-tertiary mb-3 opacity-20" />
-                   <p className="text-sm text-text-secondary">No hay citas programadas para hoy</p>
-                </Card>
+                <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-xl mt-4">
+                  <div className="w-12 h-12 rounded-xl bg-background-tertiary flex items-center justify-center mb-4 text-xl">
+                    <User size={24} className="text-text-tertiary opacity-50" />
+                  </div>
+                  <p className="text-sm font-medium text-text-primary mb-1">Día libre</p>
+                  <p className="text-xs text-text-secondary mb-5">No hay citas programadas para hoy.</p>
+                </div>
               ) : (
-                citasHoy.map((cita: any) => {
+                citasHoy.map((cita: any, index: number) => {
                   const isPast = nextCita && cita.hora < (nextCita?.hora || "");
                   const isNext = nextCita?.id === cita.id;
                   
                   return (
                     <div 
                       key={cita.id} 
-                      className={`flex items-center gap-4 p-4 rounded-xl transition-all group cursor-pointer ${
-                        isNext ? 'bg-background-secondary border border-border sm:translate-x-1' : 'hover:bg-background-secondary/50'
-                      } ${isPast && cita.estado === 'completada' ? 'opacity-40' : ''}`}
+                      style={{ opacity: index > 2 ? 0.4 : 1 }}
+                      className={`flex items-center gap-4 p-4 rounded-xl transition-colors cursor-pointer group border border-transparent hover:border-border hover:bg-background-secondary ${
+                        isNext ? 'bg-background-secondary border-border/50' : ''
+                      }`}
                     >
                       <Avatar fallback={getInitials((cita as any).cliente?.nombre || "C")} className="flex-shrink-0" />
                       
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-text-primary truncate">{(cita as any).cliente?.nombre}</p>
-                        <p className="text-xs text-text-tertiary">{(cita as any).servicio?.nombre} · {cita.hora.substring(0, 5)}</p>
+                        <p className="text-xs text-text-secondary">{(cita as any).servicio?.nombre} · {cita.hora.substring(0, 5)}</p>
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-mono text-text-secondary">${Number(cita.precio_cobrado).toLocaleString()}</p>
-                        {isNext ? (
-                          <Badge variant="warning">En {getTimeLeft(cita.hora)}</Badge>
-                        ) : cita.estado === 'completada' ? (
-                          <Badge variant="success">Listo</Badge>
-                        ) : (
-                          <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-tighter">Pendiente</span>
-                        )}
+                        <p className="text-sm font-mono text-text-primary">${Number(cita.precio_cobrado).toLocaleString()}</p>
+                        <p className={`text-xs ${
+                          isNext ? 'text-warning' : 'text-text-tertiary'
+                        }`}>
+                          {isNext ? `en ${getTimeLeft(cita.hora)}` : cita.estado === 'completada' ? 'Completada' : cita.hora.substring(0, 5)}
+                        </p>
                       </div>
                       
-                      <div className="hidden group-hover:flex items-center ml-2 text-text-tertiary">
-                        <ChevronRight size={16} />
+                      <div className="hidden group-hover:flex items-center gap-1 flex-shrink-0">
+                        <button className="text-xs text-text-secondary hover:text-text-primary px-2 py-1 rounded hover:bg-background-tertiary transition-colors">
+                          Editar
+                        </button>
+                        <button className="text-xs text-danger px-2 py-1 rounded hover:bg-danger-bg transition-colors">
+                          Cancelar
+                        </button>
                       </div>
                     </div>
                   );

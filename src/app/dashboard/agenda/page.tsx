@@ -5,6 +5,7 @@ import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { createCita } from '@/app/actions/citas';
 import { Plus } from 'lucide-react';
 
@@ -40,17 +41,17 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         <form action={createCita} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Cliente</label>
-            <select name="cliente_id" className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" required>
+            <Select name="cliente_id" required>
               <option value="">Seleccionar...</option>
               {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
-            </select>
+            </Select>
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Servicio</label>
-            <select name="servicio_id" className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" required>
+            <Select name="servicio_id" required>
               <option value="">Servicio...</option>
               {servicios.map((s: any) => <option key={s.id} value={s.id}>{s.nombre} (${Number(s.precio).toLocaleString()})</option>)}
-            </select>
+            </Select>
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Fecha</label>

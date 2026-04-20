@@ -9,18 +9,25 @@ export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Alias for `fallback` — both are supported */
   initials?: string
   size?: "sm" | "md" | "lg"
+  isVip?: boolean
 }
 
-export function Avatar({ className, src, alt, fallback, initials, size = "md", ...props }: AvatarProps) {
+export function Avatar({ className, src, alt, fallback, initials, size = "md", isVip = false, ...props }: AvatarProps) {
   const text = fallback || initials || ""
   return (
     <div
       className={cn(
-        "relative flex shrink-0 overflow-hidden rounded-full font-medium border border-accent/20 bg-accent-muted text-accent items-center justify-center",
+        "relative flex shrink-0 overflow-hidden rounded-full items-center justify-center font-medium",
         {
-          "h-8 w-8 text-xs": size === "sm",
-          "h-10 w-10 text-sm": size === "md",
-          "h-14 w-14 text-base": size === "lg",
+          // Default styling (neutral)
+          "bg-background-tertiary border border-border-strong text-text-secondary": !isVip,
+          // VIP styling (accent)
+          "bg-accent-muted border border-accent/20 text-accent": isVip,
+          
+          // Sizes
+          "w-8 h-8 text-[10px]": size === "sm",
+          "w-9 h-9 text-xs": size === "md",
+          "w-16 h-16 text-xl": size === "lg",
         },
         className
       )}
