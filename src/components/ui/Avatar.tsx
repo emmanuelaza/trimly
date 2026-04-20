@@ -4,11 +4,15 @@ import { cn } from "@/lib/utils"
 export interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
   src?: string
   alt?: string
-  fallback: string
+  /** Text to display when no image — also aliased as `initials` */
+  fallback?: string
+  /** Alias for `fallback` — both are supported */
+  initials?: string
   size?: "sm" | "md" | "lg"
 }
 
-export function Avatar({ className, src, alt, fallback, size = "md", ...props }: AvatarProps) {
+export function Avatar({ className, src, alt, fallback, initials, size = "md", ...props }: AvatarProps) {
+  const text = fallback || initials || ""
   return (
     <div
       className={cn(
@@ -29,7 +33,7 @@ export function Avatar({ className, src, alt, fallback, size = "md", ...props }:
           className="aspect-square h-full w-full object-cover"
         />
       ) : (
-        <span>{fallback}</span>
+        <span>{text}</span>
       )}
     </div>
   )
