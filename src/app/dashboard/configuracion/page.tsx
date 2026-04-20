@@ -135,7 +135,7 @@ function TabServicios() {
             </div>
             <div className="flex items-center gap-4 ml-12 sm:ml-0">
               <span className="text-sm font-mono text-text-primary">${s.precio.toLocaleString('es-CO')}</span>
-              <Badge variant={s.activo ? 'success' : 'default'}>{s.activo ? 'Activo' : 'Inactivo'}</Badge>
+              <Badge variant={s.activo ? 'success' : 'neutral'}>{s.activo ? 'Activo' : 'Inactivo'}</Badge>
               <Button variant="ghost" size="sm" type="button">Editar</Button>
             </div>
           </Card>
@@ -173,7 +173,7 @@ function TabBarberos() {
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <Badge variant={b.activo ? 'success' : 'default'}>{b.activo ? 'Activo' : 'Inactivo'}</Badge>
+              <Badge variant={b.activo ? 'success' : 'neutral'}>{b.activo ? 'Activo' : 'Inactivo'}</Badge>
               <Button variant="ghost" size="sm">Editar</Button>
             </div>
           </Card>
