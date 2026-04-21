@@ -1,5 +1,5 @@
-import { getClientes } from '@/app/actions/clientes';
-import { getCitas } from '@/app/actions/citas';
+import { getClients } from '@/app/actions/clients';
+import { getAppointments } from '@/app/actions/appointments';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Edit2, Calendar, Star } from 'lucide-react';
 import { Card, Avatar, Button, Badge, StatCard } from '@/components/ui/RedesignComponents';
@@ -8,16 +8,16 @@ import { Card, Avatar, Button, Badge, StatCard } from '@/components/ui/RedesignC
 export default async function PerfilCliente({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  // Real apps would fetch specifically `getClienteById`, but reusing `getClientes` as mock:
-  const clientes = await getClientes();
+  // Real apps would fetch specifically `getClientById`, but reusing `getClients` as mock:
+  const clientes = await getClients();
   const cliente = clientes.find((c: any) => c.id === id);
   
-  const allCitas = await getCitas();
-  const citasCliente = allCitas.filter((c: any) => c.cliente_id === id).sort((a: any, b: any) => b.fecha.localeCompare(a.fecha));
+  const allCitas = await getAppointments();
+  const citasCliente = allCitas.filter((c: any) => c.client_id === id).sort((a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   if (!cliente) return <div className="p-10 text-center text-text-secondary">Cliente no encontrado</div>;
 
-  const totalGastado = citasCliente.reduce((acc: number, c: any) => acc + (Number(c.precio_cobrado) || 0), 0);
+  const totalGastado = citasCliente.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
   const getInitials = (n: string) => n ? n.substring(0, 2).toUpperCase() : "C";
 
   return (
@@ -30,13 +30,13 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
       {/* 2. Hero Profile */}
       <Card className="flex flex-col md:flex-row md:items-center justify-between gap-6 p-6">
         <div className="flex items-center gap-6">
-          <Avatar initials={getInitials(cliente.nombre)} className="w-20 h-20 text-2xl" />
+          <Avatar initials={getInitials(cliente.name)} className="w-20 h-20 text-2xl" />
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <h1 className="text-2xl font-bold text-text-primary">{cliente.nombre}</h1>
+              <h1 className="text-2xl font-bold text-text-primary">{cliente.name}</h1>
               {(cliente as any)?.vip && <Badge variant="info">VIP</Badge>}
             </div>
-            <p className="text-sm text-text-secondary">{cliente.telefono}</p>
+            <p className="text-sm text-text-secondary">{cliente.phone}</p>
             <p className="text-xs text-text-tertiary mt-2">Cliente desde Ene 2024 · 95% asistencia</p>
           </div>
         </div>
@@ -107,16 +107,18 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
 
                         <div className="flex-1 px-4">
                            <div className="flex justify-between md:flex-col lg:flex-row lg:justify-between items-start gap-1 mb-2">
-                              <p className="text-sm font-bold text-text-primary">{cita.fecha} · {cita.hora.substring(0,5)}</p>
-                              <Badge variant={cita.estado === 'completada' ? 'success' : 'warning'}>
-                                 {cita.estado}
+                              <p className="text-sm font-bold text-text-primary">
+                                {new Date(cita.scheduled_at).toLocaleDateString()} · {new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                              </p>
+                              <Badge variant={cita.status === 'completed' ? 'success' : cita.status === 'confirmed' ? 'info' : 'warning'}>
+                                 {cita.status}
                               </Badge>
                            </div>
                            <p className="text-sm text-text-secondary mb-1">
-                              Servicio: {cita.servicio?.nombre || 'General'}
+                              Servicio: {cita.service?.name || 'General'}
                            </p>
                            <p className="text-xs text-text-tertiary font-mono">
-                              Billed: ${Number(cita.precio_cobrado).toLocaleString()}
+                              Billed: ${Number(cita.price_charged).toLocaleString()}
                            </p>
                         </div>
                      </div>

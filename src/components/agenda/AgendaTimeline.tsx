@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, MessageCircle, Trash2, Scissors, Plus } from
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
-import { deleteCita } from '@/app/actions/citas';
+import { deleteAppointment } from '@/app/actions/appointments';
 
 interface Props {
   citas: any[];       // day-filtered citas (for day view)
@@ -56,7 +56,7 @@ function DayView({ citas, filterDate, currentTimeOffset }: { citas: any[]; filte
   const currentMin = now.getMinutes();
 
   const getCitasInHour = (hour: number) =>
-    citas.filter(c => parseInt(c.hora.split(':')[0]) === hour);
+    citas.filter(c => new Date(c.scheduled_at).getHours() === hour);
 
   return (
     <Card className="p-0 overflow-hidden bg-background-primary">
@@ -96,21 +96,21 @@ function DayView({ citas, filterDate, currentTimeOffset }: { citas: any[]; filte
                       >
                         <div className="flex items-center gap-2.5">
                           <Avatar
-                            fallback={cita.cliente?.nombre?.substring(0, 2).toUpperCase() || '??'}
+                            fallback={cita.client?.name?.substring(0, 2).toUpperCase() || '??'}
                             size="sm"
                           />
                           <div>
-                            <p className="text-sm font-semibold text-text-primary leading-tight">{cita.cliente?.nombre}</p>
+                            <p className="text-sm font-semibold text-text-primary leading-tight">{cita.client?.name}</p>
                             <p className="text-[11px] text-accent/80 font-medium flex items-center gap-1 mt-0.5">
                               <Scissors size={9} />
-                              {cita.servicio?.nombre} · {cita.hora.substring(0, 5)}
+                              {cita.service?.name} · {new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-1 flex-shrink-0">
-                          {cita.cliente?.telefono && (
+                          {cita.client?.phone && (
                             <a
-                              href={`https://wa.me/${cita.cliente.telefono.replace(/\D/g, '')}`}
+                              href={`https://wa.me/${cita.client.phone.replace(/\D/g, '')}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 text-success hover:bg-success/10 rounded-lg transition-colors"
@@ -119,7 +119,7 @@ function DayView({ citas, filterDate, currentTimeOffset }: { citas: any[]; filte
                             </a>
                           )}
                           <button
-                            onClick={async () => await deleteCita(cita.id)}
+                            onClick={async () => await deleteAppointment(cita.id)}
                             className="p-1.5 text-text-tertiary hover:text-danger hover:bg-danger/10 rounded-lg transition-colors"
                           >
                             <Trash2 size={14} />
@@ -147,7 +147,7 @@ function WeekView({ allCitas, weekDays }: { allCitas: any[]; weekDays: string[] 
   const todayStr = new Date().toISOString().split('T')[0];
 
   const getCitasForDay = (dateStr: string) =>
-    allCitas.filter((c: any) => c.fecha === dateStr).sort((a: any, b: any) => a.hora.localeCompare(b.hora));
+    allCitas.filter((c: any) => c.scheduled_at.startsWith(dateStr)).sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
   return (
     <Card className="p-0 overflow-hidden bg-background-primary">
@@ -187,7 +187,7 @@ function WeekView({ allCitas, weekDays }: { allCitas: any[]; weekDays: string[] 
 
             {/* Day columns */}
             {weekDays.map(day => {
-              const citasThisSlot = getCitasForDay(day).filter(c => parseInt(c.hora.split(':')[0]) === hour);
+              const citasThisSlot = getCitasForDay(day).filter(c => new Date(c.scheduled_at).getHours() === hour);
               const isToday = day === todayStr;
               return (
                 <div
@@ -199,8 +199,8 @@ function WeekView({ allCitas, weekDays }: { allCitas: any[]; weekDays: string[] 
                       key={cita.id}
                       className="bg-accent-muted border-l-2 border-accent rounded-r-md px-1.5 py-1 mb-0.5"
                     >
-                      <p className="text-[10px] font-semibold text-text-primary truncate leading-tight">{cita.cliente?.nombre}</p>
-                      <p className="text-[9px] text-accent/70 truncate">{cita.servicio?.nombre}</p>
+                      <p className="text-[10px] font-semibold text-text-primary truncate leading-tight">{cita.client?.name}</p>
+                      <p className="text-[9px] text-accent/70 truncate">{cita.service?.name}</p>
                     </div>
                   ))}
                 </div>

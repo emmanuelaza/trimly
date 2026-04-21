@@ -1,4 +1,4 @@
-import { getClientes, createCliente } from '@/app/actions/clientes';
+import { getClients, createClient } from '@/app/actions/clients';
 import { Plus, UserPlus } from 'lucide-react';
 import ClientesList from './ClientesList';
 import { Card, Input, Button } from '@/components/ui/RedesignComponents';
@@ -6,7 +6,7 @@ import { Card, Input, Button } from '@/components/ui/RedesignComponents';
 export const revalidate = 60;
 
 export default async function ClientesPage() {
-  const clientes = await getClientes();
+  const clientes = await getClients();
 
   return (
     <div className="space-y-10">
@@ -23,7 +23,7 @@ export default async function ClientesPage() {
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
           <UserPlus size={16} /> Registro Rápido
         </h2>
-        <form action={createCliente} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+        <form action={createClient} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
             <Input id="nombre" name="nombre" placeholder="Ej. Juan Pérez" required />

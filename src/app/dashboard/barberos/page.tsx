@@ -1,9 +1,9 @@
-import { getBarberos, createBarbero, deleteBarbero } from '@/app/actions/barberos';
+import { getBarbers, createBarber, deleteBarber } from '@/app/actions/barbers';
 import { Plus, Trash2, UserCheck } from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
 
 export default async function BarberosPage() {
-  const barberos = await getBarberos();
+  const barberos = await getBarbers();
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
@@ -22,7 +22,7 @@ export default async function BarberosPage() {
             <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
               <Plus size={16} /> Registrar nuevo barbero
             </h2>
-            <form action={createBarbero} className="space-y-4">
+            <form action={createBarber} className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
                 <Input name="nombre" placeholder="Ej. Marlon Brando" required />
@@ -52,15 +52,15 @@ export default async function BarberosPage() {
               <Card key={b.id} className="group hover:border-border-strong transition-all overflow-hidden relative">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <Avatar initials={getInitials(b.nombre)} className="w-12 h-12 bg-accent-muted text-accent" />
+                    <Avatar initials={getInitials(b.name)} className="w-12 h-12 bg-accent-muted text-accent" />
                     <div>
-                      <p className="text-base font-semibold text-text-primary">{b.nombre}</p>
+                      <p className="text-base font-semibold text-text-primary">{b.name}</p>
                       <p className="text-xs text-text-tertiary">Barbero Profesional · Activo</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <form action={async () => { "use server"; await deleteBarbero(b.id); }}>
+                    <form action={async () => { "use server"; await deleteBarber(b.id); }}>
                       <button type="submit" className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors">
                         <Trash2 size={18} />
                       </button>

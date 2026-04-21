@@ -1,12 +1,11 @@
-import { getCitas } from '@/app/actions/citas';
-import { getClientes } from '@/app/actions/clientes';
-import { getServicios } from '@/app/actions/servicios';
+import { getAppointments, createAppointment } from '@/app/actions/appointments';
+import { getClients } from '@/app/actions/clients';
+import { getServices } from '@/app/actions/services';
 import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
-import { createCita } from '@/app/actions/citas';
 import { Plus } from 'lucide-react';
 
 export const revalidate = 60;
@@ -17,13 +16,13 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
   // Fetch ALL citas so the week view has full data
   const [allCitas, clientes, servicios] = await Promise.all([
-    getCitas(),
-    getClientes(),
-    getServicios(),
+    getAppointments(),
+    getClients(),
+    getServices(),
   ]);
 
   // Day-filtered citas for the day view
-  const citasForDay = allCitas.filter((c: any) => c.fecha === filterDate);
+  const citasForDay = allCitas.filter((c: any) => c.scheduled_at.startsWith(filterDate));
 
   return (
     <div className="space-y-10">
@@ -38,19 +37,19 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
           <Plus size={16} /> Agendar rápido
         </h2>
-        <form action={createCita} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+        <form action={createAppointment} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Cliente</label>
-            <Select name="cliente_id" required>
+            <Select name="client_id" required>
               <option value="">Seleccionar...</option>
-              {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+              {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Servicio</label>
-            <Select name="servicio_id" required>
+            <Select name="service_id" required>
               <option value="">Servicio...</option>
-              {servicios.map((s: any) => <option key={s.id} value={s.id}>{s.nombre} (${Number(s.precio).toLocaleString()})</option>)}
+              {servicios.map((s: any) => <option key={s.id} value={s.id}>{s.name} (${Number(s.price).toLocaleString()})</option>)}
             </Select>
           </div>
           <div className="space-y-2">

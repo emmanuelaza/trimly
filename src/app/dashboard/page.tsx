@@ -1,4 +1,5 @@
-import { getCitas } from '@/app/actions/citas';
+import { getAppointments } from '@/app/actions/appointments';
+import { getBarbershop } from '@/app/actions/barbershops';
 import Link from 'next/link';
 import { Plus, Clock, CheckCircle2, User, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
@@ -11,52 +12,42 @@ import { createClient } from '@/lib/supabase/server';
 export const revalidate = 60;
 
 export default async function DashboardHome() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const userName = user?.user_metadata?.negocio || user?.user_metadata?.full_name || "Barbero";
+  const barbershop = await getBarbershop();
+  const userName = barbershop?.name || "Dueño";
   
-  const allCitas = await getCitas();
+  const allCitas = await getAppointments();
   const todayStr = new Date().toISOString().split('T')[0];
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMin = now.getMinutes();
 
   // Filtrar citas hoy y ordenar por hora
-  const citasHoy = allCitas
-    .filter((c: any) => c.fecha === todayStr)
-    .sort((a: any, b: any) => a.hora.localeCompare(b.hora));
+  const citasHoyStr = allCitas
+    .filter((c: any) => c.scheduled_at.startsWith(todayStr))
+    .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
-  const ingresosHoy = citasHoy.reduce((acc: number, c: any) => acc + (Number(c.precio_cobrado) || 0), 0);
-  const completadas = citasHoy.filter((c: any) => c.estado === 'completada').length;
-  const pendientes = citasHoy.length - completadas;
+  const ingresosHoy = citasHoyStr.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
+  const completadas = citasHoyStr.filter((c: any) => c.status === 'completed').length;
+  const pendientes = citasHoyStr.length - completadas;
 
-  // Encontrar turno activo (muy simplificado: cita más cercana pasada que no esté completada o la actual)
-  const activeTurn = citasHoy.find((c: any) => {
-    const [h, m] = c.hora.split(':').map(Number);
-    const appointmentTime = new Date();
-    appointmentTime.setHours(h, m, 0);
-    // Margen de 45 min para considerarlo "en silla"
+  // Encontrar turno activo
+  const activeTurn = citasHoyStr.find((c: any) => {
+    const appointmentTime = new Date(c.scheduled_at);
     const diff = (now.getTime() - appointmentTime.getTime()) / (1000 * 60);
-    return diff >= 0 && diff < 45 && c.estado !== 'completada';
+    return diff >= 0 && diff < 45 && c.status !== 'completed';
   }) || null;
 
   // Próxima cita
-  const nextCita = citasHoy.find((c: any) => {
-    const [h, m] = c.hora.split(':').map(Number);
-    const appointmentTime = new Date();
-    appointmentTime.setHours(h, m, 0);
-    return appointmentTime > now;
+  const nextCita = citasHoyStr.find((c: any) => {
+    const appointmentTime = new Date(c.scheduled_at);
+    return appointmentTime > now && c.status !== 'completed';
   }) || null;
 
-  const getTimeLeft = (hora: string) => {
-    const [h, m] = hora.split(':').map(Number);
-    const target = new Date();
-    target.setHours(h, m, 0);
+  const getTimeLeft = (isoDate: string) => {
+    const target = new Date(isoDate);
     const diff = Math.floor((target.getTime() - now.getTime()) / (1000 * 60));
     return diff > 0 ? `${diff} min` : "Ahora";
   };
 
-  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  const getInitials = (name: string) => name ? name.split(' ').map((n: string) => n[0]).join('').toUpperCase().substring(0, 2) : 'C';
 
   return (
     <div className="space-y-10">
@@ -79,19 +70,19 @@ export default async function DashboardHome() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard 
           label="Citas Hoy" 
-          value={citasHoy.length} 
+          value={citasHoyStr.length} 
           sub={`${completadas} completadas · ${pendientes} pendientes`} 
         />
         <StatCard 
           label="Ingresos (COP)" 
           value={`$${ingresosHoy.toLocaleString()}`} 
           sub={`$${(ingresosHoy / 4000).toFixed(2)} USD aprox`}
-          trend="↑ 12%" 
+          color="success" 
         />
         <StatCard 
           label="Próxima Cita" 
-          value={nextCita ? getTimeLeft(nextCita.hora) : "--"} 
-          sub={nextCita ? `${(nextCita as any).cliente?.nombre} · ${(nextCita as any).servicio?.nombre}` : "No hay más citas"} 
+          value={nextCita ? getTimeLeft(nextCita.scheduled_at) : "--"} 
+          sub={nextCita ? `${(nextCita as any).client?.name} · ${(nextCita as any).service?.name}` : "No hay más citas"} 
         />
       </div>
 
@@ -112,14 +103,14 @@ export default async function DashboardHome() {
                     </span>
                   </div>
                   <span className="text-xs text-text-tertiary font-mono">
-                    Inició {activeTurn.hora.substring(0, 5)} · {Math.floor((now.getTime() - new Date().setHours(Number(activeTurn.hora.split(':')[0]), Number(activeTurn.hora.split(':')[1]), 0)) / 60000)} min
+                    Inició {new Date(activeTurn.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} · {Math.floor((now.getTime() - new Date(activeTurn.scheduled_at).getTime()) / 60000)} min
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-xl font-semibold text-text-primary mb-1">{(activeTurn as any).cliente?.nombre}</p>
-                    <p className="text-sm text-text-secondary">{(activeTurn as any).servicio?.nombre} · ${Number(activeTurn.precio_cobrado).toLocaleString()}</p>
-                    <p className="text-xs text-text-tertiary mt-1">Cliente regular · {(activeTurn as any).cliente?.notas || 'Sin notas'}</p>
+                    <p className="text-xl font-semibold text-text-primary mb-1">{(activeTurn as any).client?.name}</p>
+                    <p className="text-sm text-text-secondary">{(activeTurn as any).service?.name} · ${Number(activeTurn.price_charged).toLocaleString()}</p>
+                    <p className="text-xs text-text-tertiary mt-1">Cliente regular</p>
                   </div>
                   <div className="flex gap-2">
                     <Button variant="secondary" className="text-xs px-3 py-2 h-auto">
@@ -136,7 +127,7 @@ export default async function DashboardHome() {
                 <p className="text-sm text-text-secondary">Sin turno activo</p>
                 <p className="text-base text-text-primary mt-1">
                   {nextCita ? (
-                    <>Próxima cita en <span className="text-accent font-mono">{getTimeLeft(nextCita.hora)}</span></>
+                    <>Próxima cita en <span className="text-accent font-mono">{getTimeLeft(nextCita.scheduled_at)}</span></>
                   ) : (
                     "Relájate, no hay más citas por hoy."
                   )}
@@ -153,7 +144,7 @@ export default async function DashboardHome() {
             </div>
             
             <div className="space-y-1">
-              {citasHoy.length === 0 ? (
+              {citasHoyStr.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center border border-dashed border-border rounded-xl mt-4">
                   <div className="w-12 h-12 rounded-xl bg-background-tertiary flex items-center justify-center mb-4 text-xl">
                     <User size={24} className="text-text-tertiary opacity-50" />
@@ -162,8 +153,7 @@ export default async function DashboardHome() {
                   <p className="text-xs text-text-secondary mb-5">No hay citas programadas para hoy.</p>
                 </div>
               ) : (
-                citasHoy.map((cita: any, index: number) => {
-                  const isPast = nextCita && cita.hora < (nextCita?.hora || "");
+                citasHoyStr.map((cita: any, index: number) => {
                   const isNext = nextCita?.id === cita.id;
                   
                   return (
@@ -174,19 +164,19 @@ export default async function DashboardHome() {
                         isNext ? 'bg-background-secondary border-border/50' : ''
                       }`}
                     >
-                      <Avatar fallback={getInitials((cita as any).cliente?.nombre || "C")} className="flex-shrink-0" />
+                      <Avatar fallback={getInitials((cita as any).client?.name || "C")} className="flex-shrink-0" />
                       
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-text-primary truncate">{(cita as any).cliente?.nombre}</p>
-                        <p className="text-xs text-text-secondary">{(cita as any).servicio?.nombre} · {cita.hora.substring(0, 5)}</p>
+                        <p className="text-sm font-medium text-text-primary truncate">{(cita as any).client?.name}</p>
+                        <p className="text-xs text-text-secondary">{(cita as any).service?.name} · {new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                       </div>
 
                       <div className="text-right flex-shrink-0">
-                        <p className="text-sm font-mono text-text-primary">${Number(cita.precio_cobrado).toLocaleString()}</p>
+                        <p className="text-sm font-mono text-text-primary">${Number(cita.price_charged).toLocaleString()}</p>
                         <p className={`text-xs ${
                           isNext ? 'text-warning' : 'text-text-tertiary'
                         }`}>
-                          {isNext ? `en ${getTimeLeft(cita.hora)}` : cita.estado === 'completada' ? 'Completada' : cita.hora.substring(0, 5)}
+                          {isNext ? `en ${getTimeLeft(cita.scheduled_at)}` : cita.status === 'completed' ? 'Completada' : new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                         </p>
                       </div>
                       
@@ -239,15 +229,6 @@ export default async function DashboardHome() {
                     <p className="text-xs font-medium text-accent">¡Recupera a Juan!</p>
                     <p className="text-[10px] text-accent/70 mt-0.5">No nos visita hace 22 días. ¿Enviar recordatorio?</p>
                     <Button variant="primary" className="w-full mt-3 py-1.5 text-xs h-auto">Contactar ahora</Button>
-                 </div>
-                 <div className="p-3 bg-background-tertiary rounded-lg border border-border">
-                    <div className="flex justify-between items-start">
-                       <div>
-                          <p className="text-xs font-medium text-text-primary">Aniversario: Carlos</p>
-                          <p className="text-[10px] text-text-tertiary mt-0.5">Hoy cumple 1 año como cliente.</p>
-                       </div>
-                       <Badge variant="info">VIP</Badge>
-                    </div>
                  </div>
               </div>
            </Card>

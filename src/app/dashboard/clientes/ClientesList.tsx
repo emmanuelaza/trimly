@@ -10,8 +10,8 @@ export default function ClientesList({ clientes }: { clientes: any[] }) {
   const [filter, setFilter] = useState('Todos');
 
   const filteredClientes = clientes.filter((c: any) =>
-    (c.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (c.telefono && c.telefono.includes(searchTerm))) &&
+    (c.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (c.phone && c.phone.includes(searchTerm))) &&
     (filter === 'Todos' || (filter==='VIP' && c.vip))
   );
 
@@ -64,13 +64,13 @@ export default function ClientesList({ clientes }: { clientes: any[] }) {
                 
                 {/* Meta info */}
                 <div className="flex items-center gap-4 flex-1">
-                  <Avatar initials={getInitials(c.nombre)} />
+                  <Avatar initials={getInitials(c.name)} />
                   <div>
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-semibold text-text-primary">{c.nombre}</p>
+                      <p className="text-sm font-semibold text-text-primary">{c.name}</p>
                       {c.vip && <Badge variant="info">VIP</Badge>}
                     </div>
-                    <p className="text-xs text-text-tertiary mt-0.5">{c.telefono || "Sin teléfono"}</p>
+                    <p className="text-xs text-text-tertiary mt-0.5">{c.phone || "Sin teléfono"}</p>
                   </div>
                 </div>
 
