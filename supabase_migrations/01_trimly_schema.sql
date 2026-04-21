@@ -24,6 +24,9 @@ CREATE TABLE IF NOT EXISTS barbershops (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
+  address TEXT,
+  phone TEXT,
+  config JSONB DEFAULT '{}'::jsonb,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 

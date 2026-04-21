@@ -1,0 +1,75 @@
+import { NextResponse } from 'next/server';
+import { supabaseAdmin } from '@/lib/supabase/serviceRole';
+import { resend } from '@/lib/resend';
+import { getBaseEmailTemplate } from '@/lib/emailTemplates';
+
+export async function GET(req: Request) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  try {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const dateStr = yesterday.toISOString().split('T')[0];
+
+    // Fetch appointments completed exactly yesterday
+    const { data: appointments, error } = await supabaseAdmin
+      .from('appointments')
+      .select(`
+        id, 
+        barbershop_id,
+        client:clients(name, email),
+        service:services(name)
+      `)
+      .gte('scheduled_at', `${dateStr}T00:00:00Z`)
+      .lte('scheduled_at', `${dateStr}T23:59:59Z`)
+      .eq('status', 'completed');
+
+    if (error) throw error;
+    if (!appointments || appointments.length === 0) return NextResponse.json({ sent: 0 });
+
+    let sentCount = 0;
+
+    for (const app of appointments) {
+      const { data: automation } = await supabaseAdmin
+        .from('automations')
+        .select('is_active')
+        .eq('barbershop_id', app.barbershop_id)
+        .eq('type', 'post_visit')
+        .single();
+
+      if (automation?.is_active && app.client?.email) {
+        const html = getBaseEmailTemplate(
+          "¿Cómo estuvo tu visita?",
+          `<p>Hola <strong>${app.client.name}</strong>, gracias por visitarnos ayer para tu <strong>${app.service?.name}</strong>.</p>
+           <p>Nos encantaría saber tu opinión. Tu feedback nos ayuda a mejorar cada día.</p>`,
+           "Dejar Reseña",
+           "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID" // Placeholder
+        );
+
+        await resend.emails.send({
+          from: 'Trimly <onboarding@resend.dev>',
+          to: app.client.email,
+          subject: '¿Qué te pareció tu servicio en Trimly?',
+          html
+        });
+
+        await supabaseAdmin.from('automation_logs').insert({
+          automation_type: 'post_visit',
+          appointment_id: app.id,
+          client_id: (app as any).client_id,
+          channel: 'email'
+        });
+
+        sentCount++;
+      }
+    }
+
+    return NextResponse.json({ sent: sentCount });
+  } catch (err: any) {
+    console.error('CRON ERROR (Post-Visit):', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

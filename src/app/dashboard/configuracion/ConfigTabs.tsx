@@ -48,7 +48,15 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Nombre Comercial</label>
-                <input name="name" defaultValue={barbershop?.name || "Mi Barbería"} className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
+                <input name="name" defaultValue={barbershop?.name || ""} className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase">Dirección</label>
+                <input name="address" defaultValue={barbershop?.address || ""} placeholder="Calle 123..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase">Teléfono</label>
+                <input name="phone" defaultValue={barbershop?.phone || ""} placeholder="+57..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
             </div>
             <div className="flex justify-end">
