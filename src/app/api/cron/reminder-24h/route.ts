@@ -43,15 +43,18 @@ export async function GET(req: Request) {
         .eq('type', 'reminder_24h')
         .single();
 
-      if (automation?.is_active && app.client?.email) {
+      const clientData = app.client as any;
+      const serviceData = app.service as any;
+
+      if (automation?.is_active && clientData?.email) {
         const time = new Date(app.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
         // 4. Send Email
         const html = getBaseEmailTemplate(
           "Recordatorio de tu Cita",
-          `<p>Hola <strong>${app.client.name}</strong>, te recordamos tu cita para mañana en Trimly:</p>
+          `<p>Hola <strong>${clientData.name}</strong>, te recordamos tu cita para mañana en Trimly:</p>
            <div class="highlight">
-             <p><span class="label">Servicio</span><br>${app.service?.name}</p>
+             <p><span class="label">Servicio</span><br>${serviceData?.name}</p>
              <p><span class="label">Fecha</span><br>${dateStr}</p>
              <p><span class="label">Hora</span><br>${time}</p>
            </div>
@@ -60,7 +63,7 @@ export async function GET(req: Request) {
 
         await resend.emails.send({
           from: 'Trimly <onboarding@resend.dev>',
-          to: app.client.email,
+          to: clientData.email,
           subject: 'Recordatorio: Tu cita en Trimly',
           html
         });

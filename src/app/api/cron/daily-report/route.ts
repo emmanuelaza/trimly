@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         // 3. Calculate today's stats
         const { data: appointments } = await supabaseAdmin
           .from('appointments')
-          .select('price_charged, status')
+          .select('price_charged, status, service:services(name)')
           .eq('barbershop_id', shop.id)
           .gte('scheduled_at', `${dateStr}T00:00:00Z`)
           .lte('scheduled_at', `${dateStr}T23:59:59Z`);
@@ -44,10 +44,14 @@ export async function GET(req: Request) {
         const ingresos = appointments?.reduce((acc, a) => acc + (Number(a.price_charged) || 0), 0) || 0;
         const noShows = appointments?.filter(a => a.status === 'no_show').length || 0;
 
-        // 4. Get owner email (need to join with auth.users or check if we have it in barbershops - currently we have owner_id)
-        // For simplicity, let's assume we send it to a test address or we have a way to get owner email.
-        // In a real app, we'd query auth.users or have an email field in barbershops.
-        
+        // Calculate most popular service
+        const serviceCounts: Record<string, number> = {};
+        appointments?.forEach(a => {
+           const sName = (a as any).service?.name || 'Varios';
+           serviceCounts[sName] = (serviceCounts[sName] || 0) + 1;
+        });
+        const popularService = Object.entries(serviceCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || 'N/A';
+
         const html = getBaseEmailTemplate(
           `Resumen del Día - ${shop.name}`,
           `<p>Aquí tienes el resumen de actividad de hoy, <strong>${dateStr}</strong>:</p>
@@ -55,8 +59,9 @@ export async function GET(req: Request) {
              <p><span class="label">Citas Totales</span><br>${totalCitas}</p>
              <p><span class="label">Ingresos</span><br>$${ingresos.toLocaleString()}</p>
              <p><span class="label">No-shows</span><br>${noShows}</p>
+             <p><span class="label">Servicio Estrella</span><br>${popularService}</p>
            </div>
-           <p>¡Buen trabajo hoy!</p>`,
+           <p>¡Buen trabajo hoy! Las métricas muestran un rendimiento sólido.</p>`,
            "Ver en Dashboard",
            `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`
         );

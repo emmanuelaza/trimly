@@ -79,6 +79,21 @@ export async function toggleAutomation(type: string, is_active: boolean) {
   else revalidatePath("/dashboard/automatizaciones");
 }
 
+export async function initializeAutomations(barbershopId: string) {
+  const supabase = await createClient();
+  const types = ['reminder_24h', 'confirmation', 'post_visit', 'daily_report', 'recover_inactive', 'birthday'];
+  
+  const automations = types.map(t => ({
+    barbershop_id: barbershopId,
+    type: t,
+    is_active: false,
+    config: {}
+  }));
+
+  const { error } = await supabase.from("automations").upsert(automations, { onConflict: 'barbershop_id, type' });
+  if (error) console.error("Error initializing automations", error);
+}
+
 export async function getAutomationStats() {
   const barbershopId = await getBarbershopId();
   if (!barbershopId) return null;
@@ -87,23 +102,77 @@ export async function getAutomationStats() {
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  // 1. Citas recordadas (Count of logs with type 'reminder_24h' this month)
+  // 1. Citas recordadas
   const { count: recordadas } = await supabase
     .from("automation_logs")
     .select("*", { count: 'exact', head: true })
     .eq("automation_type", "reminder_24h")
     .gte("sent_at", startOfMonth);
 
-  // 2. Clientes recuperados (Mocked logic for now, count of recover_inactive logs)
-  const { count: recuperados } = await supabase
+  // 2. Clientes recuperados: Quienes recibieron 'recover_inactive' y luego COMPLETARON una cita
+  const { data: logsRecuperacion } = await supabase
     .from("automation_logs")
-    .select("*", { count: 'exact', head: true })
+    .select("client_id, sent_at")
     .eq("automation_type", "recover_inactive")
     .gte("sent_at", startOfMonth);
 
+  let recuperadosCount = 0;
+  if (logsRecuperacion && logsRecuperacion.length > 0) {
+    for (const log of logsRecuperacion) {
+      const { count } = await supabase
+        .from("appointments")
+        .select("*", { count: 'exact', head: true })
+        .eq("client_id", log.client_id)
+        .eq("status", "completed")
+        .gt("scheduled_at", log.sent_at);
+      if (count && count > 0) recuperadosCount++;
+    }
+  }
+
+  // 3. No-shows evitados (estimado): Citas con recordatorio enviado que terminaron en 'completed'
+  const { data: remindedApps } = await supabase
+    .from("automation_logs")
+    .select("appointment_id")
+    .eq("automation_type", "reminder_24h")
+    .gte("sent_at", startOfMonth);
+  
+  let realEvitados = 0;
+  if (remindedApps && remindedApps.length > 0) {
+     const ids = remindedApps.map(r => r.appointment_id).filter(Boolean);
+     const { count } = await supabase
+       .from("appointments")
+       .select("*", { count: 'exact', head: true })
+       .in("id", ids)
+       .eq("status", "completed");
+     realEvitados = count || 0;
+  }
+
   return {
     recordadas: recordadas || 0,
-    recuperados: recuperados || 0,
-    evitados: Math.round((recordadas || 0) * 0.15) // Estimation
+    recuperados: recuperadosCount,
+    evitados: realEvitados
   };
+}
+
+export async function completeOnboarding(businessName: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("No user found");
+
+  // 1. Create Barbershop
+  const { data: bShop, error: bError } = await supabase
+    .from("barbershops")
+    .insert({
+      name: businessName,
+      owner_id: user.id
+    })
+    .select()
+    .single();
+
+  if (bError) throw bError;
+
+  // 2. Initialize Automations
+  await initializeAutomations(bShop.id);
+  
+  revalidatePath("/dashboard");
 }

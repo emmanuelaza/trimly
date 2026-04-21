@@ -89,15 +89,18 @@ export async function createAppointment(formData: FormData): Promise<void> {
          .eq('id', data.id)
          .single();
 
-       if (details?.client?.email) {
+       const clientData = details?.client as any;
+       const serviceData = details?.service as any;
+
+       if (details && clientData?.email) {
           const time = new Date(details.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
           const dateStr = new Date(details.scheduled_at).toLocaleDateString();
           
           const html = getBaseEmailTemplate(
             "Confirmación de Reserva",
-            `<p>¡Hola <strong>${details.client.name}</strong>! Tu cita ha sido confirmada:</p>
+            `<p>¡Hola <strong>${clientData.name}</strong>! Tu cita ha sido confirmada:</p>
              <div class="highlight">
-               <p><span class="label">Servicio</span><br>${details.service?.name}</p>
+               <p><span class="label">Servicio</span><br>${serviceData?.name}</p>
                <p><span class="label">Fecha</span><br>${dateStr}</p>
                <p><span class="label">Hora</span><br>${time}</p>
              </div>
@@ -106,7 +109,7 @@ export async function createAppointment(formData: FormData): Promise<void> {
 
           await resend.emails.send({
             from: 'Trimly <onboarding@resend.dev>',
-            to: details.client.email,
+            to: clientData.email,
             subject: 'Tu reserva en Trimly está confirmada',
             html
           });
@@ -171,50 +174,100 @@ export async function getReportStats() {
   const barbershopId = await getBarbershopId();
   if (!barbershopId) return null;
 
-  const supabase = await createServerClient();
+  const supabase = await createClient();
   const now = new Date();
   
-  // Current month
+  // Ranges
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  // Previous month
   const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
   const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
 
-  // Queries
-  const [currentMonthCitas, prevMonthCitas, services, barbers] = await Promise.all([
-    supabase.from("appointments").select("price_charged, status, created_at").eq("barbershop_id", barbershopId).gte("scheduled_at", startOfMonth),
-    supabase.from("appointments").select("price_charged").eq("barbershop_id", barbershopId).gte("scheduled_at", startOfPrevMonth).lte("scheduled_at", endOfPrevMonth),
-    supabase.from("services").select("id, name"),
-    supabase.from("barbers").select("id, name")
-  ]);
+  // 1. Fetch appointments for this month (all statuses)
+  const { data: citas, error } = await supabase
+    .from("appointments")
+    .select(`
+      price_charged, 
+      status, 
+      scheduled_at,
+      service_id,
+      barber_id,
+      service:services(name),
+      barber:barbers(name)
+    `)
+    .eq("barbershop_id", barbershopId)
+    .gte("scheduled_at", startOfMonth);
 
-  const currentIngresos = currentMonthCitas.data?.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0) || 0;
-  const prevIngresos = prevMonthCitas.data?.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0) || 0;
-  
-  const totalCitas = currentMonthCitas.data?.length || 0;
-  const avgTicket = totalCitas > 0 ? currentIngresos / totalCitas : 0;
+  // 2. Income previous month
+  const { data: prevMonthCitas } = await supabase
+    .from("appointments")
+    .select("price_charged")
+    .eq("barbershop_id", barbershopId)
+    .eq("status", "completed")
+    .gte("scheduled_at", startOfPrevMonth)
+    .lte("scheduled_at", endOfPrevMonth);
 
-  // New clients
-  const { count: nuevosCount } = await supabase
+  // 3. New clients current month
+  const { data: nuevosClientes } = await supabase
     .from("clients")
-    .select("*", { count: 'exact', head: true })
+    .select("created_at")
     .eq("barbershop_id", barbershopId)
     .gte("created_at", startOfMonth);
 
-  // Top Services (Aggregated from current month citas)
-  // Note: For production, this should be a DB view or more complex join, but doing it in JS for now
-  const serviceCounts: Record<string, { n: string, t: number, c: number }> = {};
-  currentMonthCitas.data?.forEach((c: any) => {
-    // If services/barbers were joined in query
-  });
+  if (error) {
+    console.error(error);
+    return null;
+  }
+
+  // Aggregations
+  const completed = citas?.filter(c => c.status === 'completed') || [];
+  const noShows = citas?.filter(c => c.status === 'no_show') || [];
   
+  const currentIngresos = completed.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0);
+  const prevIngresos = prevMonthCitas?.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0) || 0;
+  
+  const totalCitas = completed.length;
+  const totalIntento = citas?.length || 0;
+  const noShowRate = totalIntento > 0 ? (noShows.length / totalIntento) * 100 : 0;
+  const avgTicket = totalCitas > 0 ? currentIngresos / totalCitas : 0;
+
+  // Services distribution
+  const serviceMap: Record<string, { n: string, c: number, t: number }> = {};
+  completed.forEach((c: any) => {
+    const sId = c.service_id || 'unknown';
+    if (!serviceMap[sId]) serviceMap[sId] = { n: c.service?.name || "General", c: 0, t: 0 };
+    serviceMap[sId].c++;
+    serviceMap[sId].t += Number(c.price_charged) || 0;
+  });
+  const serviciosPopular = Object.values(serviceMap).sort((a, b) => b.c - a.c).slice(0, 5);
+
+  // Barbers distribution
+  const barberMap: Record<string, { n: string, c: number }> = {};
+  completed.forEach((c: any) => {
+    const bId = c.barber_id || 'unassigned';
+    if (!barberMap[bId]) barberMap[bId] = { n: c.barber?.name || "Sin asignar", c: 0 };
+    barberMap[bId].c++;
+  });
+  const citasPorBarbero = Object.values(barberMap).sort((a, b) => b.c - a.c);
+
+  // Weekly clients
+  const weeklyClients: Record<string, number> = {};
+  nuevosClientes?.forEach(c => {
+    const d = new Date(c.created_at);
+    const day = d.getDate();
+    const week = Math.ceil(day / 7);
+    const key = `Semana ${week}`;
+    weeklyClients[key] = (weeklyClients[key] || 0) + 1;
+  });
+
   return {
     ingresos: currentIngresos,
     ingPrev: prevIngresos,
     citas: totalCitas,
     ticket: avgTicket,
-    nuevos: nuevosCount || 0,
-    servicios: [], // Expanded later
-    clientes: [] 
+    nuevos: nuevosClientes?.length || 0,
+    noShowRate,
+    servicios: serviciosPopular,
+    barberos: citasPorBarbero,
+    clientesSemanales: Object.entries(weeklyClients).map(([label, value]) => ({ label, value }))
   };
 }

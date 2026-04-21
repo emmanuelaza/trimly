@@ -12,7 +12,18 @@ export default function OnboardingPage() {
 
   const handleNext = () => setPaso(p => Math.min(p + 1, 3));
   const handleSkip = () => router.push('/dashboard');
-  const handleFinish = () => router.push('/dashboard');
+  
+  const handleFinish = async () => {
+    try {
+      const { data: { user } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
+      const negocio = user?.user_metadata?.negocio || "Mi Barbería";
+      await (await import('@/app/actions/barbershops')).completeOnboarding(negocio);
+      router.push('/dashboard');
+    } catch(e) {
+      console.error(e);
+      router.push('/dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-4">

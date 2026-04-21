@@ -40,10 +40,13 @@ export async function GET(req: Request) {
         .eq('type', 'post_visit')
         .single();
 
-      if (automation?.is_active && app.client?.email) {
+      const clientData = app.client as any;
+      const serviceData = app.service as any;
+
+      if (automation?.is_active && clientData?.email) {
         const html = getBaseEmailTemplate(
           "¿Cómo estuvo tu visita?",
-          `<p>Hola <strong>${app.client.name}</strong>, gracias por visitarnos ayer para tu <strong>${app.service?.name}</strong>.</p>
+          `<p>Hola <strong>${clientData.name}</strong>, gracias por visitarnos ayer para tu <strong>${serviceData?.name}</strong>.</p>
            <p>Nos encantaría saber tu opinión. Tu feedback nos ayuda a mejorar cada día.</p>`,
            "Dejar Reseña",
            "https://search.google.com/local/writereview?placeid=YOUR_PLACE_ID" // Placeholder
@@ -51,7 +54,7 @@ export async function GET(req: Request) {
 
         await resend.emails.send({
           from: 'Trimly <onboarding@resend.dev>',
-          to: app.client.email,
+          to: clientData.email,
           subject: '¿Qué te pareció tu servicio en Trimly?',
           html
         });
