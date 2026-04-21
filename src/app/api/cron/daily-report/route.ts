@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/serviceRole';
-import { resend } from '@/lib/resend';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
+import { getResend } from '@/lib/resend';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const resend = getResend();
+    
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
 
@@ -66,11 +71,10 @@ export async function GET(req: Request) {
            `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard`
         );
 
-        // Send to owner (Mocking owner email for now or using a fixed one for the user)
-        // In full implementation, we'd fetch shop.owner_email
+        // Send to owner (Placeholder email for now)
         await resend.emails.send({
           from: 'Trimly <onboarding@resend.dev>',
-          to: 'owner_placeholder@trimly.co', // This would be shop.owner_email
+          to: 'owner_placeholder@trimly.co',
           subject: `Reporte Diario: ${shop.name}`,
           html
         });
@@ -79,9 +83,9 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ processed: processedCount });
+    return NextResponse.json({ success: true, processed: processedCount });
   } catch (err: any) {
     console.error('CRON ERROR (Daily Report):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error', details: err.message }, { status: 500 });
   }
 }

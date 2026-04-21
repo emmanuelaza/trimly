@@ -1,15 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/serviceRole';
-import { resend } from '@/lib/resend';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
+import { getResend } from '@/lib/resend';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const resend = getResend();
+    
     const fortyFiveDaysAgo = new Date();
     fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
     
@@ -51,7 +56,7 @@ export async function GET(req: Request) {
             `<p>Hola <strong>${client.name}</strong>, hace tiempo no nos visitas. ¡Te echamos de menos! 💈</p>
              <p>Queremos invitarte a volver y por eso te regalamos un <strong>10% de descuento</strong> en tu siguiente servicio.</p>`,
              "Agendar Cita",
-             `${process.env.NEXT_PUBLIC_SITE_URL}/onboarding` // Link to booking or shop
+             `${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`
           );
 
           await resend.emails.send({
@@ -72,9 +77,9 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ sent: sentCount });
+    return NextResponse.json({ success: true, sent: sentCount });
   } catch (err: any) {
     console.error('CRON ERROR (Recover Inactive):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error', details: err.message }, { status: 500 });
   }
 }

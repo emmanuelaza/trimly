@@ -3,9 +3,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { getBaseEmailTemplate } from "@/lib/emailTemplates";
-import { supabaseAdmin } from "@/lib/supabase/serviceRole";
+import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 
 export async function getAppointments() {
   const barbershopId = await getBarbershopId();
@@ -74,6 +74,9 @@ export async function createAppointment(formData: FormData): Promise<void> {
 
   // ─── Trigger Confirmation Automation ───
   try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const resend = getResend();
+
     const { data: auto } = await supabaseAdmin
       .from('automations')
       .select('is_active')

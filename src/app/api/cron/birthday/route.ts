@@ -1,26 +1,28 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/serviceRole';
-import { resend } from '@/lib/resend';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
+import { getResend } from '@/lib/resend';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
-export async function GET(req: Request) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const resend = getResend();
+    
     const now = new Date();
     const month = now.getMonth() + 1;
     const day = now.getDate();
 
-    // 1. Fetch clients with birthday today
-    // Using a raw RPC or complex filter if needed, but for now filtering via raw SQL logic in filter
     const { data: clients, error } = await supabaseAdmin
       .from('clients')
       .select('id, name, email, barbershop_id, birthdate');
       
-    // Filter manually for birthday safety
     const todayClients = clients?.filter(c => {
       if (!c.birthdate) return false;
       const b = new Date(c.birthdate);
@@ -31,7 +33,6 @@ export async function GET(req: Request) {
     if (!todayClients || todayClients.length === 0) return NextResponse.json({ sent: 0 });
 
     let sentCount = 0;
-
     for (const client of todayClients) {
       const { data: automation } = await supabaseAdmin
         .from('automations')
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
            <p>Te regalamos un <strong>15% de descuento exclusivo</strong> en tu próxima visita durante este mes.</p>
            <p>Código: <strong style="font-size: 18px; color: #C9F53B;">CUMPLE${day}${month}</strong></p>`,
            "Agendar Cumpleaños",
-           `${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`
+           `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard/agenda`
         );
 
         await resend.emails.send({
@@ -67,9 +68,9 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ sent: sentCount });
+    return NextResponse.json({ success: true, sent: sentCount });
   } catch (err: any) {
     console.error('CRON ERROR (Birthday):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error', details: err.message }, { status: 500 });
   }
 }

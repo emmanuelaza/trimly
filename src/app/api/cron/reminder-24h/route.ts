@@ -1,16 +1,20 @@
 import { NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase/serviceRole';
-import { resend } from '@/lib/resend';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
+import { getResend } from '@/lib/resend';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
-export async function GET(req: Request) {
-  // 1. Basic Authorization
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+export const dynamic = 'force-dynamic';
 
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const supabaseAdmin = getSupabaseAdmin();
+    const resend = getResend();
+    
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateStr = tomorrow.toISOString().split('T')[0];
@@ -80,9 +84,9 @@ export async function GET(req: Request) {
       }
     }
 
-    return NextResponse.json({ sent: sentCount });
+    return NextResponse.json({ success: true, sent: sentCount });
   } catch (err: any) {
     console.error('CRON ERROR (24h Reminder):', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal error', details: err.message }, { status: 500 });
   }
 }
