@@ -2,8 +2,8 @@ import { Sidebar, BottomNav } from '@/components/layout/DashboardNav';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { NewAppointmentModal } from '@/components/agenda/NewAppointmentModal';
-import { getClientes } from '@/app/actions/clientes';
-import { getServicios } from '@/app/actions/servicios';
+import { getClients } from '@/app/actions/clients';
+import { getServices } from '@/app/actions/services';
 import { Suspense } from 'react';
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -18,8 +18,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   // Fetch data needed for the global new-appointment modal
   const [clientes, servicios] = await Promise.all([
-    getClientes(),
-    getServicios(),
+    getClients(),
+    getServices(),
   ]);
 
   return (

@@ -1,9 +1,9 @@
-import { getCitas } from '@/app/actions/citas';
+import { getAppointments } from '@/app/actions/appointments';
 import { DollarSign, ArrowUpRight, ArrowDownRight, Printer, Download } from 'lucide-react';
 import { StatCard, Card, Badge, Button, Avatar } from '@/components/ui/RedesignComponents';
 
 export default async function IngresosPage() {
-  const citas = await getCitas();
+  const citas = await getAppointments();
 
   const todayStr = new Date().toISOString().split('T')[0];
   const currentMonthStr = todayStr.substring(0, 7);
@@ -13,14 +13,14 @@ export default async function IngresosPage() {
   const firstDay = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
   const firstDayStr = firstDay.toISOString().split('T')[0];
 
-  const citasHoy = citas.filter((c: any) => c.fecha === todayStr);
-  const ingresosHoy = citasHoy.reduce((acc: number, c: any) => acc + (Number(c.precio_cobrado) || 0), 0);
+  const citasHoy = citas.filter((c: any) => c.scheduled_at.startsWith(todayStr));
+  const ingresosHoy = citasHoy.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
-  const citasSemana = citas.filter((c: any) => c.fecha && c.fecha >= firstDayStr && c.fecha <= todayStr);
-  const ingresosSemana = citasSemana.reduce((acc: number, c: any) => acc + (Number(c.precio_cobrado) || 0), 0);
+  const citasSemana = citas.filter((c: any) => c.scheduled_at && c.scheduled_at >= firstDayStr && c.scheduled_at <= (todayStr + 'T23:59:59'));
+  const ingresosSemana = citasSemana.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
-  const citasMes = citas.filter((c: any) => c.fecha && c.fecha.startsWith(currentMonthStr));
-  const ingresosMes = citasMes.reduce((acc: number, c: any) => acc + (Number(c.precio_cobrado) || 0), 0);
+  const citasMes = citas.filter((c: any) => c.scheduled_at && c.scheduled_at.startsWith(currentMonthStr));
+  const ingresosMes = citasMes.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
@@ -127,19 +127,19 @@ export default async function IngresosPage() {
                       <tr key={c.id} className="hover:bg-background-tertiary/20 transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <Avatar initials={getInitials(c.cliente?.nombre || 'G')} className="w-8 h-8 opacity-70 group-hover:opacity-100 transition-opacity" />
+                            <Avatar initials={getInitials(c.client?.name || 'G')} className="w-8 h-8 opacity-70 group-hover:opacity-100 transition-opacity" />
                             <div>
-                               <p className="text-sm font-medium text-text-primary">{c.cliente?.nombre || 'Cliente General'}</p>
-                               <p className="text-xs text-text-tertiary">{c.servicio?.nombre || 'Servicio'}</p>
+                               <p className="text-sm font-medium text-text-primary">{c.client?.name || 'Cliente General'}</p>
+                               <p className="text-xs text-text-tertiary">{c.service?.name || 'Servicio'}</p>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 hidden sm:table-cell">
-                          <p className="text-sm text-text-secondary">{c.fecha}</p>
-                          <p className="text-[10px] text-text-tertiary font-mono">{c.hora.substring(0, 5)}</p>
+                          <p className="text-sm text-text-secondary">{new Date(c.scheduled_at).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-text-tertiary font-mono">{new Date(c.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <p className="text-sm font-bold text-success font-mono">+${Number(c.precio_cobrado).toLocaleString()}</p>
+                          <p className="text-sm font-bold text-success font-mono">+${Number(c.price_charged).toLocaleString()}</p>
                           <Badge variant="success">Efectivo</Badge>
                         </td>
                       </tr>

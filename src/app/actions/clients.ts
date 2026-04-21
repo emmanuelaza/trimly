@@ -1,6 +1,4 @@
-"use server";
-
-import { createClient } from "@/lib/supabase/server";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
 
@@ -8,7 +6,7 @@ export async function getClients() {
   const barbershopId = await getBarbershopId();
   if (!barbershopId) return [];
 
-  const supabase = await createClient();
+  const supabase = await createServerClient();
   const { data, error } = await supabase
     .from("clients")
     .select("*")
@@ -33,7 +31,7 @@ export async function createClient(formData: FormData) {
 
   if (!nombre) return;
 
-  const supabase = await createClientSupabase();
+  const supabase = await createServerClient();
   const { error } = await supabase.from("clients").insert({
     barbershop_id: barbershopId,
     name: nombre,
@@ -47,13 +45,9 @@ export async function createClient(formData: FormData) {
 }
 
 export async function deleteClient(id: string) {
-  const supabase = await createClientSupabase();
+  const supabase = await createServerClient();
   const { error } = await supabase.from("clients").delete().eq("id", id);
   if (error) console.error(error);
   else revalidatePath("/dashboard/clientes");
 }
 
-// Renamed internally to not conflict with FormData createClient export
-async function createClientSupabase() {
-  return await createClient();
-}

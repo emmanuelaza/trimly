@@ -6,22 +6,22 @@ import { useTransition } from "react"
 import { Modal } from "@/components/ui/Modal"
 import { Button } from "@/components/ui/Button"
 import { Avatar } from "@/components/ui/Avatar"
-import { createCita } from "@/app/actions/citas"
+import { createAppointment } from "@/app/actions/appointments"
 import { Search, Check, Clock, ChevronRight, Plus, Scissors, Calendar, CheckCircle2 } from "lucide-react"
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Cliente {
   id: string
-  nombre: string
-  telefono?: string
-  ultima_visita?: string
+  name: string
+  phone?: string
+  last_visit?: string
 }
 
 interface Servicio {
   id: string
-  nombre: string
-  precio: number
-  duracion?: number
+  name: string
+  price: number
+  duration_minutes?: number
 }
 
 interface Props {
@@ -127,7 +127,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
   }, [search])
 
   const filtered = debouncedSearch.length > 0
-    ? clientes.filter(c => c.nombre?.toLowerCase().includes(debouncedSearch.toLowerCase()) || c.telefono?.includes(debouncedSearch))
+    ? clientes.filter(c => c.name?.toLowerCase().includes(debouncedSearch.toLowerCase()) || c.phone?.includes(debouncedSearch))
     : clientes.slice(0, 8)
 
   const getInitials = (name: string) => name ? name.split(" ").map(n => n[0]).join("").toUpperCase().substring(0, 2) : "?"
@@ -138,7 +138,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
       prev.find(x => x.id === s.id) ? prev.filter(x => x.id !== s.id) : [...prev, s]
     )
   }
-  const total = selectedServicios.reduce((acc, s) => acc + Number(s.precio), 0)
+  const total = selectedServicios.reduce((acc, s) => acc + Number(s.price), 0)
 
   /* ── Step 3 ─ Slots ────────────────────────────────────── */
   const slotGroups = React.useMemo(() => buildSlots(), [])
@@ -148,11 +148,11 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
     if (!selectedCliente || selectedServicios.length === 0 || !selectedSlot) return
     startTransition(async () => {
       const fd = new FormData()
-      fd.set("cliente_id", selectedCliente.id)
-      fd.set("servicio_id", selectedServicios[0].id)
+      fd.set("client_id", selectedCliente.id)
+      fd.set("service_id", selectedServicios[0].id)
       fd.set("fecha", selectedSlot.date)
       fd.set("hora", selectedSlot.value)
-      await createCita(fd)
+      await createAppointment(fd)
       setDone(true)
     })
   }
@@ -171,7 +171,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
           <div>
             <p className="text-lg font-semibold text-text-primary">¡Cita agendada!</p>
             <p className="text-sm text-text-secondary mt-1">
-              {selectedCliente?.nombre} · {selectedSlot?.display} · {selectedSlot?.date}
+              {selectedCliente?.name} · {selectedSlot?.display} · {selectedSlot?.date}
             </p>
           </div>
           <div className="flex gap-3 mt-2 w-full">
@@ -211,10 +211,10 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
                     onClick={() => { setSelectedCliente(c); setStep(2) }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-background-tertiary transition-colors text-left group"
                   >
-                    <Avatar fallback={getInitials(c.nombre)} size="sm" />
+                    <Avatar fallback={getInitials(c.name)} size="sm" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-primary">{c.nombre}</p>
-                      <p className="text-xs text-text-tertiary">{c.telefono || "Sin teléfono"}</p>
+                      <p className="text-sm font-medium text-text-primary">{c.name}</p>
+                      <p className="text-xs text-text-tertiary">{c.phone || "Sin teléfono"}</p>
                     </div>
                     <ChevronRight size={14} className="text-text-tertiary group-hover:text-text-secondary transition-colors flex-shrink-0" />
                   </button>
@@ -227,7 +227,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
                 {/* Add new client */}
                 <button
                   onClick={() => {
-                    const newC: Cliente = { id: "__new__", nombre: debouncedSearch || "Nuevo Cliente" }
+                    const newC: Cliente = { id: "__new__", name: debouncedSearch || "Nuevo Cliente" }
                     setSelectedCliente(newC)
                     setStep(2)
                   }}
@@ -249,8 +249,8 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
             <div className="space-y-3">
               {/* Selected client chip */}
               <div className="flex items-center gap-2 pb-3 border-b border-border">
-                <Avatar fallback={getInitials(selectedCliente?.nombre || "")} size="sm" />
-                <span className="text-sm font-medium text-text-primary">{selectedCliente?.nombre}</span>
+                <Avatar fallback={getInitials(selectedCliente?.name || "")} size="sm" />
+                <span className="text-sm font-medium text-text-primary">{selectedCliente?.name}</span>
                 <button onClick={() => { setStep(1); setSelectedServicios([]) }} className="ml-auto text-xs text-text-tertiary hover:text-text-secondary transition-colors">
                   Cambiar
                 </button>
@@ -276,8 +276,8 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
                         <Scissors size={16} className={isSelected ? "text-accent" : "text-text-tertiary"} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-text-primary"}`}>{s.nombre}</p>
-                        <p className="text-xs text-text-tertiary font-mono">${Number(s.precio).toLocaleString("es-CO")}</p>
+                        <p className={`text-sm font-medium ${isSelected ? "text-accent" : "text-text-primary"}`}>{s.name}</p>
+                        <p className="text-xs text-text-tertiary font-mono">${Number(s.price).toLocaleString("es-CO")}</p>
                       </div>
                       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isSelected ? "bg-accent border-accent" : "border-border-strong"}`}>
                         {isSelected && <Check size={11} strokeWidth={3} className="text-background-primary" />}
@@ -318,10 +318,10 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
             <div className="space-y-4">
               {/* Summary bar */}
               <div className="flex items-center gap-2 pb-3 border-b border-border flex-wrap">
-                <Avatar fallback={getInitials(selectedCliente?.nombre || "")} size="sm" />
-                <span className="text-sm font-medium text-text-primary">{selectedCliente?.nombre}</span>
+                <Avatar fallback={getInitials(selectedCliente?.name || "")} size="sm" />
+                <span className="text-sm font-medium text-text-primary">{selectedCliente?.name}</span>
                 <span className="text-text-tertiary">·</span>
-                <span className="text-sm text-text-secondary">{selectedServicios.map(s => s.nombre).join(" + ")}</span>
+                <span className="text-sm text-text-secondary">{selectedServicios.map(s => s.name).join(" + ")}</span>
                 <span className="ml-auto text-sm font-mono text-accent">${total.toLocaleString("es-CO")}</span>
               </div>
 
@@ -367,7 +367,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
                         {selectedSlot.display} — {selectedSlot.date}
                       </p>
                       <p className="text-xs text-text-secondary">
-                        {selectedCliente?.nombre} · {selectedServicios.map(s => s.nombre).join(" + ")} · ${total.toLocaleString("es-CO")}
+                        {selectedCliente?.name} · {selectedServicios.map(s => s.name).join(" + ")} · ${total.toLocaleString("es-CO")}
                       </p>
                     </div>
                   </div>
