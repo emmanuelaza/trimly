@@ -63,20 +63,27 @@ export async function getAutomations() {
 }
 
 export async function toggleAutomation(type: string, is_active: boolean) {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return;
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return;
 
-  const supabase = await createClient();
-  
-  // Upsert rule
-  const { error } = await supabase.from("automations").upsert({
-    barbershop_id: barbershopId,
-    type,
-    is_active
-  }, { onConflict: 'barbershop_id, type' });
+    const supabase = await createClient();
+    
+    // Upsert rule
+    const { error } = await supabase.from("automations").upsert({
+      barbershop_id: barbershopId,
+      type,
+      is_active
+    }, { onConflict: 'barbershop_id, type' });
 
-  if (error) console.error("Error toggling automation", error);
-  else revalidatePath("/dashboard/automatizaciones");
+    if (error) {
+      console.error("Error toggling automation:", error);
+    } else {
+      revalidatePath("/dashboard/automatizaciones");
+    }
+  } catch (error) {
+    console.error("Critical error in toggleAutomation:", error);
+  }
 }
 
 export async function initializeAutomations(barbershopId: string) {
@@ -95,63 +102,96 @@ export async function initializeAutomations(barbershopId: string) {
 }
 
 export async function getAutomationStats() {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return null;
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return null;
 
-  const supabase = await createClient();
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const supabase = await createClient();
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-  // 1. Citas recordadas
-  const { count: recordadas } = await supabase
-    .from("automation_logs")
-    .select("*", { count: 'exact', head: true })
-    .eq("automation_type", "reminder_24h")
-    .gte("sent_at", startOfMonth);
+    // 1. Citas recordadas (count direct)
+    const { count: recordadas, error: err1 } = await supabase
+      .from("automation_logs")
+      .select("*", { count: 'exact', head: true })
+      .eq("barbershop_id", barbershopId)
+      .eq("automation_type", "reminder_24h")
+      .gte("sent_at", startOfMonth);
 
-  // 2. Clientes recuperados: Quienes recibieron 'recover_inactive' y luego COMPLETARON una cita
-  const { data: logsRecuperacion } = await supabase
-    .from("automation_logs")
-    .select("client_id, sent_at")
-    .eq("automation_type", "recover_inactive")
-    .gte("sent_at", startOfMonth);
+    if (err1) console.error("Stats Error 1:", err1);
 
-  let recuperadosCount = 0;
-  if (logsRecuperacion && logsRecuperacion.length > 0) {
-    for (const log of logsRecuperacion) {
-      const { count } = await supabase
+    // 2. Clientes recuperados: Fetch unique client IDs who received recovery email
+    const { data: logsRecuperacion, error: err2 } = await supabase
+      .from("automation_logs")
+      .select("client_id, sent_at")
+      .eq("barbershop_id", barbershopId)
+      .eq("automation_type", "recover_inactive")
+      .gte("sent_at", startOfMonth);
+
+    if (err2) console.error("Stats Error 2:", err2);
+
+    let recuperadosCount = 0;
+    if (logsRecuperacion && logsRecuperacion.length > 0) {
+      const clientIds = Array.from(new Set(logsRecuperacion.map(l => l.client_id)));
+      
+      // Get all completed appointments for these clients after the startOfMonth
+      const { data: recentApps, error: err3 } = await supabase
         .from("appointments")
-        .select("*", { count: 'exact', head: true })
-        .eq("client_id", log.client_id)
+        .select("client_id, scheduled_at")
+        .in("client_id", clientIds)
         .eq("status", "completed")
-        .gt("scheduled_at", log.sent_at);
-      if (count && count > 0) recuperadosCount++;
+        .gte("scheduled_at", startOfMonth);
+
+      if (err3) console.error("Stats Error 3:", err3);
+
+      if (recentApps) {
+        // For each log, check if there's any appointment after sent_at
+        // Using a set of clientIds who were recovered to avoid double counting
+        const recoveredSet = new Set();
+        logsRecuperacion.forEach(log => {
+          const hasAppAfter = recentApps.some(app => 
+            app.client_id === log.client_id && 
+            new Date(app.scheduled_at) > new Date(log.sent_at)
+          );
+          if (hasAppAfter) recoveredSet.add(log.client_id);
+        });
+        recuperadosCount = recoveredSet.size;
+      }
     }
-  }
 
-  // 3. No-shows evitados (estimado): Citas con recordatorio enviado que terminaron en 'completed'
-  const { data: remindedApps } = await supabase
-    .from("automation_logs")
-    .select("appointment_id")
-    .eq("automation_type", "reminder_24h")
-    .gte("sent_at", startOfMonth);
-  
-  let realEvitados = 0;
-  if (remindedApps && remindedApps.length > 0) {
-     const ids = remindedApps.map(r => r.appointment_id).filter(Boolean);
-     const { count } = await supabase
-       .from("appointments")
-       .select("*", { count: 'exact', head: true })
-       .in("id", ids)
-       .eq("status", "completed");
-     realEvitados = count || 0;
-  }
+    // 3. No-shows evitados (estimado): Citas con recordatorio enviado que terminaron en 'completed'
+    const { data: remindedApps, error: err4 } = await supabase
+      .from("automation_logs")
+      .select("appointment_id")
+      .eq("barbershop_id", barbershopId)
+      .eq("automation_type", "reminder_24h")
+      .gte("sent_at", startOfMonth);
 
-  return {
-    recordadas: recordadas || 0,
-    recuperados: recuperadosCount,
-    evitados: realEvitados
-  };
+    if (err4) console.error("Stats Error 4:", err4);
+    
+    let realEvitados = 0;
+    if (remindedApps && remindedApps.length > 0) {
+       const ids = remindedApps.map(r => r.appointment_id).filter(Boolean);
+       if (ids.length > 0) {
+          const { count, error: err5 } = await supabase
+            .from("appointments")
+            .select("*", { count: 'exact', head: true })
+            .in("id", ids)
+            .eq("status", "completed");
+          if (err5) console.error("Stats Error 5:", err5);
+          realEvitados = count || 0;
+       }
+    }
+
+    return {
+      recordadas: recordadas || 0,
+      recuperados: recuperadosCount,
+      evitados: realEvitados
+    };
+  } catch (error) {
+    console.error("Critical error in getAutomationStats:", error);
+    return null;
+  }
 }
 
 export async function completeOnboarding(businessName: string) {

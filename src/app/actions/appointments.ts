@@ -174,103 +174,135 @@ export async function updateAppointmentStatus(id: string, status: string) {
 }
 
 export async function getReportStats() {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return null;
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) {
+      console.warn("No barbershopId found for current user in getReportStats");
+      return null;
+    }
 
-  const supabase = await createClient();
-  const now = new Date();
-  
-  // Ranges
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-  const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
+    const supabase = await createClient();
+    const now = new Date();
+    
+    // Ranges
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+    const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
 
-  // 1. Fetch appointments for this month (all statuses)
-  const { data: citas, error } = await supabase
-    .from("appointments")
-    .select(`
-      price_charged, 
-      status, 
-      scheduled_at,
-      service_id,
-      barber_id,
-      service:services(name),
-      barber:barbers(name)
-    `)
-    .eq("barbershop_id", barbershopId)
-    .gte("scheduled_at", startOfMonth);
+    // 1. Fetch appointments for this month (all statuses)
+    const { data: citas, error: err1 } = await supabase
+      .from("appointments")
+      .select(`
+        price_charged, 
+        status, 
+        scheduled_at,
+        service_id,
+        barber_id,
+        service:services(name),
+        barber:barbers(name)
+      `)
+      .eq("barbershop_id", barbershopId)
+      .gte("scheduled_at", startOfMonth);
 
-  // 2. Income previous month
-  const { data: prevMonthCitas } = await supabase
-    .from("appointments")
-    .select("price_charged")
-    .eq("barbershop_id", barbershopId)
-    .eq("status", "completed")
-    .gte("scheduled_at", startOfPrevMonth)
-    .lte("scheduled_at", endOfPrevMonth);
+    if (err1) {
+      console.error("Report Error - Fetch Citas:", err1);
+    }
 
-  // 3. New clients current month
-  const { data: nuevosClientes } = await supabase
-    .from("clients")
-    .select("created_at")
-    .eq("barbershop_id", barbershopId)
-    .gte("created_at", startOfMonth);
+    // 2. Income previous month
+    const { data: prevMonthCitas, error: err2 } = await supabase
+      .from("appointments")
+      .select("price_charged")
+      .eq("barbershop_id", barbershopId)
+      .eq("status", "completed")
+      .gte("scheduled_at", startOfPrevMonth)
+      .lte("scheduled_at", endOfPrevMonth);
 
-  if (error) {
-    console.error(error);
+    if (err2) {
+      console.error("Report Error - Fetch Prev Income:", err2);
+    }
+
+    // 3. New clients current month
+    const { data: nuevosClientes, error: err3 } = await supabase
+      .from("clients")
+      .select("created_at")
+      .eq("barbershop_id", barbershopId)
+      .gte("created_at", startOfMonth);
+
+    if (err3) {
+      console.error("Report Error - Fetch New Clients:", err3);
+    }
+
+    // Default object for empty state
+    const defaultStats = {
+      ingresos: 0,
+      ingPrev: 0,
+      citas: 0,
+      ticket: 0,
+      nuevos: 0,
+      noShowRate: 0,
+      servicios: [],
+      barberos: [],
+      clientesSemanales: []
+    };
+
+    if (!citas && !nuevosClientes) {
+       return defaultStats;
+    }
+
+    // Aggregations
+    const completed = citas?.filter(c => c.status === 'completed') || [];
+    const noShows = citas?.filter(c => c.status === 'no_show') || [];
+    
+    const currentIngresos = completed.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0);
+    const prevIngresos = prevMonthCitas?.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0) || 0;
+    
+    const totalCitas = completed.length;
+    const totalIntento = citas?.length || 0;
+    const noShowRate = totalIntento > 0 ? (noShows.length / totalIntento) * 100 : 0;
+    const avgTicket = totalCitas > 0 ? currentIngresos / totalCitas : 0;
+
+    // Services distribution
+    const serviceMap: Record<string, { n: string, c: number, t: number }> = {};
+    completed.forEach((c: any) => {
+      const sId = c.service_id || 'unknown';
+      if (!serviceMap[sId]) serviceMap[sId] = { n: c.service?.name || "General", c: 0, t: 0 };
+      serviceMap[sId].c++;
+      serviceMap[sId].t += Number(c.price_charged) || 0;
+    });
+    const serviciosPopular = Object.values(serviceMap).sort((a, b) => b.c - a.c).slice(0, 5);
+
+    // Barbers distribution
+    const barberMap: Record<string, { n: string, c: number }> = {};
+    completed.forEach((c: any) => {
+      const bId = c.barber_id || 'unassigned';
+      if (!barberMap[bId]) barberMap[bId] = { n: c.barber?.name || "Sin asignar", c: 0 };
+      barberMap[bId].c++;
+    });
+    const citasPorBarbero = Object.values(barberMap).sort((a, b) => b.c - a.c);
+
+    // Weekly clients
+    const weeklyClients: Record<string, number> = {};
+    nuevosClientes?.forEach(c => {
+      const d = new Date(c.created_at);
+      const day = d.getDate();
+      const week = Math.ceil(day / 7);
+      const key = `Semana ${week}`;
+      weeklyClients[key] = (weeklyClients[key] || 0) + 1;
+    });
+
+    return {
+      ingresos: currentIngresos,
+      ingPrev: prevIngresos,
+      citas: totalCitas,
+      ticket: avgTicket,
+      nuevos: nuevosClientes?.length || 0,
+      noShowRate,
+      servicios: serviciosPopular,
+      barberos: citasPorBarbero,
+      clientesSemanales: Object.entries(weeklyClients).map(([label, value]) => ({ label, value }))
+    };
+  } catch (error) {
+    console.error("Critical error in getReportStats:", error);
     return null;
   }
-
-  // Aggregations
-  const completed = citas?.filter(c => c.status === 'completed') || [];
-  const noShows = citas?.filter(c => c.status === 'no_show') || [];
-  
-  const currentIngresos = completed.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0);
-  const prevIngresos = prevMonthCitas?.reduce((acc, c) => acc + (Number(c.price_charged) || 0), 0) || 0;
-  
-  const totalCitas = completed.length;
-  const totalIntento = citas?.length || 0;
-  const noShowRate = totalIntento > 0 ? (noShows.length / totalIntento) * 100 : 0;
-  const avgTicket = totalCitas > 0 ? currentIngresos / totalCitas : 0;
-
-  // Services distribution
-  const serviceMap: Record<string, { n: string, c: number, t: number }> = {};
-  completed.forEach((c: any) => {
-    const sId = c.service_id || 'unknown';
-    if (!serviceMap[sId]) serviceMap[sId] = { n: c.service?.name || "General", c: 0, t: 0 };
-    serviceMap[sId].c++;
-    serviceMap[sId].t += Number(c.price_charged) || 0;
-  });
-  const serviciosPopular = Object.values(serviceMap).sort((a, b) => b.c - a.c).slice(0, 5);
-
-  // Barbers distribution
-  const barberMap: Record<string, { n: string, c: number }> = {};
-  completed.forEach((c: any) => {
-    const bId = c.barber_id || 'unassigned';
-    if (!barberMap[bId]) barberMap[bId] = { n: c.barber?.name || "Sin asignar", c: 0 };
-    barberMap[bId].c++;
-  });
-  const citasPorBarbero = Object.values(barberMap).sort((a, b) => b.c - a.c);
-
-  // Weekly clients
-  const weeklyClients: Record<string, number> = {};
-  nuevosClientes?.forEach(c => {
-    const d = new Date(c.created_at);
-    const day = d.getDate();
-    const week = Math.ceil(day / 7);
-    const key = `Semana ${week}`;
-    weeklyClients[key] = (weeklyClients[key] || 0) + 1;
-  });
-
-  return {
-    ingresos: currentIngresos,
-    ingPrev: prevIngresos,
-    citas: totalCitas,
-    ticket: avgTicket,
-    nuevos: nuevosClientes?.length || 0,
-    noShowRate,
-    servicios: serviciosPopular,
-    barberos: citasPorBarbero,
-    clientesSemanales: Object.entries(weeklyClients).map(([label, value]) => ({ label, value }))
-  };
 }

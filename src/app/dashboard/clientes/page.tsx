@@ -6,7 +6,15 @@ import { Card, Input, Button } from '@/components/ui/RedesignComponents';
 export const revalidate = 60;
 
 export default async function ClientesPage() {
-  const clientes = await getClients();
+  let clientes = [];
+  let error = false;
+
+  try {
+    clientes = await getClients();
+  } catch (err) {
+    console.error("Error loading ClientesPage:", err);
+    error = true;
+  }
 
   return (
     <div className="space-y-10">
@@ -18,28 +26,37 @@ export default async function ClientesPage() {
         </div>
       </div>
 
-      {/* Quick Add Section */}
-      <Card className="bg-background-secondary/30 border-dashed">
-        <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
-          <UserPlus size={16} /> Registro Rápido
-        </h2>
-        <form action={createClient} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
-            <Input id="nombre" name="nombre" placeholder="Ej. Juan Pérez" required />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">WhatsApp / Teléfono</label>
-            <Input id="telefono" name="telefono" placeholder="+57 300 000 0000" />
-          </div>
-          <Button type="submit" className="w-full">
-            <Plus size={18} /> Guardar Cliente
-          </Button>
-        </form>
-      </Card>
+      {error ? (
+        <Card className="bg-error/5 border-error/20 p-10 text-center">
+          <p className="text-error font-medium">No pudimos cargar los clientes.</p>
+          <p className="text-text-tertiary text-sm mt-2">Por favor, intenta recargar la página.</p>
+        </Card>
+      ) : (
+        <>
+          {/* Quick Add Section */}
+          <Card className="bg-background-secondary/30 border-dashed">
+            <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
+              <UserPlus size={16} /> Registro Rápido
+            </h2>
+            <form action={createClient} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
+                <Input id="nombre" name="nombre" placeholder="Ej. Juan Pérez" required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">WhatsApp / Teléfono</label>
+                <Input id="telefono" name="telefono" placeholder="+57 300 000 0000" />
+              </div>
+              <Button type="submit" className="w-full">
+                <Plus size={18} /> Guardar Cliente
+              </Button>
+            </form>
+          </Card>
 
-      {/* Clientes List (Client Component) */}
-      <ClientesList clientes={clientes} />
+          {/* Clientes List (Client Component) */}
+          <ClientesList clientes={clientes} />
+        </>
+      )}
     </div>
   );
 }

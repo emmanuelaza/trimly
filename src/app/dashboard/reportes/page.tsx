@@ -3,11 +3,27 @@ import ReportesClient from './ReportesClient';
 import { getReportStats } from '@/app/actions/appointments';
 
 export default async function ReportesPage() {
-  const stats = await getReportStats();
+  try {
+    const stats = await getReportStats();
 
-  if (!stats) {
-    return <div>No hay datos disponibles</div>;
+    if (!stats) {
+      // If null, it means no barbershop found or critical error
+      return (
+        <div className="p-10 text-center bg-background-secondary/30 rounded-xl border border-border-strong">
+          <h2 className="text-xl font-semibold text-text-primary mb-2">No hay datos disponibles</h2>
+          <p className="text-text-tertiary">Asegúrate de tener un negocio configurado.</p>
+        </div>
+      );
+    }
+
+    return <ReportesClient stats={stats} />;
+  } catch (error) {
+    console.error("Error in ReportesPage:", error);
+    return (
+      <div className="p-10 text-center bg-error/5 rounded-xl border border-error/20">
+        <h2 className="text-xl font-semibold text-error mb-2">Error al generar reporte</h2>
+        <p className="text-text-tertiary">Hubo un problema al procesar los datos.</p>
+      </div>
+    );
   }
-
-  return <ReportesClient stats={stats} />;
 }
