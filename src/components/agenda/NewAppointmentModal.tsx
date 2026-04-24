@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/Button"
 import { Avatar } from "@/components/ui/Avatar"
 import { createAppointment } from "@/app/actions/appointments"
 import { Search, Check, Clock, ChevronRight, Plus, Scissors, Calendar, CheckCircle2 } from "lucide-react"
+import toast from "react-hot-toast"
 
 /* ─── Types ─────────────────────────────────────────────── */
 interface Cliente {
@@ -152,8 +153,14 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
       fd.set("service_id", selectedServicios[0].id)
       fd.set("fecha", selectedSlot.date)
       fd.set("hora", selectedSlot.value)
-      await createAppointment(fd)
-      setDone(true)
+      
+      const result = await createAppointment(fd)
+      if (result.success) {
+        toast.success("Cita agendada correctamente")
+        setDone(true)
+      } else {
+        toast.error(result.error || "Error al agendar cita")
+      }
     })
   }
 

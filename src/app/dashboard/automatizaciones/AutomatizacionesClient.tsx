@@ -4,6 +4,7 @@ import React, { useTransition } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { toggleAutomation } from '@/app/actions/barbershops';
+import toast from 'react-hot-toast';
 
 interface AutomationDef {
   id: string;
@@ -31,7 +32,12 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: { 
 
   const handleToggle = (type: string, current: boolean) => {
     startTransition(async () => {
-      await toggleAutomation(type, !current);
+      try {
+        await toggleAutomation(type, !current);
+        toast.success(`${current ? 'Desactivado' : 'Activado'} correctamente`);
+      } catch (e) {
+        toast.error("Error al actualizar");
+      }
     });
   };
 

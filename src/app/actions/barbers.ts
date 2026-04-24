@@ -5,58 +5,93 @@ import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
 
 export async function getBarbers() {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return [];
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return [];
 
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("barbers")
-    .select("*")
-    .eq("barbershop_id", barbershopId)
-    .order("created_at", { ascending: true });
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("barbers")
+      .select("*")
+      .eq("barbershop_id", barbershopId)
+      .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("Error fetching barbers:", error);
+    if (error) {
+      console.error("Error fetching barbers:", error);
+      return [];
+    }
+    return data || [];
+  } catch (error) {
+    console.error("Error in getBarbers:", error);
     return [];
   }
-  return data || [];
 }
 
 export async function createBarber(formData: FormData) {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return;
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return { success: false, error: "No se encontró el ID de la barbería" };
 
-  const name = formData.get("nombre") as string;
-  const phone = formData.get("telefono") as string;
-  const email = formData.get("email") as string;
+    const name = formData.get("nombre") as string;
+    const phone = formData.get("telefono") as string;
+    const email = formData.get("email") as string;
 
-  if (!name) return;
+    if (!name) return { success: false, error: "El nombre es obligatorio" };
 
-  const supabase = await createClientSupabase();
-  const { error } = await supabase.from("barbers").insert({
-    barbershop_id: barbershopId,
-    name,
-    phone: phone || null,
-    email: email || null
-  });
+    const supabase = await createClient();
+    const { error } = await supabase.from("barbers").insert({
+      barbershop_id: barbershopId,
+      name,
+      phone: phone || null,
+      email: email || null
+    });
 
-  if (error) console.error(error);
-  else {
+    if (error) return { success: false, error: error.message };
+
     revalidatePath("/dashboard/barberos");
     revalidatePath("/dashboard/configuracion");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateBarber(id: string, formData: FormData) {
+  try {
+    const name = formData.get("nombre") as string;
+    const phone = formData.get("telefono") as string;
+    const email = formData.get("email") as string;
+
+    if (!name) return { success: false, error: "El nombre es obligatorio" };
+
+    const supabase = await createClient();
+    const { error } = await supabase.from("barbers").update({
+      name,
+      phone: phone || null,
+      email: email || null
+    }).eq("id", id);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/configuracion");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
 }
 
 export async function deleteBarber(id: string) {
-  const supabase = await createClientSupabase();
-  const { error } = await supabase.from("barbers").delete().eq("id", id);
-  if (error) console.error(error);
-  else {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.from("barbers").delete().eq("id", id);
+    
+    if (error) return { success: false, error: error.message };
+
     revalidatePath("/dashboard/barberos");
     revalidatePath("/dashboard/configuracion");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
   }
-}
-
-async function createClientSupabase() {
-  return await createClient();
 }

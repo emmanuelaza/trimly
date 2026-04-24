@@ -30,31 +30,64 @@ export async function getClients() {
 export async function createClient(formData: FormData) {
   try {
     const barbershopId = await getBarbershopId();
-    if (!barbershopId) return;
+    if (!barbershopId) return { success: false, error: "No se encontró el ID de la barbería" };
 
-    const nombre = formData.get("nombre") as string;
-    const telefono = formData.get("telefono") as string;
+    const name = formData.get("nombre") as string;
+    const phone = formData.get("telefono") as string;
     const email = formData.get("email") as string;
     const birthdate = formData.get("birthdate") as string;
 
-    if (!nombre) return;
+    if (!name) return { success: false, error: "El nombre es obligatorio" };
 
     const supabase = await createServerClient();
-    const { error } = await supabase.from("clients").insert({
+    const { error, data } = await supabase.from("clients").insert({
       barbershop_id: barbershopId,
-      name: nombre,
-      phone: telefono || null,
+      name,
+      phone: phone || null,
       email: email || null,
       birthdate: birthdate || null
-    });
+    }).select().single();
 
     if (error) {
       console.error("Error creating client:", error);
-    } else {
-      revalidatePath("/dashboard/clientes");
+      return { success: false, error: error.message };
     }
-  } catch (error) {
+    
+    revalidatePath("/dashboard/clientes");
+    return { success: true, data };
+  } catch (error: any) {
     console.error("Critical error in createClient:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateClient(id: string, formData: FormData) {
+  try {
+    const name = formData.get("nombre") as string;
+    const phone = formData.get("telefono") as string;
+    const email = formData.get("email") as string;
+    const birthdate = formData.get("birthdate") as string;
+
+    if (!name) return { success: false, error: "El nombre es obligatorio" };
+
+    const supabase = await createServerClient();
+    const { error } = await supabase.from("clients").update({
+      name,
+      phone: phone || null,
+      email: email || null,
+      birthdate: birthdate || null
+    }).eq("id", id);
+
+    if (error) {
+      console.error("Error updating client:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/dashboard/clientes");
+    return { success: true };
+  } catch (error: any) {
+    console.error("Critical error in updateClient:", error);
+    return { success: false, error: error.message };
   }
 }
 
@@ -62,13 +95,16 @@ export async function deleteClient(id: string) {
   try {
     const supabase = await createServerClient();
     const { error } = await supabase.from("clients").delete().eq("id", id);
+    
     if (error) {
       console.error("Error deleting client:", error);
-    } else {
-      revalidatePath("/dashboard/clientes");
+      return { success: false, error: error.message };
     }
-  } catch (error) {
+
+    revalidatePath("/dashboard/clientes");
+    return { success: true };
+  } catch (error: any) {
     console.error("Critical error in deleteClient:", error);
+    return { success: false, error: error.message };
   }
 }
-

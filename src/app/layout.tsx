@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   description: "Gestión inteligente y recurrencia para tu barbería.",
 };
 
+import ToasterProvider from "@/components/providers/ToasterProvider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${dmSans.variable} ${dmMono.variable}`}>
       <body className="bg-background-primary text-text-primary selection:bg-accent selection:text-background-primary transition-colors duration-300">
+        <ToasterProvider />
         {children}
       </body>
     </html>

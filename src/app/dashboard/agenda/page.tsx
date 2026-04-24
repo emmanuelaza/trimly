@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { Plus } from 'lucide-react';
 
+import { QuickAddAppointment } from '@/components/agenda/QuickAddAppointment';
+
 export const revalidate = 60;
 
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
@@ -32,39 +34,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         <p className="text-sm text-text-tertiary mt-1">Gestiona tus citas y disponibilidad.</p>
       </div>
 
-      {/* Quick-add form */}
-      <Card className="bg-background-secondary/30 border-dashed">
-        <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
-          <Plus size={16} /> Agendar rápido
-        </h2>
-        <form action={createAppointment} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Cliente</label>
-            <Select name="client_id" required>
-              <option value="">Seleccionar...</option>
-              {clientes.map((c: any) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Servicio</label>
-            <Select name="service_id" required>
-              <option value="">Servicio...</option>
-              {servicios.map((s: any) => <option key={s.id} value={s.id}>{s.name} (${Number(s.price).toLocaleString()})</option>)}
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Fecha</label>
-            <Input name="fecha" type="date" defaultValue={filterDate} required />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Hora</label>
-            <Input name="hora" type="time" required />
-          </div>
-          <Button type="submit" className="w-full">
-            <Plus size={18} /> Guardar
-          </Button>
-        </form>
-      </Card>
+      <QuickAddAppointment clientes={clientes} servicios={servicios} filterDate={filterDate} />
 
       {/* Main timeline — receives all citas for week view + day-filtered for day view */}
       <AgendaTimeline

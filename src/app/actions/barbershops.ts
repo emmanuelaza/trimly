@@ -23,26 +23,32 @@ export async function getBarbershop() {
 }
 
 export async function updateBarbershop(formData: FormData) {
-  const barbershopId = await getBarbershopId();
-  if (!barbershopId) return;
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return { success: false, error: "No se encontró el ID de la barbería" };
 
-  const name = formData.get("name") as string;
-  const address = formData.get("address") as string;
-  const phone = formData.get("phone") as string;
-  const config = formData.get("config") as string;
+    const name = formData.get("name") as string;
+    const address = formData.get("address") as string;
+    const phone = formData.get("phone") as string;
+    const config = formData.get("config") as string;
 
-  if (!name) return;
+    if (!name) return { success: false, error: "El nombre es obligatorio" };
 
-  const supabase = await createClient();
-  const { error } = await supabase.from("barbershops").update({
-    name,
-    address: address || null,
-    phone: phone || null,
-    config: config ? JSON.parse(config) : undefined
-  }).eq("id", barbershopId);
+    const supabase = await createClient();
+    const { error } = await supabase.from("barbershops").update({
+      name,
+      address: address || null,
+      phone: phone || null,
+      config: config ? JSON.parse(config) : undefined
+    }).eq("id", barbershopId);
 
-  if (error) console.error(error);
-  else revalidatePath("/dashboard/configuracion");
+    if (error) return { success: false, error: error.message };
+    
+    revalidatePath("/dashboard/configuracion");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
 }
 
 export async function getAutomations() {

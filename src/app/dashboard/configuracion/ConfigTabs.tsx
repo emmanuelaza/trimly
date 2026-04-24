@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { updateBarbershop } from '@/app/actions/barbershops';
 import { deleteService } from '@/app/actions/services';
 import { deleteBarber } from '@/app/actions/barbers';
+import toast from 'react-hot-toast';
 
 interface ConfigTab {
   id: string;
@@ -34,6 +35,22 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
     setOpenAccordion(prev => (prev === id ? null : id));
 
   function TabNegocio() {
+    const [isPending, startTransition] = React.useTransition();
+
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+      e.preventDefault();
+      const formData = new FormData(e.currentTarget);
+      
+      startTransition(async () => {
+        const result = await updateBarbershop(formData);
+        if (result.success) {
+          toast.success("Configuración guardada");
+        } else {
+          toast.error(result.error || "Error al guardar");
+        }
+      });
+    };
+
     return (
       <div className="space-y-6">
         <div>
@@ -44,7 +61,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
         </div>
 
         <Card>
-          <form action={updateBarbershop} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Nombre Comercial</label>
@@ -60,8 +77,8 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
               </div>
             </div>
             <div className="flex justify-end">
-              <Button type="submit">
-                <Save size={15} /> Guardar cambios
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Guardando..." : <><Save size={15} /> Guardar cambios</>}
               </Button>
             </div>
           </form>
@@ -97,9 +114,18 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
               <div className="flex items-center gap-4 ml-12 sm:ml-0">
                 <span className="text-sm font-mono text-text-primary">${Number(s.price).toLocaleString('es-CO')}</span>
                 <Badge variant={'success'}>Activo</Badge>
-                <form action={async () => { await deleteService(s.id) }}>
-                   <Button variant="ghost" size="sm" type="submit">Eliminar</Button>
-                </form>
+                <button 
+                  onClick={async () => {
+                   if(confirm('¿Eliminar servicio?')) {
+                     const res = await deleteService(s.id);
+                     if(res.success) toast.success('Eliminado');
+                     else toast.error('Error');
+                   }
+                  }}
+                  className="text-xs text-text-tertiary hover:text-danger px-2 py-1"
+                >
+                  Eliminar
+                </button>
               </div>
             </Card>
           ))}
@@ -131,9 +157,18 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
               </div>
               <div className="flex items-center gap-3">
                 <Badge variant={'success'}>Activo</Badge>
-                <form action={async () => { await deleteBarber(b.id) }}>
-                   <Button variant="ghost" size="sm" type="submit">Eliminar</Button>
-                </form>
+                <button 
+                  onClick={async () => {
+                   if(confirm('¿Eliminar barbero?')) {
+                     const res = await deleteBarber(b.id);
+                     if(res.success) toast.success('Eliminado');
+                     else toast.error('Error');
+                   }
+                  }}
+                  className="text-xs text-text-tertiary hover:text-danger px-2 py-1"
+                >
+                  Eliminar
+                </button>
               </div>
             </Card>
           ))}
