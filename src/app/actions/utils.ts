@@ -13,16 +13,27 @@ export async function getBarbershopId(): Promise<string | null> {
     .from('barbershops')
     .select('id')
     .eq('owner_id', user.id)
-    .maybeSingle(); // Use maybeSingle to avoid error if 0 rows
+    .maybeSingle(); 
     
   if (error) {
-    console.error("Error fetching barbershop_id for user", user.id, ":", error);
+    console.error("Error fetching barbershop_id:", error);
     return null;
   }
   
   if (!data) {
-    console.warn("No barbershop found for owner_id:", user.id);
-    return null;
+    // AUTO-CREATION: If it doesn't exist, create it on the fly
+    const name = user.user_metadata?.negocio || "Mi Barbería";
+    const { data: newShop, error: createError } = await supabase
+      .from('barbershops')
+      .insert({ name, owner_id: user.id })
+      .select('id')
+      .single();
+
+    if (createError) {
+      console.error("Failed to auto-create barbershop:", createError);
+      return null;
+    }
+    return newShop.id;
   }
   
   return data.id;
