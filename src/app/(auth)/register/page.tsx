@@ -6,7 +6,9 @@ import Link from "next/link";
 import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { signUpAction } from "@/app/actions/auth";
 import styles from "../auth.module.css";
+import toast from "react-hot-toast";
 
 export default function RegisterPage() {
   const [businessName, setBusinessName] = useState("");
@@ -20,52 +22,27 @@ export default function RegisterPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const getPasswordStrength = (pass: string) => {
-    if (pass.length === 0) return 0;
-    let score = 0;
-    if (pass.length >= 8) score++;
-    if (/[A-Z]/.test(pass)) score++;
-    if (/[0-9]/.test(pass)) score++;
-    if (/[^A-Za-z0-9]/.test(pass)) score++;
-    return score; // 0 to 4
-  };
-
-  const strength = getPasswordStrength(password);
-  const getStrengthColor = () => {
-    if (strength <= 1) return 'var(--error)';
-    if (strength === 2) return 'var(--secondary)';
-    return 'var(--success)';
-  };
-
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (strength < 2) {
-      setError("La contraseña es muy débil.");
-      return;
-    }
-    
     setIsLoading(true);
     setError(null);
 
-    const { error: signUpError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          nombre: userName,
-          negocio: businessName,
-        }
-      }
-    });
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+    formData.append("businessName", businessName);
+    formData.append("userName", userName);
 
-    if (signUpError) {
-      setError(signUpError.message);
+    const result = await signUpAction(formData);
+
+    if (result.success) {
+      toast.success("Cuenta creada correctamente");
+      router.push("/dashboard");
+      router.refresh();
+    } else {
+      setError(result.error || "Error al crear cuenta");
       setIsLoading(false);
-      return;
     }
-
-    router.push("/dashboard");
-    router.refresh();
   };
 
   const handleGoogleLogin = async () => {
@@ -79,51 +56,55 @@ export default function RegisterPage() {
 
   return (
     <div className={styles.card}>
-      <div className={styles.formHeader}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-          <div style={{ position: 'relative', width: '280px', height: '180px' }}>
-            <Image src="/logo.png" alt="Trimly" fill style={{ objectFit: 'contain', objectPosition: 'center' }} priority />
-          </div>
+      {/* 1. Logo Trimly arriba centrado */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <div style={{ position: 'relative', width: '240px', height: '120px' }}>
+          <Image src="/logo.png" alt="Trimly" fill style={{ objectFit: 'contain', objectPosition: 'center' }} priority />
         </div>
-        <h2 className={styles.formTitle}>Crea tu cuenta</h2>
-        <p className={styles.formSubtitle}>Comienza a gestionar tu barbería</p>
       </div>
 
-      <form onSubmit={handleRegister}>
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div className="input-group" style={{ marginBottom: 0, flex: 1 }}>
-            <label className="input-label" htmlFor="negocio">Nombre del Negocio</label>
-            <input
-              id="negocio"
-              type="text"
-              className="input-field"
-              value={businessName}
-              onChange={(e) => setBusinessName(e.target.value)}
-              placeholder="Trimly Barbers"
-              required
-            />
-          </div>
+      {/* 2. Título + subtítulo */}
+      <div className={styles.formHeader} style={{ textAlign: 'center', marginBottom: '2rem' }}>
+        <h2 className={styles.formTitle}>Crea tu cuenta</h2>
+        <p className={styles.formSubtitle}>Comienza a gestionar tu barbería hoy mismo</p>
+      </div>
 
-          <div className="input-group" style={{ marginBottom: 0, flex: 1 }}>
-            <label className="input-label" htmlFor="nombre">Tu Nombre</label>
-            <input
-              id="nombre"
-              type="text"
-              className="input-field"
-              value={userName}
-              onChange={(e) => setUserName(e.target.value)}
-              placeholder="Juan Pérez"
-              required
-            />
-          </div>
+      <form onSubmit={handleRegister} className="space-y-4">
+        {/* 3. Campo "Nombre del Negocio" */}
+        <div className="input-group">
+          <label className="input-label" htmlFor="negocio">Nombre del Negocio</label>
+          <input
+            id="negocio"
+            type="text"
+            className="input-field w-full"
+            value={businessName}
+            onChange={(e) => setBusinessName(e.target.value)}
+            placeholder="Ej. Trimly Studio"
+            required
+          />
         </div>
 
+        {/* 4. Campo "Tu Nombre" */}
+        <div className="input-group">
+          <label className="input-label" htmlFor="nombre">Tu Nombre</label>
+          <input
+            id="nombre"
+            type="text"
+            className="input-field w-full"
+            value={userName}
+            onChange={(e) => setUserName(e.target.value)}
+            placeholder="Ej. Juan Pérez"
+            required
+          />
+        </div>
+
+        {/* 5. Campo Email */}
         <div className="input-group">
           <label className="input-label" htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
-            className="input-field"
+            className="input-field w-full"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@barberia.com"
@@ -132,13 +113,14 @@ export default function RegisterPage() {
           />
         </div>
 
+        {/* 6. Campo Contraseña */}
         <div className="input-group">
           <label className="input-label" htmlFor="password">Contraseña</label>
-          <div style={{ position: "relative", marginBottom: '0.5rem' }}>
+          <div style={{ position: "relative" }}>
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="input-field"
+              className="input-field w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -162,39 +144,26 @@ export default function RegisterPage() {
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
-          {password.length > 0 && (
-            <div style={{ display: 'flex', gap: '4px', height: '4px', marginTop: '0.5rem' }}>
-              {[1, 2, 3, 4].map((level) => (
-                <div 
-                  key={level} 
-                  style={{ 
-                    flex: 1, 
-                    backgroundColor: strength >= level ? getStrengthColor() : '#E5E7EB',
-                    borderRadius: '2px',
-                    transition: 'all 0.3s ease'
-                  }} 
-                />
-              ))}
-            </div>
-          )}
         </div>
 
-        {error && <div className="error-message" style={{ position: 'relative', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? <div className="spinner" /> : null}
-          Crear cuenta
+        {/* 7. Botón "Crear cuenta" (ancho completo) */}
+        <button type="submit" className="btn btn-primary w-full" disabled={isLoading} style={{ marginTop: '1.5rem' }}>
+          {isLoading ? <div className="spinner" /> : "Crear cuenta"}
         </button>
       </form>
 
+      {/* 8. Separador "O" centrado */}
       <div className={styles.divider}>O</div>
 
+      {/* 9. Botón "Continuar con Google" (ancho completo) */}
       <button
         type="button"
-        className={`btn ${styles.socialBtn}`}
+        className={`btn ${styles.socialBtn} w-full`}
         onClick={handleGoogleLogin}
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
           <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
             <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/>
             <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/>
@@ -205,8 +174,9 @@ export default function RegisterPage() {
         Continuar con Google
       </button>
 
-      <p className="text-center mt-6 text-sm text-gray">
-        ¿Ya tienes cuenta? <Link href="/login" style={{ color: 'var(--primary)' }}>Inicia sesión</Link>
+      {/* 10. Link abajo centrado */}
+      <p className="text-center mt-8 text-sm text-gray">
+        ¿Ya tienes cuenta? <Link href="/login" style={{ color: 'var(--primary)', fontWeight: '600' }}>Inicia sesión</Link>
       </p>
     </div>
   );

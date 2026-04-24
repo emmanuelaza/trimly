@@ -2,6 +2,7 @@ import { Sidebar, BottomNav } from '@/components/layout/DashboardNav';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { NewAppointmentModal } from '@/components/agenda/NewAppointmentModal';
+import { getBarbershopId } from '@/lib/getBarbershopId';
 import { getClients } from '@/app/actions/clients';
 import { getServices } from '@/app/actions/services';
 import { Suspense } from 'react';
@@ -16,6 +17,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!user) {
     redirect('/login');
   }
+
+  // TAREA: Verificar si el usuario tiene barbershop, si no, crearlo automáticamente
+  await getBarbershopId();
 
   const negocio = user.user_metadata?.negocio || "Barbería";
 

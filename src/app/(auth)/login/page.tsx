@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Eye, EyeOff } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import styles from "../auth.module.css";
+import toast from "react-hot-toast";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -34,6 +35,7 @@ export default function LoginPage() {
       return;
     }
 
+    toast.success("Bienvenido de nuevo");
     router.push("/dashboard");
     router.refresh();
   };
@@ -49,23 +51,27 @@ export default function LoginPage() {
 
   return (
     <div className={styles.card}>
-      <div className={styles.formHeader}>
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-          <div style={{ position: 'relative', width: '280px', height: '180px' }}>
-            <Image src="/logo.png" alt="Trimly" fill style={{ objectFit: 'contain', objectPosition: 'center' }} priority />
-          </div>
+      {/* 1. Logo Trimly arriba centrado */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <div style={{ position: 'relative', width: '240px', height: '120px' }}>
+          <Image src="/logo.png" alt="Trimly" fill style={{ objectFit: 'contain', objectPosition: 'center' }} priority />
         </div>
+      </div>
+
+      {/* 2. Título "Bienvenido" + subtítulo */}
+      <div className={styles.formHeader} style={{ textAlign: 'center', marginBottom: '2rem' }}>
         <h2 className={styles.formTitle}>Bienvenido</h2>
         <p className={styles.formSubtitle}>Ingresa a tu cuenta para continuar</p>
       </div>
 
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleLogin} className="space-y-4">
+        {/* 3. Campo Email */}
         <div className="input-group">
           <label className="input-label" htmlFor="email">Email</label>
           <input
             id="email"
             type="email"
-            className="input-field"
+            className="input-field w-full"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="tu@barberia.com"
@@ -74,13 +80,14 @@ export default function LoginPage() {
           />
         </div>
 
+        {/* 4. Campo Contraseña */}
         <div className="input-group">
           <label className="input-label" htmlFor="password">Contraseña</label>
           <div style={{ position: "relative" }}>
             <input
               id="password"
               type={showPassword ? "text" : "password"}
-              className="input-field"
+              className="input-field w-full"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -106,26 +113,31 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <Link href="/login" className={styles.forgotPassword}>
-          ¿Olvidaste tu contraseña?
-        </Link>
+        {/* 5. Link "¿Olvidaste tu contraseña?" (alineado a la derecha) */}
+        <div style={{ textAlign: 'right' }}>
+          <Link href="/login" className={styles.forgotPassword} style={{ fontSize: '0.875rem' }}>
+            ¿Olvidaste tu contraseña?
+          </Link>
+        </div>
 
-        {error && <div className="error-message" style={{ position: 'relative', marginBottom: '1rem' }}>{error}</div>}
+        {error && <div className="error-message">{error}</div>}
 
-        <button type="submit" className="btn btn-primary" disabled={isLoading}>
-          {isLoading ? <div className="spinner" /> : null}
-          Iniciar sesión
+        {/* 6. Botón "Iniciar sesión" (ancho completo) */}
+        <button type="submit" className="btn btn-primary w-full" disabled={isLoading} style={{ marginTop: '1rem' }}>
+          {isLoading ? <div className="spinner" /> : "Iniciar sesión"}
         </button>
       </form>
 
+      {/* 7. Separador "O" centrado */}
       <div className={styles.divider}>O</div>
 
+      {/* 8. Botón "Continuar con Google" (ancho completo) */}
       <button
         type="button"
-        className={`btn ${styles.socialBtn}`}
+        className={`btn ${styles.socialBtn} w-full`}
         onClick={handleGoogleLogin}
       >
-        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: '10px' }}>
           <g transform="matrix(1, 0, 0, 1, 27.009001, -39.238998)">
             <path fill="#4285F4" d="M -3.264 51.509 C -3.264 50.719 -3.334 49.969 -3.454 49.239 L -14.754 49.239 L -14.754 53.749 L -8.284 53.749 C -8.574 55.229 -9.424 56.479 -10.684 57.329 L -10.684 60.329 L -6.824 60.329 C -4.564 58.239 -3.264 55.159 -3.264 51.509 Z"/>
             <path fill="#34A853" d="M -14.754 63.239 C -11.514 63.239 -8.804 62.159 -6.824 60.329 L -10.684 57.329 C -11.764 58.049 -13.134 58.489 -14.754 58.489 C -17.884 58.489 -20.534 56.379 -21.484 53.529 L -25.464 53.529 L -25.464 56.619 C -23.494 60.539 -19.444 63.239 -14.754 63.239 Z"/>
@@ -136,8 +148,9 @@ export default function LoginPage() {
         Continuar con Google
       </button>
 
-      <p className="text-center mt-6 text-sm text-gray">
-        ¿No tienes cuenta? <Link href="/register" style={{ color: 'var(--primary)' }}>Crea una gratis</Link>
+      {/* 9. Link abajo centrado */}
+      <p className="text-center mt-8 text-sm text-gray">
+        ¿No tienes cuenta? <Link href="/register" style={{ color: 'var(--primary)', fontWeight: '600' }}>Crea una gratis</Link>
       </p>
     </div>
   );
