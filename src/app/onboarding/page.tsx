@@ -11,7 +11,16 @@ export default function OnboardingPage() {
   const router = useRouter();
 
   const handleNext = () => setPaso(p => Math.min(p + 1, 3));
-  const handleSkip = () => router.push('/dashboard');
+  const handleSkip = async () => {
+    try {
+      const { data: { user } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
+      const name = user?.user_metadata?.negocio || "Mi Barbería";
+      await (await import('@/app/actions/barbershops')).completeOnboarding(name);
+      router.push('/dashboard');
+    } catch (e) {
+      router.push('/dashboard');
+    }
+  };
   
   const handleFinish = async () => {
     try {

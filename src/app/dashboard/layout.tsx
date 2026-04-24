@@ -14,6 +14,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/login');
   }
 
+  // Check if barbershop exists
+  const { data: barbershop } = await supabase
+    .from('barbershops')
+    .select('id')
+    .eq('owner_id', user.id)
+    .maybeSingle();
+
+  if (!barbershop) {
+    redirect('/onboarding');
+  }
+
   const negocio = user.user_metadata?.negocio || "Barbería";
 
   // Fetch data needed for the global new-appointment modal

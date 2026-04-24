@@ -205,13 +205,13 @@ export async function completeOnboarding(businessName: string) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No user found");
 
-  // 1. Create Barbershop
+  // 1. Create Barbershop (Upsert based on owner_id)
   const { data: bShop, error: bError } = await supabase
     .from("barbershops")
-    .insert({
+    .upsert({
       name: businessName,
       owner_id: user.id
-    })
+    }, { onConflict: 'owner_id' })
     .select()
     .single();
 
