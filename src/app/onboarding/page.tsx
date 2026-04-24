@@ -16,9 +16,9 @@ export default function OnboardingPage() {
       const { data: { user } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
       const name = user?.user_metadata?.negocio || "Mi Barbería";
       await (await import('@/app/actions/barbershops')).completeOnboarding(name);
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch (e) {
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
   };
   
@@ -27,10 +27,10 @@ export default function OnboardingPage() {
       const { data: { user } } = await (await import('@/lib/supabase/client')).createClient().auth.getUser();
       const negocio = user?.user_metadata?.negocio || "Mi Barbería";
       await (await import('@/app/actions/barbershops')).completeOnboarding(negocio);
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     } catch(e) {
       console.error(e);
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
   };
 
