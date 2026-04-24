@@ -4,9 +4,11 @@ import React, { useTransition } from 'react';
 import { Plus, Trash2, Scissors } from 'lucide-react';
 import { Card, Input, Button, Badge } from '@/components/ui/RedesignComponents';
 import { createService, deleteService } from '@/app/actions/services';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function ServiciosClient({ initialServices }: { initialServices: any[] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -19,6 +21,7 @@ export default function ServiciosClient({ initialServices }: { initialServices: 
       if (result.success) {
         toast.success('Servicio guardado correctamente');
         form.reset();
+        router.refresh();
       } else {
         toast.error(result.error || 'Error al guardar servicio');
       }
@@ -32,6 +35,7 @@ export default function ServiciosClient({ initialServices }: { initialServices: 
       const result = await deleteService(id);
       if (result.success) {
         toast.success('Servicio eliminado');
+        router.refresh();
       } else {
         toast.error(result.error || 'Error al eliminar');
       }

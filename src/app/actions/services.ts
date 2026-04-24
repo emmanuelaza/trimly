@@ -39,14 +39,18 @@ export async function createService(formData: FormData) {
     if (!name || !priceStr || !durationStr) return { success: false, error: "Todos los campos son obligatorios" };
 
     const supabase = await createClient();
-    const { error } = await supabase.from("services").insert({
+    const { data, error } = await supabase.from("services").insert({
       barbershop_id: barbershopId,
       name,
       price: Number(priceStr),
       duration_minutes: Number(durationStr)
-    });
+    }).select().single();
 
-    if (error) return { success: false, error: error.message };
+    console.log('SERVICE INSERT result:', data);
+    if (error) {
+      console.error('Supabase service insert error:', error.message, error.details, error.hint);
+      return { success: false, error: error.message };
+    }
 
     revalidatePath("/dashboard/servicios");
     revalidatePath("/dashboard/configuracion");

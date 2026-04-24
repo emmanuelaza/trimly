@@ -215,7 +215,11 @@ export async function completeOnboarding(businessName: string) {
     .select()
     .single();
 
-  if (bError) throw bError;
+  console.log('ONBOARDING Barbershop Result:', bShop);
+  if (bError) {
+    console.error('Onboarding Barbershop Error:', bError.message, bError.details, bError.hint);
+    throw bError;
+  }
 
   // 2. Initialize Automations
   await initializeAutomations(bShop.id);

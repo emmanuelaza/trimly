@@ -4,9 +4,11 @@ import React, { useTransition } from 'react';
 import { Plus, Trash2, UserCheck } from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
 import { createBarber, deleteBarber } from '@/app/actions/barbers';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export default function BarberosClient({ initialBarberos }: { initialBarberos: any[] }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
@@ -21,6 +23,7 @@ export default function BarberosClient({ initialBarberos }: { initialBarberos: a
       if (result.success) {
         toast.success('Barbero añadido correctamente');
         form.reset();
+        router.refresh();
       } else {
         toast.error(result.error || 'Error al añadir barbero');
       }
@@ -34,6 +37,7 @@ export default function BarberosClient({ initialBarberos }: { initialBarberos: a
       const result = await deleteBarber(id);
       if (result.success) {
         toast.success('Barbero eliminado');
+        router.refresh();
       } else {
         toast.error(result.error || 'Error al eliminar');
       }

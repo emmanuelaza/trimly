@@ -7,9 +7,11 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 import { createAppointment } from '@/app/actions/appointments';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 export function QuickAddAppointment({ clientes, servicios, filterDate }: { clientes: any[], servicios: any[], filterDate: string }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -22,6 +24,7 @@ export function QuickAddAppointment({ clientes, servicios, filterDate }: { clien
       if (result.success) {
         toast.success("Cita guardada correctamente");
         form.reset();
+        router.refresh();
       } else {
         toast.error(result.error || "Error al guardar cita");
       }

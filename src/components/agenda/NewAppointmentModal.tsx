@@ -158,6 +158,7 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
       if (result.success) {
         toast.success("Cita agendada correctamente")
         setDone(true)
+        router.refresh()
       } else {
         toast.error(result.error || "Error al agendar cita")
       }

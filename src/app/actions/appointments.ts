@@ -54,7 +54,7 @@ export async function createAppointment(formData: FormData) {
 
     const price_charged = svc ? svc.price : 0;
 
-    const { error, data } = await supabase.from("appointments").insert({
+    const { error, data: insertData } = await supabase.from("appointments").insert({
       barbershop_id: barbershopId,
       client_id,
       service_id,
@@ -64,7 +64,11 @@ export async function createAppointment(formData: FormData) {
       price_charged
     }).select().single();
 
-    if (error) return { success: false, error: error.message };
+    console.log('APPOINTMENT INSERT result:', insertData);
+    if (error) {
+       console.error('Supabase appointment insert error:', error.message, error.details, error.hint);
+       return { success: false, error: error.message };
+    }
 
     // ─── Trigger Confirmation Automation (Async, don't wait if not critical) ───
     try {
@@ -73,7 +77,7 @@ export async function createAppointment(formData: FormData) {
       const { data: auto } = await supabaseAdmin.from('automations').select('is_active').eq('barbershop_id', barbershopId).eq('type', 'confirmation').single();
 
       if (auto?.is_active) {
-         const { data: details } = await supabaseAdmin.from('appointments').select('scheduled_at, client:clients(name, email), service:services(name)').eq('id', data.id).single();
+         const { data: details } = await supabaseAdmin.from('appointments').select('scheduled_at, client:clients(name, email), service:services(name)').eq('id', insertData.id).single();
          const clientData = details?.client as any;
          const serviceData = details?.service as any;
 

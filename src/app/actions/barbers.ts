@@ -39,14 +39,18 @@ export async function createBarber(formData: FormData) {
     if (!name) return { success: false, error: "El nombre es obligatorio" };
 
     const supabase = await createClient();
-    const { error } = await supabase.from("barbers").insert({
+    const { data, error } = await supabase.from("barbers").insert({
       barbershop_id: barbershopId,
       name,
       phone: phone || null,
       email: email || null
-    });
+    }).select().single();
 
-    if (error) return { success: false, error: error.message };
+    console.log('BARBER INSERT result:', data);
+    if (error) {
+      console.error('Supabase barber insert error:', error.message, error.details, error.hint);
+      return { success: false, error: error.message };
+    }
 
     revalidatePath("/dashboard/barberos");
     revalidatePath("/dashboard/configuracion");

@@ -5,9 +5,11 @@ import { Plus, UserPlus, Search, ChevronRight } from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
 import { createClient, deleteClient } from '@/app/actions/clients';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function ClientesClient({ initialClientes }: { initialClientes: any[] }) {
+  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -26,6 +28,7 @@ export default function ClientesClient({ initialClientes }: { initialClientes: a
       if (result.success) {
         toast.success('Cliente creado correctamente');
         form.reset();
+        router.refresh();
       } else {
         toast.error(result.error || 'Error al crear cliente');
       }

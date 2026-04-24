@@ -4,6 +4,7 @@ import React, { useTransition } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { toggleAutomation } from '@/app/actions/barbershops';
+import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
 interface AutomationDef {
@@ -26,6 +27,7 @@ const AUTOMATION_DEFS: AutomationDef[] = [
 ];
 
 export default function AutomatizacionesClient({ initialAutomations, stats }: { initialAutomations: any[], stats: any }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const getIsActive = (type: string) => initialAutomations.find(a => a.type === type)?.is_active || false;
@@ -35,6 +37,7 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: { 
       try {
         await toggleAutomation(type, !current);
         toast.success(`${current ? 'Desactivado' : 'Activado'} correctamente`);
+        router.refresh();
       } catch (e) {
         toast.error("Error al actualizar");
       }

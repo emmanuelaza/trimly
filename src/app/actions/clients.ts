@@ -48,8 +48,9 @@ export async function createClient(formData: FormData) {
       birthdate: birthdate || null
     }).select().single();
 
+    console.log('CLIENT INSERT result:', data);
     if (error) {
-      console.error("Error creating client:", error);
+      console.error('Supabase client insert error:', error.message, error.details, error.hint);
       return { success: false, error: error.message };
     }
     
