@@ -42,8 +42,16 @@ export async function createAppointment(formData: FormData) {
       return { success: false, error: "Faltan datos obligatorios" };
     }
     
-    // Construct scheduled_at
-    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+    // Construct scheduled_at (Localization based on barbershop country)
+    const { data: bShop } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
+    const timezone = bShop?.config?.timezone || "America/Bogota";
+    
+    // Get offset for this date/timezone
+    const tempDate = new Date(`${date}T12:00:00`); 
+    const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
+    const offset = offsetParts.find(p => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
+
+    const scheduled_at = `${date}T${time}:00${offset}`;
 
     // ─── Conflict Check ───
     if (barber_id) {
@@ -194,7 +202,16 @@ export async function updateAppointment(id: string, formData: FormData) {
       return { success: false, error: "Faltan datos obligatorios" };
     }
 
-    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+    // Construct scheduled_at (Localization based on barbershop country)
+    const { data: bShop } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
+    const timezone = bShop?.config?.timezone || "America/Bogota";
+    
+    // Get offset for this date/timezone
+    const tempDate = new Date(`${date}T12:00:00`); 
+    const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
+    const offset = offsetParts.find(p => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
+
+    const scheduled_at = `${date}T${time}:00${offset}`;
 
     // ─── Conflict Check ───
     if (barber_id) {

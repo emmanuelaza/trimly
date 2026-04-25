@@ -15,11 +15,14 @@ interface Props {
   onSuccess: () => void
   initialDate?: string
   editingAppointment?: any
+  barbershop?: any
 }
 
-export function AppointmentForm({ clientes, servicios, barberos, onSuccess, initialDate, editingAppointment }: Props) {
+export function AppointmentForm({ clientes, servicios, barberos, onSuccess, initialDate, editingAppointment, barbershop }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const timezone = barbershop?.config?.timezone || "America/Bogota"
+  
   const [showNewClientForm, setShowNewClientForm] = useState(false)
   const [clientSearch, setClientSearch] = useState(editingAppointment ? editingAppointment.client?.name : "")
   
@@ -27,8 +30,14 @@ export function AppointmentForm({ clientes, servicios, barberos, onSuccess, init
   const [clientId, setClientId] = useState(editingAppointment?.client_id || "")
   const [serviceId, setServiceId] = useState(editingAppointment?.service_id || "")
   const [barberId, setBarberId] = useState(editingAppointment?.barber_id || "")
-  const [date, setDate] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toISOString().split('T')[0] : (initialDate || new Date().toISOString().split('T')[0]))
-  const [time, setTime] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }) : "")
+
+  const [date, setDate] = useState(editingAppointment 
+    ? new Date(editingAppointment.scheduled_at).toLocaleDateString('en-CA', { timeZone: timezone }) 
+    : (initialDate || new Date().toLocaleDateString('en-CA', { timeZone: timezone })))
+
+  const [time, setTime] = useState(editingAppointment 
+    ? new Date(editingAppointment.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: timezone }) 
+    : "")
 
   const filteredClients = useMemo(() => {
     if (!clientSearch || clientId) return []

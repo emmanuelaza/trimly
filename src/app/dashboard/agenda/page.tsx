@@ -1,7 +1,7 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { getClients } from '@/app/actions/clients';
 import { getServices } from '@/app/actions/services';
-import { getBarbers } from '@/app/actions/barbers';
+import { getBarbershop } from '@/app/actions/barbershops';
 import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
 
 export const revalidate = 60;
@@ -11,11 +11,12 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const filterDate = params.date || new Date().toISOString().split('T')[0];
 
   // Fetch all necessary data
-  const [allCitas, clientes, servicios, barberos] = await Promise.all([
+  const [allCitas, clientes, servicios, barberos, barbershop] = await Promise.all([
     getAppointments(),
     getClients(),
     getServices(),
     getBarbers(),
+    getBarbershop(),
   ]);
 
   return (
@@ -34,6 +35,7 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
         servicios={servicios}
         barberos={barberos}
         initialDate={filterDate}
+        barbershop={barbershop}
       />
     </div>
   );

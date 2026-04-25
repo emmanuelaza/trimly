@@ -14,11 +14,13 @@ interface Props {
   appointment: any
   onClose: () => void
   onEdit: () => void
+  barbershop?: any
 }
 
-export function AppointmentDetails({ appointment, onClose, onEdit }: Props) {
+export function AppointmentDetails({ appointment, onClose, onEdit, barbershop }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const timezone = barbershop?.config?.timezone || "America/Bogota"
 
   const handleStatusChange = (status: string) => {
     startTransition(async () => {
@@ -48,8 +50,8 @@ export function AppointmentDetails({ appointment, onClose, onEdit }: Props) {
   }
 
   const date = new Date(appointment.scheduled_at)
-  const dateFormatted = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
-  const timeFormatted = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+  const dateFormatted = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: timezone })
+  const timeFormatted = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: timezone })
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

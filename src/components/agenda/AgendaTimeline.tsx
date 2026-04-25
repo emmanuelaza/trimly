@@ -16,6 +16,7 @@ interface Props {
   servicios: any[];
   barberos: any[];
   initialDate: string;
+  barbershop?: any;
 }
 
 function addDays(dateStr: string, n: number): string {
@@ -36,9 +37,9 @@ function getDayName(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('es-CO', { weekday: 'long' });
 }
 
-export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servicios, barberos, initialDate }) => {
+export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servicios, barberos, initialDate, barbershop }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const timezone = barbershop?.config?.timezone || "America/Bogota";
   
   const [filterDate, setFilterDate] = useState(initialDate);
   const [isMobile, setIsMobile] = useState(false);
@@ -66,9 +67,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
   const getCitasForDay = (dayStr: string) => {
     return allCitas.filter(c => {
       const d = new Date(c.scheduled_at);
-      const isoLocal = d.getFullYear() + "-" + 
-                       String(d.getMonth() + 1).padStart(2, '0') + "-" + 
-                       String(d.getDate()).padStart(2, '0');
+      const isoLocal = d.toLocaleDateString('en-CA', { timeZone: timezone });
       return isoLocal === dayStr;
     }).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
   };
@@ -87,10 +86,12 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
     const isCancelled = cita.status === 'cancelled';
     const isCompleted = cita.status === 'completed';
     const date = new Date(cita.scheduled_at);
-    const timeStart = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    
+    const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone } as const;
+    const timeStart = date.toLocaleTimeString('es-CO', timeFormat);
     
     const duration = cita.service?.duration_minutes || 45;
-    const timeEnd = new Date(date.getTime() + duration * 60000).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    const timeEnd = new Date(date.getTime() + duration * 60000).toLocaleTimeString('es-CO', timeFormat);
 
     let bgClass = "bg-orange-500/10 border-orange-500/20";
     let statusColor = "bg-orange-500";
@@ -134,7 +135,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   const DayColumn = ({ day }: { day: string }) => {
     const citas = getCitasForDay(day);
-    const isToday = day === new Date().toISOString().split('T')[0];
+    const isToday = day === new Date().toLocaleDateString('en-CA', { timeZone: timezone });
 
     return (
       <div className={`space-y-4 min-h-[300px] flex flex-col ${isMobile && day !== filterDate ? 'hidden' : ''}`}>
@@ -163,7 +164,6 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   return (
     <div className="space-y-6 pb-20">
-      {/* ── Navigation ────────────────────────────────── */}
       <div className="flex items-center justify-between bg-background-secondary/50 p-2 rounded-2xl border border-border">
         <div className="flex items-center gap-2">
           <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all">
@@ -176,7 +176,6 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             <ChevronRight size={20} className="text-text-secondary" />
           </button>
         </div>
-
         {!isMobile && (
           <Button onClick={handleNewClick} className="shadow-lg shadow-accent/20">
             <Plus size={18} /> Nueva Cita
@@ -184,7 +183,6 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
         )}
       </div>
 
-      {/* ── Mobile Day Navigation ─────────────────────── */}
       {isMobile && (
         <div className="flex justify-between items-center bg-background-tertiary rounded-xl p-1">
           {['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'].map((d, i) => {
@@ -203,14 +201,12 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
         </div>
       )}
 
-      {/* ── Grid Views ────────────────────────────────── */}
       <div className={`grid gap-6 ${isMobile ? 'grid-cols-1' : 'grid-cols-3 lg:grid-cols-6'}`}>
         {weekDays.map(day => (
           <DayColumn key={day} day={day} />
         ))}
       </div>
 
-      {/* ── Floating Action Button (Mobile) ───────────── */}
       {isMobile && (
         <button 
           onClick={handleNewClick}
@@ -220,7 +216,6 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
         </button>
       )}
 
-      {/* ── Side Panels ───────────────────────────────── */}
       <SlidePanel 
         isOpen={panelMode !== 'none'} 
         onClose={() => setPanelMode('none')}
@@ -233,6 +228,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             barberos={barberos}
             onSuccess={() => setPanelMode('none')}
             initialDate={filterDate}
+            barbershop={barbershop}
           />
         )}
 
@@ -241,6 +237,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             appointment={selectedAppointment}
             onClose={() => setPanelMode('none')}
             onEdit={() => setPanelMode('edit')}
+            barbershop={barbershop}
           />
         )}
 
@@ -251,6 +248,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             barberos={barberos}
             onSuccess={() => setPanelMode('none')}
             editingAppointment={selectedAppointment}
+            barbershop={barbershop}
           />
         )}
       </SlidePanel>

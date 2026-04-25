@@ -71,7 +71,27 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Dirección</label>
                 <input name="address" defaultValue={barbershop?.address || ""} placeholder="Calle 123..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
-               <div className="space-y-2">
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">País & Zona Horaria</label>
+                <select 
+                  name="country" 
+                  defaultValue={barbershop?.country || "Colombia"} 
+                  className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none"
+                >
+                  <option value="Colombia">Colombia (GMT-5)</option>
+                  <option value="España">España (GMT+1/2)</option>
+                  <option value="México">México (GMT-6)</option>
+                  <option value="Argentina">Argentina (GMT-3)</option>
+                  <option value="Estados Unidos">Estados Unidos (GMT-5)</option>
+                  <option value="Chile">Chile (GMT-3/4)</option>
+                  <option value="Perú">Perú (GMT-5)</option>
+                  <option value="Ecuador">Ecuador (GMT-5)</option>
+                  <option value="Venezuela">Venezuela (GMT-4)</option>
+                  <option value="Uruguay">Uruguay (GMT-3)</option>
+                </select>
+                <p className="text-[10px] text-text-tertiary italic">Esto ajusta automáticamente el horario de tu agenda.</p>
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Teléfono</label>
                 <input name="phone" defaultValue={barbershop?.phone || ""} placeholder="+57..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>

@@ -30,6 +30,24 @@ export async function updateBarbershop(formData: FormData) {
     const name = formData.get("name") as string;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
+    const country = formData.get("country") as string;
+
+    const COUNTRY_TIMEZONES: Record<string, string> = {
+      "Colombia": "America/Bogota",
+      "España": "Europe/Madrid",
+      "México": "America/Mexico_City",
+      "Argentina": "America/Buenos_Aires",
+      "Chile": "America/Santiago",
+      "Estados Unidos": "America/New_York",
+      "Perú": "America/Lima",
+      "Ecuador": "America/Guayaquil",
+      "Venezuela": "America/Caracas",
+      "Uruguay": "America/Montevideo",
+      "Panamá": "America/Panama",
+      "Costa Rica": "America/Costa_Rica",
+    };
+
+    const timezone = COUNTRY_TIMEZONES[country] || "America/Bogota";
     
     // Parse hours
     const hours: any = {};
@@ -43,11 +61,16 @@ export async function updateBarbershop(formData: FormData) {
     if (!name) return { success: false, error: "El nombre es obligatorio" };
 
     const supabase = await createClient();
+    
+    // Get existing config to merge
+    const { data: current } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
+
     const { error } = await supabase.from("barbershops").update({
       name,
       address: address || null,
       phone: phone || null,
-      config: { hours }
+      country,
+      config: { ...(current?.config || {}), hours, timezone }
     }).eq("id", barbershopId);
 
     if (error) return { success: false, error: error.message };
