@@ -146,7 +146,61 @@ export async function updateAppointmentStatus(id: string, status: string) {
   }
 }
 
-export async function getReportStats() {
+export async function getAppointmentById(id: string) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("*, client:clients(name, phone, email), service:services(name, price), barber:barbers(name)")
+      .eq("id", id)
+      .single();
+
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error("Error fetching appointment:", error);
+    return null;
+  }
+}
+
+export async function updateAppointment(id: string, formData: FormData) {
+  try {
+    const supabase = await createClient();
+    
+    const client_id = formData.get("client_id") as string;
+    const service_id = formData.get("service_id") as string;
+    const barber_id = formData.get("barber_id") as string;
+    const date = formData.get("fecha") as string;
+    const time = formData.get("hora") as string;
+    const notes = formData.get("notes") as string;
+    const status = formData.get("status") as string;
+
+    if (!client_id || !service_id || !date || !time) {
+      return { success: false, error: "Faltan datos obligatorios" };
+    }
+
+    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+
+    const { error } = await supabase.from("appointments").update({
+      client_id,
+      service_id,
+      barber_id: barber_id || null,
+      scheduled_at,
+      notes: notes || null,
+      status: status || "confirmed"
+    }).eq("id", id);
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath("/dashboard");
+    revalidatePath("/dashboard/agenda");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getReportStats(period: 'hoy' | 'semana' | 'mes' | 'todo' = 'mes') {
   try {
     const barbershopId = await getBarbershopId();
     if (!barbershopId) {
@@ -156,13 +210,30 @@ export async function getReportStats() {
 
     const supabase = await createClient();
     const now = new Date();
+    let startDate: string;
     
-    // Ranges
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    switch(period) {
+      case 'hoy': 
+        startDate = new Date(new Date().setHours(0,0,0,0)).toISOString();
+        break;
+      case 'semana':
+        const d = new Date();
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        startDate = new Date(d.setDate(diff)).toISOString();
+        break;
+      case 'todo':
+        startDate = new Date(0).toISOString();
+        break;
+      case 'mes':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    }
+    
     const startOfPrevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
     const endOfPrevMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59).toISOString();
 
-    // 1. Fetch appointments for this month (all statuses)
+    // 1. Fetch appointments for this period
     const { data: citas, error: err1 } = await supabase
       .from("appointments")
       .select(`
@@ -175,11 +246,9 @@ export async function getReportStats() {
         barber:barbers(name)
       `)
       .eq("barbershop_id", barbershopId)
-      .gte("scheduled_at", startOfMonth);
+      .gte("scheduled_at", startDate);
 
-    if (err1) {
-      console.error("Report Error - Fetch Citas:", err1);
-    }
+    if (err1) console.error("Report Error - Fetch Citas:", err1);
 
     // 2. Income previous month
     const { data: prevMonthCitas, error: err2 } = await supabase
@@ -190,16 +259,14 @@ export async function getReportStats() {
       .gte("scheduled_at", startOfPrevMonth)
       .lte("scheduled_at", endOfPrevMonth);
 
-    if (err2) {
-      console.error("Report Error - Fetch Prev Income:", err2);
-    }
+    if (err2) console.error("Report Error - Fetch Prev Income:", err2);
 
     // 3. New clients current month
     const { data: nuevosClientes, error: err3 } = await supabase
       .from("clients")
       .select("created_at")
       .eq("barbershop_id", barbershopId)
-      .gte("created_at", startOfMonth);
+      .gte("created_at", startDate);
 
     if (err3) {
       console.error("Report Error - Fetch New Clients:", err3);

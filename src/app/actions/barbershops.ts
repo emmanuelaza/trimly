@@ -30,7 +30,15 @@ export async function updateBarbershop(formData: FormData) {
     const name = formData.get("name") as string;
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
-    const config = formData.get("config") as string;
+    
+    // Parse hours
+    const hours: any = {};
+    ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].forEach(day => {
+      hours[day] = {
+        open: formData.get(`hours_${day}_open`),
+        close: formData.get(`hours_${day}_close`)
+      };
+    });
 
     if (!name) return { success: false, error: "El nombre es obligatorio" };
 
@@ -39,7 +47,7 @@ export async function updateBarbershop(formData: FormData) {
       name,
       address: address || null,
       phone: phone || null,
-      config: config ? JSON.parse(config) : undefined
+      config: { hours }
     }).eq("id", barbershopId);
 
     if (error) return { success: false, error: error.message };

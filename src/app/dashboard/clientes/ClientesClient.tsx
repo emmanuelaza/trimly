@@ -45,7 +45,7 @@ export default function ClientesClient({ initialClientes }: { initialClientes: a
           <h2 className="text-sm font-bold text-text-secondary uppercase tracking-widest mb-6 flex items-center gap-2">
             <UserPlus size={16} /> Registro Rápido
           </h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
               <Input name="nombre" placeholder="Ej. Juan Pérez" required />
@@ -57,6 +57,10 @@ export default function ClientesClient({ initialClientes }: { initialClientes: a
             <div className="space-y-2">
               <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Email (Opcional)</label>
               <Input name="email" type="email" placeholder="hola@ejemplo.com" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Cumpleaños</label>
+              <Input name="birthdate" type="date" />
             </div>
             <Button type="submit" className="w-full" disabled={isPending}>
               {isPending ? 'Guardando...' : <><Plus size={18} /> Guardar Cliente</>}

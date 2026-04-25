@@ -71,11 +71,30 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Dirección</label>
                 <input name="address" defaultValue={barbershop?.address || ""} placeholder="Calle 123..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
-              <div className="space-y-2">
+               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-text-tertiary uppercase">Teléfono</label>
                 <input name="phone" defaultValue={barbershop?.phone || ""} placeholder="+57..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
             </div>
+
+            <div className="pt-4 border-t border-border">
+              <h3 className="text-xs font-bold text-text-secondary uppercase mb-4 flex items-center gap-2">
+                <Clock size={14} /> Horario de Atención
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => (
+                  <div key={day} className="p-3 bg-background-tertiary/50 border border-border rounded-lg">
+                    <p className="text-[10px] font-bold text-text-tertiary uppercase mb-2">{day}</p>
+                    <div className="flex items-center gap-2">
+                      <input name={`hours_${day.toLowerCase()}_open`} defaultValue={barbershop?.config?.hours?.[day.toLowerCase()]?.open || "09:00"} type="time" className="bg-transparent text-xs text-text-primary outline-none focus:text-accent" />
+                      <span className="text-text-tertiary">-</span>
+                      <input name={`hours_${day.toLowerCase()}_close`} defaultValue={barbershop?.config?.hours?.[day.toLowerCase()]?.close || "19:00"} type="time" className="bg-transparent text-xs text-text-primary outline-none focus:text-accent" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="flex justify-end">
               <Button type="submit" disabled={isPending}>
                 {isPending ? "Guardando..." : <><Save size={15} /> Guardar cambios</>}

@@ -2,9 +2,10 @@ import React from 'react';
 import ReportesClient from './ReportesClient';
 import { getReportStats } from '@/app/actions/appointments';
 
-export default async function ReportesPage() {
+export default async function ReportesPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   try {
-    const stats = await getReportStats();
+    const { p } = await searchParams;
+    const stats = await getReportStats((p as any) || 'mes');
 
     if (!stats) {
       // If null, it means no barbershop found or critical error
@@ -16,7 +17,7 @@ export default async function ReportesPage() {
       );
     }
 
-    return <ReportesClient stats={stats} />;
+    return <ReportesClient stats={stats} initialPeriod={(p as any) || 'mes'} />;
   } catch (error) {
     console.error("Error in ReportesPage:", error);
     return (

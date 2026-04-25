@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { Badge } from '@/components/ui/Badge';
@@ -15,8 +16,14 @@ const PERIODOS: { id: Periodo; label: string }[] = [
   { id: 'todo', label: 'Todo' },
 ];
 
-export default function ReportesClient({ stats }: { stats: any }) {
-  const [periodo, setPeriodo] = useState<Periodo>('mes');
+export default function ReportesClient({ stats, initialPeriod }: { stats: any, initialPeriod: Periodo }) {
+  const router = useRouter();
+  const [periodo, setPeriodo] = useState<Periodo>(initialPeriod);
+
+  const handlePeriodChange = (p: Periodo) => {
+    setPeriodo(p);
+    router.push(`/dashboard/reportes?p=${p}`);
+  };
 
   const isEmpty = !stats || stats.citas === 0;
 
@@ -32,7 +39,7 @@ export default function ReportesClient({ stats }: { stats: any }) {
           {PERIODOS.map(p => (
             <button
               key={p.id}
-              onClick={() => setPeriodo(p.id)}
+              onClick={() => handlePeriodChange(p.id)}
               className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                 periodo === p.id
                   ? 'bg-accent text-background-primary shadow-sm'
