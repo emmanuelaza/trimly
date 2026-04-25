@@ -17,14 +17,11 @@ export async function GET(req: Request) {
     
     const fortyFiveDaysAgo = new Date();
     fortyFiveDaysAgo.setDate(fortyFiveDaysAgo.getDate() - 45);
-    
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    // 1. Fetch clients with old last_visit or no visit and old created_at
+    // Buscar clientes cuya última visita fue hace más de 45 días
     const { data: clients, error } = await supabaseAdmin
       .from('clients')
-      .select('id, name, email, barbershop_id, last_visit')
+      .select('id, name, email, barbershop_id')
       .lte('last_visit', fortyFiveDaysAgo.toISOString());
 
     if (error) throw error;
@@ -33,7 +30,6 @@ export async function GET(req: Request) {
     let sentCount = 0;
 
     for (const client of clients) {
-      // 2. Check automation status
       const { data: automation } = await supabaseAdmin
         .from('automations')
         .select('is_active')
@@ -42,42 +38,32 @@ export async function GET(req: Request) {
         .single();
 
       if (automation?.is_active && client.email) {
-        // 3. Check if sent in last 30 days
-        const { count: recentlySent } = await supabaseAdmin
-          .from('automation_logs')
-          .select('*', { count: 'exact', head: true })
-          .eq('client_id', client.id)
-          .eq('automation_type', 'recover_inactive')
-          .gte('sent_at', thirtyDaysAgo.toISOString());
+        const html = getBaseEmailTemplate(
+          "¡Te extrañamos!",
+          `<p>Hola <strong>${client.name}</strong>,</p>
+           <p>Hace tiempo no nos visitas y el equipo de la barbería te extraña. ✂️</p>
+           <p>¿Qué tal si agendas una cita para este fin de semana? ¡Te esperamos con el mejor servicio!</p>`
+        );
 
-        if (recentlySent === 0) {
-          const html = getBaseEmailTemplate(
-            `¡Te extrañamos en Trimly!`,
-            `<p>Hola <strong>${client.name}</strong>, hace tiempo no nos visitas. ¡Te echamos de menos! 💈</p>
-             <p>Queremos invitarte a volver y por eso te regalamos un <strong>10% de descuento</strong> en tu siguiente servicio.</p>`,
-             "Agendar Cita",
-             `${process.env.NEXT_PUBLIC_SITE_URL}/onboarding`
-          );
+        await resend.emails.send({
+          from: 'Trimly <no-reply@trimlyapp.com>',
+          to: client.email,
+          subject: 'Te extrañamos ✂️',
+          html
+        });
 
-          await resend.emails.send({
-            from: 'Trimly <onboarding@resend.dev>',
-            to: client.email,
-            subject: '¡Te echamos de menos! Vuelve a Trimly',
-            html
-          });
+        await supabaseAdmin.from('automation_logs').insert({
+          automation_type: 'recover_inactive',
+          client_id: client.id,
+          channel: 'email',
+          barbershop_id: client.barbershop_id
+        });
 
-          await supabaseAdmin.from('automation_logs').insert({
-            automation_type: 'recover_inactive',
-            client_id: client.id,
-            channel: 'email'
-          });
-
-          sentCount++;
-        }
+        sentCount++;
       }
     }
 
-    return NextResponse.json({ success: true, sent: sentCount });
+    return NextResponse.json({ sent: sentCount });
   } catch (err: any) {
     console.error('CRON ERROR (Recover Inactive):', err);
     return NextResponse.json({ error: 'Internal error', details: err.message }, { status: 500 });

@@ -70,25 +70,28 @@ export async function createAppointment(formData: FormData) {
        return { success: false, error: error.message };
     }
 
-    // ─── Trigger Confirmation Automation (Async, don't wait if not critical) ───
+    // ─── Trigger Background Automations via QStash ───
     try {
-      const supabaseAdmin = getSupabaseAdmin();
-      const resend = getResend();
-      const { data: auto } = await supabaseAdmin.from('automations').select('is_active').eq('barbershop_id', barbershopId).eq('type', 'confirmation').single();
+      const { Client } = await import("@upstash/qstash");
+      const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
 
-      if (auto?.is_active) {
-         const { data: details } = await supabaseAdmin.from('appointments').select('scheduled_at, client:clients(name, email), service:services(name)').eq('id', insertData.id).single();
-         const clientData = details?.client as any;
-         const serviceData = details?.service as any;
+      // 1. Confirmación Inmediata
+      await qstash.publishJSON({
+        url: `${appUrl}/api/jobs/confirmacion`,
+        body: { citaId: insertData.id },
+      });
 
-         if (details && clientData?.email) {
-            const timeStr = new Date(details.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const dateStr = new Date(details.scheduled_at).toLocaleDateString();
-            const html = getBaseEmailTemplate("Confirmación", `<p>Hola ${clientData.name}, tu cita para ${serviceData?.name} el ${dateStr} a las ${timeStr} está confirmada.</p>`);
-            await resend.emails.send({ from: 'Trimly <onboarding@resend.dev>', to: clientData.email, subject: 'Cita confirmada', html });
-         }
-      }
-    } catch(e) { console.error('Automation error', e); }
+      // 2. Post-Visita (24h después)
+      await qstash.publishJSON({
+        url: `${appUrl}/api/jobs/post-visita`,
+        body: { citaId: insertData.id },
+        delay: 86400, // 24 horas
+      });
+    } catch(e) { 
+      console.error('QStash trigger error:', e); 
+      // No fallamos la acción si QStash falla, pero lo logueamos
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/agenda");

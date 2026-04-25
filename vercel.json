@@ -1,9 +1,20 @@
 {
   "crons": [
-    { "path": "/api/cron/reminder-24h", "schedule": "0 10 * * *" },
-    { "path": "/api/cron/post-visit", "schedule": "0 11 * * *" },
-    { "path": "/api/cron/daily-report", "schedule": "0 20 * * *" },
-    { "path": "/api/cron/recover-inactive", "schedule": "0 10 * * 1" },
-    { "path": "/api/cron/birthday", "schedule": "0 9 * * *" }
+    {
+      "path": "/api/cron/reminder-24h",
+      "schedule": "0 15 * * *"
+    },
+    {
+      "path": "/api/cron/daily-report",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/recover-inactive",
+      "schedule": "0 16 * * 1"
+    },
+    {
+      "path": "/api/cron/birthday",
+      "schedule": "0 14 * * *"
+    }
   ]
 }
