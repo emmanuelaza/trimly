@@ -95,7 +95,7 @@ export async function createAppointment(formData: FormData) {
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/agenda");
-    return { success: true, data };
+    return { success: true, data: insertData };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
