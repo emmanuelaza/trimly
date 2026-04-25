@@ -1,19 +1,19 @@
 {
   "crons": [
     {
-      "path": "/api/cron/reminder-24h",
+      "path": "/api/cron/recordatorio-24h",
       "schedule": "0 15 * * *"
     },
     {
-      "path": "/api/cron/daily-report",
+      "path": "/api/cron/reporte-diario",
       "schedule": "0 1 * * *"
     },
     {
-      "path": "/api/cron/recover-inactive",
+      "path": "/api/cron/recuperar-inactivos",
       "schedule": "0 16 * * 1"
     },
     {
-      "path": "/api/cron/birthday",
+      "path": "/api/cron/cumpleanos",
       "schedule": "0 14 * * *"
     }
   ]
