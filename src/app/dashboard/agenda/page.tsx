@@ -1,14 +1,8 @@
-import { getAppointments, createAppointment } from '@/app/actions/appointments';
+import { getAppointments } from '@/app/actions/appointments';
 import { getClients } from '@/app/actions/clients';
 import { getServices } from '@/app/actions/services';
+import { getBarbers } from '@/app/actions/barbers';
 import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-import { Plus } from 'lucide-react';
-
-import { QuickAddAppointment } from '@/components/agenda/QuickAddAppointment';
 
 export const revalidate = 60;
 
@@ -16,29 +10,30 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const filterDate = params.date || new Date().toISOString().split('T')[0];
 
-  // Fetch ALL citas
-  const [allCitas, clientes, servicios] = await Promise.all([
+  // Fetch all necessary data
+  const [allCitas, clientes, servicios, barberos] = await Promise.all([
     getAppointments(),
     getClients(),
     getServices(),
+    getBarbers(),
   ]);
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-semibold text-text-primary">Agenda</h1>
-        <p className="text-sm text-text-tertiary mt-1">Gestiona tus citas y disponibilidad.</p>
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-3xl font-semibold text-text-primary">Agenda</h1>
+          <p className="text-sm text-text-tertiary mt-1">Navega y gestiona la programación semanal.</p>
+        </div>
       </div>
 
-      <QuickAddAppointment clientes={clientes} servicios={servicios} filterDate={filterDate} />
-
-      {/* Main timeline — receives all citas for both views */}
       <AgendaTimeline
         allCitas={allCitas}
         clientes={clientes}
         servicios={servicios}
-        filterDate={filterDate}
+        barberos={barberos}
+        initialDate={filterDate}
       />
     </div>
   );

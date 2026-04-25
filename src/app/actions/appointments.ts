@@ -45,6 +45,21 @@ export async function createAppointment(formData: FormData) {
     // Construct scheduled_at
     const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
 
+    // ─── Conflict Check ───
+    if (barber_id) {
+      const { data: conflict } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("barber_id", barber_id)
+        .eq("scheduled_at", scheduled_at)
+        .neq("status", "cancelled")
+        .maybeSingle();
+
+      if (conflict) {
+        return { success: false, error: "El barbero ya tiene una cita agendada a esa hora" };
+      }
+    }
+
     // Get service price
     const { data: svc } = await supabase
       .from("services")
@@ -180,6 +195,22 @@ export async function updateAppointment(id: string, formData: FormData) {
     }
 
     const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+
+    // ─── Conflict Check ───
+    if (barber_id) {
+      const { data: conflict } = await supabase
+        .from("appointments")
+        .select("id")
+        .eq("barber_id", barber_id)
+        .eq("scheduled_at", scheduled_at)
+        .neq("id", id) // Exclude current
+        .neq("status", "cancelled")
+        .maybeSingle();
+
+      if (conflict) {
+        return { success: false, error: "El barbero ya tiene una cita agendada a esa hora" };
+      }
+    }
 
     const { error } = await supabase.from("appointments").update({
       client_id,
