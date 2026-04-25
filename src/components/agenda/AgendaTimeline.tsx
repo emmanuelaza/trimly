@@ -9,8 +9,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { deleteAppointment } from '@/app/actions/appointments';
 
 interface Props {
-  citas: any[];       // day-filtered citas (for day view)
-  allCitas?: any[];   // all citas (for week view — falls back to citas)
+  allCitas: any[];
   clientes: any[];
   servicios: any[];
   filterDate: string;
@@ -147,7 +146,13 @@ function WeekView({ allCitas, weekDays }: { allCitas: any[]; weekDays: string[] 
   const todayStr = new Date().toISOString().split('T')[0];
 
   const getCitasForDay = (dateStr: string) =>
-    allCitas.filter((c: any) => c.scheduled_at.startsWith(dateStr)).sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
+    allCitas.filter((c: any) => {
+      const d = new Date(c.scheduled_at);
+      const isoLocal = d.getFullYear() + "-" + 
+                       String(d.getMonth() + 1).padStart(2, '0') + "-" + 
+                       String(d.getDate()).padStart(2, '0');
+      return isoLocal === dateStr;
+    }).sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
   return (
     <Card className="p-0 overflow-hidden bg-background-primary">
@@ -214,11 +219,23 @@ function WeekView({ allCitas, weekDays }: { allCitas: any[]; weekDays: string[] 
 }
 
 /* ── Main Export ───────────────────────────────────────── */
-export const AgendaTimeline: React.FC<Props> = ({ citas, allCitas, clientes, servicios, filterDate }) => {
+export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servicios, filterDate }) => {
   const router = useRouter();
   const [view, setView] = useState<'dia' | 'semana'>('dia');
 
   const now = new Date();
+
+  // Filter day-specific citas using local date string to avoid UTC shifting
+  const currentCitasForDay = useMemo(() => {
+    return allCitas.filter(c => {
+      // Use client-side date parsing for the comparison
+      const d = new Date(c.scheduled_at);
+      const isoLocal = d.getFullYear() + "-" + 
+                       String(d.getMonth() + 1).padStart(2, '0') + "-" + 
+                       String(d.getDate()).padStart(2, '0');
+      return isoLocal === filterDate;
+    });
+  }, [allCitas, filterDate]);
 
   const changeDate = (days: number) => {
     const next = addDays(filterDate, days);
@@ -233,7 +250,6 @@ export const AgendaTimeline: React.FC<Props> = ({ citas, allCitas, clientes, ser
 
   const weekLabel = `${formatDateShort(weekDays[0])} – ${formatDateShort(weekDays[6])} ${new Date(weekDays[0]).getFullYear()}`;
 
-  // For week view we need all citas (passed as prop), for day view we already filter upstream
   const currentTimeOffset = (now.getHours() - 8) * 80 + (now.getMinutes() / 60) * 80;
 
   return (
@@ -299,7 +315,7 @@ export const AgendaTimeline: React.FC<Props> = ({ citas, allCitas, clientes, ser
       <div className="page-fade">
         {view === 'dia' ? (
           <DayView
-            citas={citas}
+            citas={currentCitasForDay}
             filterDate={filterDate}
             currentTimeOffset={currentTimeOffset}
           />

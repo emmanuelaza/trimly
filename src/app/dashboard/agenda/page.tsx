@@ -16,15 +16,12 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
   const params = await searchParams;
   const filterDate = params.date || new Date().toISOString().split('T')[0];
 
-  // Fetch ALL citas so the week view has full data
+  // Fetch ALL citas
   const [allCitas, clientes, servicios] = await Promise.all([
     getAppointments(),
     getClients(),
     getServices(),
   ]);
-
-  // Day-filtered citas for the day view
-  const citasForDay = allCitas.filter((c: any) => c.scheduled_at.startsWith(filterDate));
 
   return (
     <div className="space-y-10">
@@ -36,13 +33,12 @@ export default async function AgendaPage({ searchParams }: { searchParams: Promi
 
       <QuickAddAppointment clientes={clientes} servicios={servicios} filterDate={filterDate} />
 
-      {/* Main timeline — receives all citas for week view + day-filtered for day view */}
+      {/* Main timeline — receives all citas for both views */}
       <AgendaTimeline
-        citas={citasForDay}
+        allCitas={allCitas}
         clientes={clientes}
         servicios={servicios}
         filterDate={filterDate}
-        allCitas={allCitas}
       />
     </div>
   );
