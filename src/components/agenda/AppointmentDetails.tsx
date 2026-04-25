@@ -48,8 +48,8 @@ export function AppointmentDetails({ appointment, onClose, onEdit }: Props) {
   }
 
   const date = new Date(appointment.scheduled_at)
-  const dateFormatted = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
-  const timeFormatted = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+  const dateFormatted = date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Bogota' })
+  const timeFormatted = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota' })
 
   return (
     <div className="space-y-8 animate-in fade-in duration-300">

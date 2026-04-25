@@ -42,8 +42,8 @@ export async function createAppointment(formData: FormData) {
       return { success: false, error: "Faltan datos obligatorios" };
     }
     
-    // Construct scheduled_at
-    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+    // Construct scheduled_at (Forcing Colombia UTC-5 to avoid timezone shifts)
+    const scheduled_at = `${date}T${time}:00-05:00`;
 
     // ─── Conflict Check ───
     if (barber_id) {
@@ -194,7 +194,7 @@ export async function updateAppointment(id: string, formData: FormData) {
       return { success: false, error: "Faltan datos obligatorios" };
     }
 
-    const scheduled_at = new Date(`${date}T${time}:00`).toISOString();
+    const scheduled_at = `${date}T${time}:00-05:00`;
 
     // ─── Conflict Check ───
     if (barber_id) {

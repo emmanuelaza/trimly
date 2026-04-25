@@ -27,8 +27,8 @@ export function AppointmentForm({ clientes, servicios, barberos, onSuccess, init
   const [clientId, setClientId] = useState(editingAppointment?.client_id || "")
   const [serviceId, setServiceId] = useState(editingAppointment?.service_id || "")
   const [barberId, setBarberId] = useState(editingAppointment?.barber_id || "")
-  const [date, setDate] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toISOString().split('T')[0] : (initialDate || new Date().toISOString().split('T')[0]))
-  const [time, setTime] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }) : "")
+  const [date, setDate] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }) : (initialDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })))
+  const [time, setTime] = useState(editingAppointment ? new Date(editingAppointment.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Bogota' }) : "")
 
   const filteredClients = useMemo(() => {
     if (!clientSearch || clientId) return []

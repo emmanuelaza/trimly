@@ -42,6 +42,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
   
   const [filterDate, setFilterDate] = useState(initialDate);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
   
   // Side Panel State
   const [panelMode, setPanelMode] = useState<'none' | 'new' | 'details' | 'edit'>('none');
@@ -63,12 +64,24 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
     setFilterDate(addDays(filterDate, n * 7));
   };
 
+  const changeYear = (n: number) => {
+    const d = new Date(filterDate);
+    d.setFullYear(d.getFullYear() + n);
+    setFilterDate(d.toISOString().split('T')[0]);
+  };
+
+  const jumpToMonth = (month: number) => {
+    const d = new Date(filterDate);
+    d.setMonth(month);
+    setFilterDate(d.toISOString().split('T')[0]);
+    setShowPicker(false);
+  };
+
   const getCitasForDay = (dayStr: string) => {
     return allCitas.filter(c => {
+      // Use explicit Bogotá timezone for filtering
       const d = new Date(c.scheduled_at);
-      const isoLocal = d.getFullYear() + "-" + 
-                       String(d.getMonth() + 1).padStart(2, '0') + "-" + 
-                       String(d.getDate()).padStart(2, '0');
+      const isoLocal = d.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // YYYY-MM-DD
       return isoLocal === dayStr;
     }).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
   };
@@ -86,25 +99,23 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
   const AppointmentCard = ({ cita }: { cita: any }) => {
     const isCancelled = cita.status === 'cancelled';
     const isCompleted = cita.status === 'completed';
+    // Use America/Bogota to display exactly the intended time
     const date = new Date(cita.scheduled_at);
-    const timeStart = date.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    const timeFormat: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Bogota' };
+    const timeStart = date.toLocaleTimeString('es-CO', timeFormat);
     
-    // Calcular fin (pobremente, asumiendo 45min si no hay duración)
     const duration = cita.service?.duration_minutes || 45;
-    const timeEnd = new Date(date.getTime() + duration * 60000).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    const timeEnd = new Date(date.getTime() + duration * 60000).toLocaleTimeString('es-CO', timeFormat);
 
     let bgClass = "bg-orange-500/10 border-orange-500/20";
-    let statusLabel = "Confirmada";
     let statusColor = "bg-orange-500";
 
     if (isCompleted) {
       bgClass = "bg-green-500/10 border-green-500/20";
-      statusLabel = "Completada";
       statusColor = "bg-green-500";
     }
     if (isCancelled) {
       bgClass = "bg-red-500/10 border-red-500/20 opacity-60";
-      statusLabel = "Cancelada";
       statusColor = "bg-red-500";
     }
 
@@ -138,7 +149,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   const DayColumn = ({ day }: { day: string }) => {
     const citas = getCitasForDay(day);
-    const isToday = day === new Date().toISOString().split('T')[0];
+    const isToday = day === new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
 
     return (
       <div className={`space-y-4 min-h-[300px] flex flex-col ${isMobile && day !== filterDate ? 'hidden' : ''}`}>
@@ -165,19 +176,55 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
     );
   };
 
+  const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
   return (
     <div className="space-y-6 pb-20">
       {/* ── Navigation ────────────────────────────────── */}
-      <div className="flex items-center justify-between bg-background-secondary/50 p-2 rounded-2xl border border-border">
-        <div className="flex items-center gap-2">
+      <div className="flex flex-col md:flex-row items-center justify-between bg-background-secondary/50 p-3 rounded-2xl border border-border gap-4">
+        <div className="flex items-center gap-2 relative">
+          <button onClick={() => changeYear(-1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all text-text-tertiary hover:text-accent" title="Año anterior">
+            <ChevronLeft size={16} />
+            <ChevronLeft size={16} className="-ml-3" />
+          </button>
+          
           <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all">
             <ChevronLeft size={20} className="text-text-secondary" />
           </button>
-          <div className="px-4 text-sm font-bold text-text-primary">
-            {isMobile ? formatDateLong(filterDate) : `Semana del ${new Date(currentWeekStart).getDate()} de ${new Date(currentWeekStart).toLocaleDateString('es-CO', { month: 'long' })}`}
+
+          <div className="relative">
+            <button 
+              onClick={() => setShowPicker(!showPicker)}
+              className="px-4 py-2 text-sm font-bold text-text-primary hover:bg-background-tertiary rounded-xl transition-all flex items-center gap-2 border border-transparent hover:border-border"
+            >
+              {isMobile ? formatDateLong(filterDate) : `Semana del ${new Date(currentWeekStart).getDate()} de ${new Date(currentWeekStart).toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`}
+              <ChevronRight size={14} className={`transform transition-transform ${showPicker ? 'rotate-90' : ''}`} />
+            </button>
+
+            {showPicker && (
+              <div className="absolute top-full left-0 mt-2 p-4 bg-background-primary border border-border rounded-2xl shadow-2xl z-[60] min-w-[300px] animate-in fade-in zoom-in-95 duration-200">
+                <div className="grid grid-cols-3 gap-2">
+                  {MONTHS.map((m, i) => (
+                    <button
+                      key={m}
+                      onClick={() => jumpToMonth(i)}
+                      className={`py-2 text-[11px] font-bold rounded-lg transition-all ${new Date(filterDate).getMonth() === i ? 'bg-accent text-background-primary' : 'hover:bg-background-tertiary text-text-secondary'}`}
+                    >
+                      {m.substring(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
           <button onClick={() => changeWeek(1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all">
             <ChevronRight size={20} className="text-text-secondary" />
+          </button>
+
+          <button onClick={() => changeYear(1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all text-text-tertiary hover:text-accent" title="Año siguiente">
+            <ChevronRight size={16} />
+            <ChevronRight size={16} className="-ml-3" />
           </button>
         </div>
 
