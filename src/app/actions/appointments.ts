@@ -189,6 +189,8 @@ export async function getAppointmentById(id: string) {
 export async function updateAppointment(id: string, formData: FormData) {
   try {
     const supabase = await createClient();
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return { success: false, error: "No barbershopId" };
     
     const client_id = formData.get("client_id") as string;
     const service_id = formData.get("service_id") as string;
