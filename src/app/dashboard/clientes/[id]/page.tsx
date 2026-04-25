@@ -1,18 +1,20 @@
 import { getClients } from '@/app/actions/clients';
 import { getAppointments } from '@/app/actions/appointments';
+import { getServices } from '@/app/actions/services';
 import Link from 'next/link';
 import { ChevronLeft, Plus, Edit2, Calendar, Star } from 'lucide-react';
 import { Card, Avatar, Button, Badge, StatCard } from '@/components/ui/RedesignComponents';
+import ClientProfileActions from './ClientProfileActions';
 
 // Using dynamic route params Next.js 15+ Pattern
 export default async function PerfilCliente({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  // Real apps would fetch specifically `getClientById`, but reusing `getClients` as mock:
-  const clientes = await getClients();
-  const cliente = clientes.find((c: any) => c.id === id);
-  
   const allCitas = await getAppointments();
+  const servicios = await getServices();
+  const allClientes = await getClients();
+  
+  const cliente = allClientes.find((c: any) => c.id === id);
   const citasCliente = allCitas.filter((c: any) => c.client_id === id).sort((a: any, b: any) => new Date(b.scheduled_at).getTime() - new Date(a.scheduled_at).getTime());
 
   if (!cliente) return <div className="p-10 text-center text-text-secondary">Cliente no encontrado</div>;
@@ -40,10 +42,11 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
             <p className="text-xs text-text-tertiary mt-2">Cliente desde Ene 2024 · 95% asistencia</p>
           </div>
         </div>
-        <div className="flex gap-3">
-          <Button variant="secondary"><Edit2 size={16} /> Editar</Button>
-          <Button><Plus size={16} /> Nueva cita</Button>
-        </div>
+        <ClientProfileActions 
+          cliente={cliente} 
+          allClientes={allClientes} 
+          servicios={servicios} 
+        />
       </Card>
 
       {/* 3. Stats 4 cards */}

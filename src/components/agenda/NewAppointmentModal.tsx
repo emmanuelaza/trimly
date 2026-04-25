@@ -28,6 +28,7 @@ interface Servicio {
 interface Props {
   clientes: Cliente[]
   servicios: Servicio[]
+  initialClientId?: string
 }
 
 /* ─── Step Indicator ─────────────────────────────────────── */
@@ -92,7 +93,7 @@ function buildSlots(): { label: string; slots: Slot[] }[] {
 }
 
 /* ─── Main Component ─────────────────────────────────────── */
-export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
+export function NewAppointmentModal({ clientes = [], servicios = [], initialClientId }: Props) {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
@@ -107,6 +108,17 @@ export function NewAppointmentModal({ clientes = [], servicios = [] }: Props) {
   const [selectedServicios, setSelectedServicios] = React.useState<Servicio[]>([])
   const [selectedSlot, setSelectedSlot] = React.useState<Slot | null>(null)
   const [done, setDone] = React.useState(false)
+
+  // Handle initial client
+  React.useEffect(() => {
+    if (initialClientId && isOpen) {
+      const cliente = clientes.find(c => c.id === initialClientId);
+      if (cliente) {
+        setSelectedCliente(cliente);
+        setStep(2); // Jump to services
+      }
+    }
+  }, [initialClientId, isOpen, clientes]);
 
   /* Reset wizard on close */
   const handleClose = () => {
