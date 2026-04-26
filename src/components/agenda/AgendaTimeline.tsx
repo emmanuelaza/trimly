@@ -164,6 +164,17 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   return (
     <div className="space-y-6 pb-20">
+      {/* ── Status Bar / Timezone Indicator ──────────────── */}
+      <div className="flex items-center justify-end gap-2 px-1">
+        <div className="flex items-center gap-1.5 px-3 py-1 bg-background-tertiary rounded-full border border-border">
+          <div className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+          <span className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">
+            Horario: {timezone} {barbershop?.country ? `(${barbershop.country})` : ''}
+          </span>
+        </div>
+      </div>
+
+      {/* ── Navigation ────────────────────────────────── */}
       <div className="flex items-center justify-between bg-background-secondary/50 p-2 rounded-2xl border border-border">
         <div className="flex items-center gap-2">
           <button onClick={() => changeWeek(-1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all">

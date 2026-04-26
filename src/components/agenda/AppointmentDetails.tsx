@@ -58,8 +58,14 @@ export function AppointmentDetails({ appointment, onClose, onEdit, barbershop }:
       {/* Header Profile */}
       <div className="flex flex-col items-center text-center gap-4">
         <Avatar initials={appointment.client?.name?.substring(0, 2).toUpperCase()} className="w-20 h-20 text-2xl" />
-        <div>
-          <h2 className="text-xl font-bold text-text-primary">{appointment.client?.name}</h2>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-bold text-text-primary">{appointment.client?.name}</h2>
+          <div className="flex items-center gap-2 justify-center">
+            <Badge variant={appointment.status === 'confirmed' ? 'warning' : appointment.status === 'completed' ? 'success' : 'danger'}>
+              {appointment.status.toUpperCase()}
+            </Badge>
+            <span className="text-[10px] text-text-tertiary font-mono opacity-50">RAW: {appointment.scheduled_at}</span>
+          </div>
           <div className="flex items-center gap-2 mt-1 justify-center">
             {appointment.client?.phone && (
               <span className="text-sm text-text-tertiary flex items-center gap-1">
