@@ -29,6 +29,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
     getServices(),
   ]);
 
+  const { data: bShop } = await supabase.from('barbershops').select('subscription_status, trial_ends_at').eq('owner_id', user.id).single();
+  const isTrial = bShop?.subscription_status === 'trialing';
+  const trialDaysLeft = isTrial ? Math.ceil((new Date(bShop.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
+
   return (
     <div className="flex min-h-screen bg-background-primary overflow-hidden">
       {/* Sidebar for Desktop */}
@@ -36,6 +40,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {isTrial && (
+          <div className="bg-accent/10 border-b border-accent/20 px-6 py-2 flex items-center justify-between animate-in slide-in-from-top duration-500">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-accent animate-pulse" />
+              <p className="text-xs font-bold text-accent uppercase tracking-wider">
+                Prueba Gratis Activa: Quedan {trialDaysLeft} días
+              </p>
+            </div>
+            <a href="/dashboard/billing" className="text-[10px] font-black bg-accent text-background-primary px-3 py-1 rounded-full hover:scale-105 transition-all">
+              VER PLANES
+            </a>
+          </div>
+        )}
         <main className="flex-1 overflow-y-auto pb-24 md:pb-0">
           <div className="max-w-[1400px] mx-auto p-4 md:p-8 lg:p-12">
             <div className="page-fade">

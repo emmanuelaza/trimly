@@ -15,7 +15,8 @@ import {
   ChevronRight,
   LogOut,
   Plus,
-  Zap
+  Zap,
+  CreditCard
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
@@ -31,6 +32,7 @@ const mainNavItems = [
 
 const secondaryNavItems = [
   { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Zap, badge: 'NEW' },
+  { href: '/dashboard/billing', label: 'Facturación', icon: CreditCard },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
 
