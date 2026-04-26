@@ -1,6 +1,7 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { getClients } from '@/app/actions/clients';
 import { getServices } from '@/app/actions/services';
+import { getBarbers } from '@/app/actions/barbers';
 import { getBarbershop } from '@/app/actions/barbershops';
 import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
 
