@@ -128,7 +128,7 @@ export default function BillingClient({ barbershop }: { barbershop: any }) {
             <Button 
               onClick={() => handleCheckout(plan.id)}
               loading={loading === plan.id}
-              variant={plan.popular ? 'primary' : 'outline'}
+              variant={plan.popular ? 'primary' : 'secondary'}
               className="w-full py-4 rounded-xl font-bold text-sm shadow-lg shadow-accent/5"
             >
               <CreditCard size={18} className="mr-2" />
