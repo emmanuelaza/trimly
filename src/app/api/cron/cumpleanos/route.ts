@@ -30,7 +30,7 @@ export async function GET(req: Request) {
     
     // Filtrado en JS para simplicidad con diferentes formatos de fecha, 
     // aunque lo ideal sería en SQL si el volumen es muy alto.
-    const bdayClients = clients?.filter(c => c.birthdate && c.birthdate.includes(monthDay)) || [];
+    const bdayClients = (clients as any[])?.filter((c: any) => c.birthdate && c.birthdate.includes(monthDay)) || [];
 
     if (bdayClients.length === 0) return NextResponse.json({ sent: 0 });
 
@@ -42,7 +42,7 @@ export async function GET(req: Request) {
         .select('is_active')
         .eq('barbershop_id', client.barbershop_id)
         .eq('type', 'birthday')
-        .single();
+        .maybeSingle();
 
       if (automation?.is_active && client.email) {
         const html = getBaseEmailTemplate(
