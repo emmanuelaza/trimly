@@ -5,11 +5,14 @@ import { updateSubscriptionStatus } from '@/app/actions/subscriptions';
 export async function POST(request: Request) {
   try {
     const signature = request.headers.get('x-signature');
+    const xRequestId = request.headers.get('x-request-id');
     const bodyText = await request.text();
     const payload = JSON.parse(bodyText);
 
+    console.log('Webhook Payload:', JSON.stringify(payload, null, 2));
+
     // Verify signature
-    if (!signature || !verifyWebhookSignature(signature, bodyText)) {
+    if (!signature || !xRequestId || !verifyWebhookSignature(signature, xRequestId)) {
       console.warn('Invalid webhook signature');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
