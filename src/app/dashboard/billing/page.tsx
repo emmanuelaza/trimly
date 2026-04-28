@@ -3,6 +3,9 @@ import BillingClient from './BillingClient';
 import { createClient } from '@/lib/supabase/server';
 import { getBarbershopId } from '@/app/actions/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function BillingPage() {
   const supabase = await createClient();
   const barbershopId = await getBarbershopId();
@@ -11,7 +14,7 @@ export default async function BillingPage() {
     .from('barbershops')
     .select('*')
     .eq('id', barbershopId)
-    .single();
+    .maybeSingle();
 
   const { data: subscription } = await supabase
     .from('subscriptions')

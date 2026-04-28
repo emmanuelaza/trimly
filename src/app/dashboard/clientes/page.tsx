@@ -2,7 +2,8 @@ import { getClients } from '@/app/actions/clients';
 import { Card } from '@/components/ui/RedesignComponents';
 import ClientesClient from './ClientesClient';
 
-export const revalidate = 60;
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function ClientesPage() {
   let clientes = [];

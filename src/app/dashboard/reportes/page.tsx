@@ -4,6 +4,9 @@ import { getReportStats } from '@/app/actions/appointments';
 import { createClient } from '@/lib/supabase/server';
 import { getBarbershopId } from '@/app/actions/utils';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function ReportesPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   try {
     const { p } = await searchParams;

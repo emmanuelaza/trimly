@@ -3,6 +3,9 @@ import { notFound } from 'next/navigation';
 import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop } from '@/app/actions/booking';
 import BookingClient from './BookingClient';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default async function BookingPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   
