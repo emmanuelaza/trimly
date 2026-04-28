@@ -28,7 +28,7 @@ export async function POST() {
           frequency: 3,
           frequency_type: 'days'
         }
-      }
+      } as any
     });
 
     if (result.init_point) {

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/serviceRole'; // Need service role to bypass RLS if needed
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +9,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Missing barbershopId' }, { status: 400 });
     }
 
-    const supabase = createClient();
+    const supabase = getSupabaseAdmin();
 
     // Check if they already have an active subscription (maybe they paid before the 3 days)
     const { data: barbershop } = await supabase
