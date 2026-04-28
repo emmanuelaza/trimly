@@ -34,47 +34,51 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const url = new URL(request.url)
-  const path = url.pathname
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    const url = new URL(request.url)
+    const path = url.pathname
 
-  // 1. Proteger Dashboard (Auth)
-  if (!user && path.startsWith('/dashboard') && path !== '/dashboard/billing') {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
+    // 1. Proteger Dashboard (Auth)
+    if (!user && path.startsWith('/dashboard') && path !== '/dashboard/billing') {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
 
-  // 2. Control de Acceso por Suscripción y Onboarding
-  if (user && (path.startsWith('/dashboard') || path === '/onboarding')) {
-    const { data: barbershop } = await supabase
-      .from('barbershops')
-      .select('subscription_status, trial_ends_at, onboarding_completed')
-      .eq('owner_id', user.id)
-      .single()
+    // 2. Control de Acceso por Suscripción y Onboarding
+    if (user && (path.startsWith('/dashboard') || path === '/onboarding')) {
+      const { data: barbershop } = await supabase
+        .from('barbershops')
+        .select('subscription_status, trial_ends_at, onboarding_completed')
+        .eq('owner_id', user.id)
+        .maybeSingle()
 
-    if (barbershop) {
-      // Onboarding check
-      if (!barbershop.onboarding_completed && path.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
-      if (barbershop.onboarding_completed && path === '/onboarding') {
-        return NextResponse.redirect(new URL('/dashboard', request.url))
-      }
+      if (barbershop) {
+        // Onboarding check
+        if (!barbershop.onboarding_completed && path.startsWith('/dashboard')) {
+          return NextResponse.redirect(new URL('/onboarding', request.url))
+        }
+        if (barbershop.onboarding_completed && path === '/onboarding') {
+          return NextResponse.redirect(new URL('/dashboard', request.url))
+        }
 
-      // Subscription check (only if onboarding is done and in dashboard)
-      if (barbershop.onboarding_completed && path.startsWith('/dashboard') && !path.startsWith('/dashboard/billing')) {
-        const isTrialActive = barbershop.subscription_status === 'trialing' && new Date(barbershop.trial_ends_at) > new Date()
-        const isActive = barbershop.subscription_status === 'active'
+        // Subscription check (only if onboarding is done and in dashboard)
+        if (barbershop.onboarding_completed && path.startsWith('/dashboard') && !path.startsWith('/dashboard/billing')) {
+          const isTrialActive = barbershop.subscription_status === 'trialing' && new Date(barbershop.trial_ends_at) > new Date()
+          const isActive = barbershop.subscription_status === 'active'
 
-        if (!isActive && !isTrialActive) {
-          return NextResponse.redirect(new URL('/dashboard/billing?expired=true', request.url))
+          if (!isActive && !isTrialActive) {
+            return NextResponse.redirect(new URL('/dashboard/billing?expired=true', request.url))
+          }
+        }
+      } else {
+        // Si no hay barbería y está en dashboard, forzar onboarding
+        if (path.startsWith('/dashboard')) {
+          return NextResponse.redirect(new URL('/onboarding', request.url))
         }
       }
-    } else {
-      // Si no hay barbería y está en dashboard, forzar onboarding
-      if (path.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL('/onboarding', request.url))
-      }
     }
+  } catch (err) {
+    console.error("Middleware error:", err)
   }
 
   return response
