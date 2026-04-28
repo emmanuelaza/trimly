@@ -45,7 +45,7 @@ export async function exportReportData(dateFrom: string, dateTo: string) {
     if (clientError) throw clientError;
 
     // 3. Fetch all completed appointments for these clients to calculate total visits/spent
-    const clientIds = clients.map(c => c.id);
+    const clientIds = (clients as any[]).map((c: any) => c.id);
     const { data: allAppointments, error: allAppError } = await supabase
       .from("appointments")
       .select("client_id, price_charged, status")
@@ -55,16 +55,16 @@ export async function exportReportData(dateFrom: string, dateTo: string) {
     if (allAppError) throw allAppError;
 
     // Map stats to clients
-    const clientsWithStats = clients.map(client => {
-      const clientApps = allAppointments.filter(a => a.client_id === client.id);
+    const clientsWithStats = (clients as any[]).map(client => {
+      const clientApps = (allAppointments as any[]).filter((a: any) => a.client_id === client.id);
       return {
         ...client,
         totalVisits: clientApps.length,
-        totalSpent: clientApps.reduce((acc, curr) => acc + (Number(curr.price_charged) || 0), 0)
+        totalSpent: clientApps.reduce((acc: number, curr: any) => acc + (Number(curr.price_charged) || 0), 0)
       };
-    }).filter(c => {
+    }).filter((c: any) => {
         // Only include clients who had a cita in the selected period
-        return appointments.some(a => (a as any).client?.id === c.id);
+        return (appointments as any[]).some((a: any) => (a as any).client?.id === c.id);
     });
 
     return {

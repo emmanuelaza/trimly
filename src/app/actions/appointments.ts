@@ -54,7 +54,7 @@ export async function createAppointment(formData: FormData) {
     
     const tempDate = new Date(`${date}T12:00:00`); 
     const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
-    let offset = offsetParts.find(p => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
+    let offset = offsetParts.find((p: any) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
     
     if (offset === "") offset = "+00:00";
     if (!offset.includes(":")) {
@@ -185,7 +185,7 @@ export async function updateAppointment(id: string, formData: FormData) {
     const timezone = bShop?.config?.timezone || "America/Bogota";
     const tempDate = new Date(`${date}T12:00:00`); 
     const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
-    let offset = offsetParts.find(p => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
+    let offset = offsetParts.find((p: any) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
     if (offset === "") offset = "+00:00";
     if (!offset.includes(":")) {
       const sign = offset.startsWith('-') ? '-' : '+';

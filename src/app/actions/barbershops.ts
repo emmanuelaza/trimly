@@ -127,7 +127,7 @@ export async function initializeAutomations(barbershopId: string) {
   const supabase = await createClient();
   const types = ['reminder_24h', 'confirmation', 'post_visit', 'daily_report', 'recover_inactive', 'birthday'];
   
-  const automations = types.map(t => ({
+  const automations = types.map((t: string) => ({
     barbershop_id: barbershopId,
     type: t,
     is_active: false,
@@ -169,7 +169,7 @@ export async function getAutomationStats() {
 
     let recuperadosCount = 0;
     if (logsRecuperacion && logsRecuperacion.length > 0) {
-      const clientIds = Array.from(new Set(logsRecuperacion.map(l => l.client_id)));
+      const clientIds = Array.from(new Set(logsRecuperacion.map((l: any) => l.client_id)));
       
       // Get all completed appointments for these clients after the startOfMonth
       const { data: recentApps, error: err3 } = await supabase
@@ -185,8 +185,8 @@ export async function getAutomationStats() {
         // For each log, check if there's any appointment after sent_at
         // Using a set of clientIds who were recovered to avoid double counting
         const recoveredSet = new Set();
-        logsRecuperacion.forEach(log => {
-          const hasAppAfter = recentApps.some(app => 
+        logsRecuperacion.forEach((log: any) => {
+          const hasAppAfter = recentApps.some((app: any) => 
             app.client_id === log.client_id && 
             new Date(app.scheduled_at) > new Date(log.sent_at)
           );
@@ -208,7 +208,7 @@ export async function getAutomationStats() {
     
     let realEvitados = 0;
     if (remindedApps && remindedApps.length > 0) {
-       const ids = remindedApps.map(r => r.appointment_id).filter(Boolean);
+       const ids = remindedApps.map((r: any) => r.appointment_id).filter(Boolean);
        if (ids.length > 0) {
           const { count, error: err5 } = await supabase
             .from("appointments")
