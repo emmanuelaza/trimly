@@ -7,8 +7,7 @@ export function getSupabaseAdmin() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   
   if (!url || !key) {
-    console.warn('Supabase Admin env vars missing.');
-    return null as any;
+    throw new Error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
   }
 
   return createClient(url, key);
