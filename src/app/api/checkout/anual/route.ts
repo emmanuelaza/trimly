@@ -16,23 +16,9 @@ export async function POST() {
     const planId = process.env.MP_PLAN_ID_ANUAL;
     if (!planId) return NextResponse.json({ error: 'Plan ID not configured' }, { status: 500 });
 
-    const result = await mpPreApproval.create({
-      body: {
-        preapproval_plan_id: planId,
-        payer_email: user.email,
-        back_url: `https://trimlyapp-phi.vercel.app/dashboard/billing?status=success`,
-        status: 'pending',
-        external_reference: barbershopId,
-        reason: 'Trimly Plan Anual'
-      }
-    });
-
-    if (result.init_point) {
-      await createSubscription('anual', result.id);
-      return NextResponse.json({ init_point: result.init_point });
-    }
-
-    throw new Error('Failed to create preapproval');
+    const checkoutUrl = `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${planId}`;
+    
+    return NextResponse.json({ url: checkoutUrl });
   } catch (error: any) {
     console.error('Checkout Anual Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

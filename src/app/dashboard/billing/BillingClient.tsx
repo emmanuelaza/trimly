@@ -67,8 +67,10 @@ export default function BillingClient({ barbershop }: { barbershop: any }) {
       });
       const data = await res.json();
       
-      if (data.init_point) {
-        window.location.href = data.init_point;
+      const checkoutUrl = data.url || data.init_point;
+      
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
         throw new Error(data.error || 'Error al iniciar checkout');
       }
