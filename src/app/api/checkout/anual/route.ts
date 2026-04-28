@@ -1,36 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { mpPreApproval } from '@/lib/mercadopago';
-import { getBarbershopId } from '@/app/actions/utils';
-import { createSubscription } from '@/app/actions/subscriptions';
 
 export async function POST() {
-  try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const barbershopId = await getBarbershopId();
-    if (!barbershopId) return NextResponse.json({ error: 'No barbershop found' }, { status: 404 });
-
-    const planId = process.env.MP_PLAN_ID_ANUAL;
-    if (!planId) return NextResponse.json({ error: 'Plan ID not configured' }, { status: 500 });
-
-    const result = await mpPreApproval.create({
-      body: {
-        preapproval_plan_id: planId,
-        payer_email: user.email,
-        back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
-        external_reference: barbershopId,
-        reason: 'Trimly Plan Anual',
-      } as any
-    });
-
-    if (result.init_point) {
-      return NextResponse.json({ url: result.init_point });
-    }
-  } catch (error: any) {
-    console.error('Checkout Anual Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  const planId = process.env.MP_PLAN_ID_ANUAL;
+  if (!planId) {
+    return NextResponse.json({ error: 'Plan ID not configured' }, { status: 500 });
   }
+
+  return NextResponse.json({ 
+    init_point: `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${planId}` 
+  });
 }
