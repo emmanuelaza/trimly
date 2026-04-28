@@ -237,10 +237,16 @@ export async function getReportStats(periodo: string = 'mes') {
     const prevMonth = new Date(startDate); prevMonth.setMonth(prevMonth.getMonth() - 1);
     const { data: citasPrev } = await supabase.from("appointments").select("price_charged").eq("barbershop_id", barbershopId).eq("status", "completed").gte("scheduled_at", prevMonth.toISOString()).lt("scheduled_at", startISO);
 
-    const completedCitas = citasRange.filter(c => c.status === 'completed');
-    const cancelledCitas = citasRange.filter(c => c.status === 'cancelled');
-    const ingresos = completedCitas.reduce((acc, curr) => acc + (Number(curr.price_charged) || 0), 0);
-    const ingPrev = citasPrev?.reduce((acc, curr) => acc + (Number(curr.price_charged) || 0), 0) || 0;
+    type AppointmentRow = {
+      status: string;
+      price_charged: number | null;
+      [key: string]: any;
+    };
+
+    const completedCitas = (citasRange as AppointmentRow[]).filter((c: AppointmentRow) => c.status === 'completed');
+    const cancelledCitas = (citasRange as AppointmentRow[]).filter((c: AppointmentRow) => c.status === 'cancelled');
+    const ingresos = completedCitas.reduce((acc: number, curr: AppointmentRow) => acc + (Number(curr.price_charged) || 0), 0);
+    const ingPrev = (citasPrev as AppointmentRow[] | null)?.reduce((acc: number, curr: AppointmentRow) => acc + (Number(curr.price_charged) || 0), 0) ?? 0;
     const noShowRate = citasRange.length > 0 ? (cancelledCitas.length / citasRange.length) * 100 : 0;
 
     // New clients
@@ -249,7 +255,7 @@ export async function getReportStats(periodo: string = 'mes') {
     // Grouping
     const serviceMap: Record<string, { n: string, c: number, t: number }> = {};
     const barberMap: Record<string, { n: string, c: number }> = {};
-    citasRange.forEach(c => {
+    (citasRange as AppointmentRow[]).forEach((c: AppointmentRow) => {
       const sName = c.service?.name || 'Otro';
       if (!serviceMap[sName]) serviceMap[sName] = { n: sName, c: 0, t: 0 };
       serviceMap[sName].c++; serviceMap[sName].t += (Number(c.price_charged) || 0);
