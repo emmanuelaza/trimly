@@ -13,32 +13,31 @@ export async function POST() {
     const barbershopId = await getBarbershopId();
     if (!barbershopId) return NextResponse.json({ error: 'No barbershop found' }, { status: 404 });
 
-    const result = await mpPreference.create({
-      body: {
-        items: [{
-          id: 'lifetime',
-          title: 'Trimly Lifetime',
-          quantity: 1,
-          unit_price: 599000,
-          currency_id: 'COP'
-        }],
-        payer: { email: user.email },
-        back_urls: {
-          success: `https://trimlyapp-phi.vercel.app/dashboard/billing?status=success`,
-          failure: `https://trimlyapp-phi.vercel.app/dashboard/billing?status=failed`,
-          pending: `https://trimlyapp-phi.vercel.app/dashboard/billing?status=pending`
-        },
-        auto_return: 'approved',
-        external_reference: barbershopId
-      }
-    });
+    // 1. Activate Trial in DB
+    const { error: dbError } = await supabase
+      .from('barbershops')
+      .update({ 
+        subscription_status: 'trialing',
+        trial_ends_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+      })
+      .eq('id', barbershopId);
 
-    if (result.init_point) {
-      await createSubscription('lifetime', undefined, result.id);
-      return NextResponse.json({ init_point: result.init_point });
+    if (dbError) throw dbError;
+
+    // 2. Schedule QStash Job (3 days = 259200 seconds)
+    try {
+      const { qstash } = await import('@/lib/qstash');
+      await qstash.publishJSON({
+        url: `${process.env.NEXT_PUBLIC_APP_URL}/api/jobs/lifetime-billing`,
+        body: { barbershopId, userEmail: user.email },
+        delay: 259200,
+      });
+    } catch (qstashError) {
+      console.error('QStash Error:', qstashError);
+      // Continue anyway, trial is active
     }
 
-    throw new Error('Failed to create preference');
+    return NextResponse.json({ success: true, message: 'Trial activated' });
   } catch (error: any) {
     console.error('Checkout Lifetime Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

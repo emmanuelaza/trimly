@@ -13,5 +13,12 @@ export default async function BillingPage() {
     .eq('id', barbershopId)
     .single();
 
-  return <BillingClient barbershop={barbershop} />;
+  const { data: subscription } = await supabase
+    .from('subscriptions')
+    .select('plan_id')
+    .eq('barbershop_id', barbershopId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  return <BillingClient barbershop={barbershop} currentPlanId={subscription?.plan_id} />;
 }

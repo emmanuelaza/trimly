@@ -16,9 +16,24 @@ export async function POST() {
     const planId = process.env.MP_PLAN_ID_MENSUAL;
     if (!planId) return NextResponse.json({ error: 'Plan ID not configured' }, { status: 500 });
 
-    const checkoutUrl = `https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=${planId}`;
-    
-    return NextResponse.json({ url: checkoutUrl });
+    const result = await mpPreApproval.create({
+      body: {
+        preapproval_plan_id: planId,
+        payer_email: user.email,
+        back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
+        status: 'pending',
+        external_reference: barbershopId,
+        reason: 'Trimly Plan Mensual',
+        free_trial: {
+          frequency: 3,
+          frequency_type: 'days'
+        }
+      }
+    });
+
+    if (result.init_point) {
+      return NextResponse.json({ url: result.init_point });
+    }
   } catch (error: any) {
     console.error('Checkout Mensual Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

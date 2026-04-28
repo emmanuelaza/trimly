@@ -56,7 +56,7 @@ export async function middleware(request: NextRequest) {
       const isActive = barbershop.subscription_status === 'active'
 
       if (!isActive && !isTrialActive) {
-        return NextResponse.redirect(new URL('/dashboard/billing', request.url))
+        return NextResponse.redirect(new URL('/dashboard/billing?expired=true', request.url))
       }
     }
   }
