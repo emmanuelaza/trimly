@@ -35,7 +35,7 @@ export async function GET(req: Request) {
         .select('is_active')
         .eq('barbershop_id', client.barbershop_id)
         .eq('type', 'recover_inactive')
-        .single();
+        .maybeSingle();
 
       if (automation?.is_active && client.email) {
         const html = getBaseEmailTemplate(

@@ -46,7 +46,7 @@ export async function GET(req: Request) {
         .select('is_active')
         .eq('barbershop_id', app.barbershop_id)
         .eq('type', 'reminder_24h')
-        .single();
+        .maybeSingle();
 
       const clientData = app.client as any;
       const serviceData = app.service as any;

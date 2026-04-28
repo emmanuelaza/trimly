@@ -24,7 +24,7 @@ export async function GET(req: Request) {
         .select('is_active')
         .eq('barbershop_id', shop.id)
         .eq('type', 'daily_report')
-        .single();
+        .maybeSingle();
 
       if (automation?.is_active) {
         const today = new Date().toISOString().split('T')[0];
@@ -38,10 +38,10 @@ export async function GET(req: Request) {
           .lte('scheduled_at', `${today}T23:59:59Z`);
 
         const totalCitas = appointments?.length || 0;
-        const ingresos = appointments?.reduce((acc, curr) => acc + (Number(curr.price_charged) || 0), 0) || 0;
+        const ingresos = (appointments as any[])?.reduce((acc: number, curr: any) => acc + (Number(curr.price_charged) || 0), 0) || 0;
         
         const servicesMap: Record<string, number> = {};
-        appointments?.forEach(app => {
+        (appointments as any[])?.forEach((app: any) => {
           const name = (app.service as any)?.name || 'Desconocido';
           servicesMap[name] = (servicesMap[name] || 0) + 1;
         });
