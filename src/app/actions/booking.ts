@@ -12,7 +12,7 @@ export async function getBarbershopBySlug(slug: string) {
     .from("barbershops")
     .select("id, name, city, whatsapp, opening_hours")
     .eq("slug", slug)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Error fetching barbershop by slug:", error);

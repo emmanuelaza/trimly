@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   // TAREA: Verificar si el usuario tiene barbershop, si no, crearlo automáticamente
-  await getBarbershopId();
+  const barbershopId = await getBarbershopId();
 
   const negocio = user.user_metadata?.negocio || "Barbería";
 
@@ -29,7 +29,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
     getServices(),
   ]);
 
-  const { data: bShop } = await supabase.from('barbershops').select('subscription_status, trial_ends_at').eq('owner_id', user.id).single();
+  const { data: bShop } = await supabase.from('barbershops').select('subscription_status, trial_ends_at').eq('id', barbershopId).maybeSingle();
   const isTrial = bShop?.subscription_status === 'trialing';
   const trialDaysLeft = isTrial ? Math.ceil((new Date(bShop.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 

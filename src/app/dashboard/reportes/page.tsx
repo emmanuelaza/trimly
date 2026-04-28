@@ -17,7 +17,7 @@ export default async function ReportesPage({ searchParams }: { searchParams: Pro
       .from('barbershops')
       .select('subscription_status')
       .eq('id', barbershopId)
-      .single();
+      .maybeSingle();
 
     const { data: sub } = await supabase
       .from('subscriptions')
