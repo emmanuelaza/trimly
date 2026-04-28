@@ -13,31 +13,32 @@ export async function POST() {
     const barbershopId = await getBarbershopId();
     if (!barbershopId) return NextResponse.json({ error: 'No barbershop found' }, { status: 404 });
 
-    // 1. Activate Trial in DB
-    const { error: dbError } = await supabase
-      .from('barbershops')
-      .update({ 
-        subscription_status: 'trialing',
-        trial_ends_at: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-      })
-      .eq('id', barbershopId);
+    const result = await mpPreference.create({
+      body: {
+        items: [
+          {
+            id: 'lifetime',
+            title: 'Trimly Plan Lifetime - Pago Único',
+            quantity: 1,
+            unit_price: 599000,
+            currency_id: 'COP'
+          }
+        ],
+        back_urls: {
+          success: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
+          failure: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=failed`,
+          pending: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=pending`,
+        },
+        auto_return: 'approved',
+        external_reference: barbershopId,
+      }
+    });
 
-    if (dbError) throw dbError;
-
-    // 2. Schedule QStash Job (3 days = 259200 seconds)
-    try {
-      const { qstash } = await import('@/lib/qstash');
-      await qstash.publishJSON({
-        url: `${process.env.NEXT_PUBLIC_APP_URL}/api/jobs/lifetime-billing`,
-        body: { barbershopId, userEmail: user.email },
-        delay: 259200,
-      });
-    } catch (qstashError) {
-      console.error('QStash Error:', qstashError);
-      // Continue anyway, trial is active
+    if (result.init_point) {
+      return NextResponse.json({ url: result.init_point });
     }
 
-    return NextResponse.json({ success: true, message: 'Trial activated' });
+    throw new Error('No se pudo generar el punto de inicio de pago');
   } catch (error: any) {
     console.error('Checkout Lifetime Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

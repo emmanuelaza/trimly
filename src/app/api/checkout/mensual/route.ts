@@ -21,13 +21,8 @@ export async function POST() {
         preapproval_plan_id: planId,
         payer_email: user.email,
         back_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/billing?status=success`,
-        status: 'pending',
         external_reference: barbershopId,
         reason: 'Trimly Plan Mensual',
-        free_trial: {
-          frequency: 3,
-          frequency_type: 'days'
-        }
       } as any
     });
 

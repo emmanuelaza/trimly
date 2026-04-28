@@ -349,10 +349,10 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
                   size="lg"
                   className={`w-full font-bold h-12 ${plan.buttonClassName || ''}`}
                 >
-                  {isCurrentPlan ? 'Plan actual' : 'Empezar gratis 3 días'}
+                  {isCurrentPlan ? 'Plan actual' : 'Elegir Plan'}
                 </Button>
                 <p className="text-center text-xs text-text-tertiary font-medium">
-                  3 días gratis · Sin tarjeta de crédito
+                  Pago seguro · Cancela en cualquier momento
                 </p>
               </div>
             </Card>
