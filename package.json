@@ -14,6 +14,7 @@
     "@upstash/qstash": "^2.10.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "file-saver": "^2.0.5",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.8.0",
     "mercadopago": "^2.12.0",
@@ -23,10 +24,12 @@
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
-    "tailwind-merge": "^3.5.0"
+    "tailwind-merge": "^3.5.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.2.2",
+    "@types/file-saver": "^2.0.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

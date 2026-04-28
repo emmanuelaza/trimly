@@ -5,7 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { IngresosChart } from '@/components/reportes/IngresosChart';
+import { FileSpreadsheet, Download, Lock } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+import { exportReportData } from '@/app/actions/reports';
 
 type Periodo = 'hoy' | 'semana' | 'mes' | 'todo';
 
@@ -16,13 +22,108 @@ const PERIODOS: { id: Periodo; label: string }[] = [
   { id: 'todo', label: 'Todo' },
 ];
 
-export default function ReportesClient({ stats, initialPeriod }: { stats: any, initialPeriod: Periodo }) {
+export default function ReportesClient({ 
+  stats, 
+  initialPeriod, 
+  subscriptionStatus,
+  planType
+}: { 
+  stats: any, 
+  initialPeriod: Periodo,
+  subscriptionStatus?: string,
+  planType?: string
+}) {
   const router = useRouter();
   const [periodo, setPeriodo] = useState<Periodo>(initialPeriod);
+  const [exporting, setExporting] = useState(false);
 
   const handlePeriodChange = (p: Periodo) => {
     setPeriodo(p);
     router.push(`/dashboard/reportes?p=${p}`);
+  };
+
+  const isPremiumPlan = planType === 'anual' || planType === 'lifetime';
+  const canExport = isPremiumPlan && subscriptionStatus === 'active';
+
+  const handleExport = async () => {
+    if (!canExport) {
+        toast.error("Exportación disponible en plan Anual o Lifetime");
+        return;
+    }
+
+    setExporting(true);
+    try {
+      const now = new Date();
+      let startDate = new Date();
+      if (periodo === 'hoy') startDate.setHours(0, 0, 0, 0);
+      else if (periodo === 'semana') startDate.setDate(now.getDate() - 7);
+      else if (periodo === 'mes') startDate.setMonth(now.getMonth() - 1);
+      else if (periodo === 'todo') startDate = new Date(2000, 0, 1);
+
+      const data = await exportReportData(startDate.toISOString(), now.toISOString());
+      
+      if (!data) throw new Error("No se pudieron obtener los datos");
+
+      const wb = XLSX.utils.book_new();
+
+      // HOJA 1: RESUMEN
+      const resumenData = [
+        ["Trimly", "Reporte de Negocio"],
+        [],
+        ["Período", `${startDate.toLocaleDateString()} - ${now.toLocaleDateString()}`],
+        ["Total de citas", data.appointments.length],
+        ["Citas completadas", data.appointments.filter((a: any) => a.status === 'completed').length],
+        ["Citas canceladas", data.appointments.filter((a: any) => a.status === 'cancelled').length],
+        ["Ingresos totales", stats.ingresos],
+        ["Ticket promedio", data.appointments.length > 0 ? (stats.ingresos / data.appointments.length) : 0],
+        ["Servicio más popular", stats.servicios[0]?.n || 'N/A'],
+        ["Barbero con más citas", stats.barberos[0]?.n || 'N/A']
+      ];
+      const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
+
+      // Estilo básico (xlsx no soporta estilos complejos en versión gratuita, pero podemos usar headers)
+      XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
+
+      // HOJA 2: CITAS
+      const citasHeaders = [["Trimly", "Detalle de Citas"], [], ["Fecha", "Hora", "Cliente", "Teléfono", "Servicio", "Barbero", "Precio", "Estado"]];
+      const citasRows = data.appointments.map((a: any) => {
+          const d = new Date(a.scheduled_at);
+          return [
+              d.toLocaleDateString('es-CO'),
+              d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+              a.client?.name || 'N/A',
+              a.client?.phone || 'N/A',
+              a.service?.name || 'N/A',
+              a.barber?.name || 'N/A',
+              Number(a.price_charged) || 0,
+              a.status
+          ];
+      });
+      const wsCitas = XLSX.utils.aoa_to_sheet([...citasHeaders, ...citasRows]);
+      XLSX.utils.book_append_sheet(wb, wsCitas, "Citas");
+
+      // HOJA 3: CLIENTES
+      const clientesHeaders = [["Trimly", "Listado de Clientes"], [], ["Nombre", "Teléfono", "Email", "Total visitas", "Última visita", "Total gastado"]];
+      const clientesRows = data.clients.map((c: any) => [
+          c.name,
+          c.phone || 'N/A',
+          c.email || 'N/A',
+          c.totalVisits,
+          c.last_visit ? new Date(c.last_visit).toLocaleDateString('es-CO') : 'N/A',
+          Number(c.totalSpent) || 0
+      ]);
+      const wsClientes = XLSX.utils.aoa_to_sheet([...clientesHeaders, ...clientesRows]);
+      XLSX.utils.book_append_sheet(wb, wsClientes, "Clientes");
+
+      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `Trimly-Reporte-${startDate.toISOString().split('T')[0]}-${now.toISOString().split('T')[0]}.xlsx`);
+
+      toast.success("Reporte exportado correctamente");
+    } catch (error: any) {
+      toast.error("Error al exportar: " + error.message);
+    } finally {
+      setExporting(false);
+    }
   };
 
   const isEmpty = !stats || stats.citas === 0;
@@ -35,20 +136,35 @@ export default function ReportesClient({ stats, initialPeriod }: { stats: any, i
           <p className="text-sm text-text-tertiary mt-1">Métricas y rendimiento de tu negocio.</p>
         </div>
 
-        <div className="inline-flex bg-background-secondary border border-border p-1 rounded-xl gap-0.5">
-          {PERIODOS.map(p => (
-            <button
-              key={p.id}
-              onClick={() => handlePeriodChange(p.id)}
-              className={`px-4 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                periodo === p.id
-                  ? 'bg-accent text-background-primary shadow-sm'
-                  : 'text-text-tertiary hover:text-text-primary'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-3">
+            <div title={!canExport ? "Disponible en plan anual" : ""}>
+                <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    onClick={handleExport}
+                    loading={exporting}
+                    className={`h-9 ${!canExport ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                >
+                    {canExport ? <FileSpreadsheet size={16} /> : <Lock size={14} />}
+                    Exportar a Excel
+                </Button>
+            </div>
+
+            <div className="inline-flex bg-background-secondary border border-border p-1 rounded-xl gap-0.5 h-9 items-center">
+            {PERIODOS.map(p => (
+                <button
+                key={p.id}
+                onClick={() => handlePeriodChange(p.id)}
+                className={`px-4 py-1 text-xs font-semibold rounded-lg transition-all h-7 ${
+                    periodo === p.id
+                    ? 'bg-accent text-background-primary shadow-sm'
+                    : 'text-text-tertiary hover:text-text-primary'
+                }`}
+                >
+                {p.label}
+                </button>
+            ))}
+            </div>
         </div>
       </div>
 

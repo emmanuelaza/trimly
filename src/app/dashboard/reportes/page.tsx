@@ -1,11 +1,32 @@
 import React from 'react';
 import ReportesClient from './ReportesClient';
 import { getReportStats } from '@/app/actions/appointments';
+import { createClient } from '@/lib/supabase/server';
+import { getBarbershopId } from '@/app/actions/utils';
 
 export default async function ReportesPage({ searchParams }: { searchParams: Promise<{ p?: string }> }) {
   try {
     const { p } = await searchParams;
     const stats = await getReportStats((p as any) || 'mes');
+    const barbershopId = await getBarbershopId();
+    const supabase = await createClient();
+
+    if (!barbershopId) throw new Error("No barbershopId");
+
+    const { data: barbershop } = await supabase
+      .from('barbershops')
+      .select('subscription_status')
+      .eq('id', barbershopId)
+      .single();
+
+    const { data: sub } = await supabase
+      .from('subscriptions')
+      .select('plan_type')
+      .eq('barbershop_id', barbershopId)
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     if (!stats) {
       // If null, it means no barbershop found or critical error
@@ -17,7 +38,14 @@ export default async function ReportesPage({ searchParams }: { searchParams: Pro
       );
     }
 
-    return <ReportesClient stats={stats} initialPeriod={(p as any) || 'mes'} />;
+    return (
+      <ReportesClient 
+        stats={stats} 
+        initialPeriod={(p as any) || 'mes'} 
+        subscriptionStatus={barbershop?.subscription_status}
+        planType={sub?.plan_type}
+      />
+    );
   } catch (error) {
     console.error("Error in ReportesPage:", error);
     return (
