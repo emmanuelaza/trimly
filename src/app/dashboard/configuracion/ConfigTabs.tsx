@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Save, Building2, Clock, Bell, User2, Scissors, ChevronRight, ChevronDown, Smartphone } from 'lucide-react';
+import { Save, Building2, Clock, Bell, User2, Scissors, ChevronRight, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -51,6 +51,8 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
       });
     };
 
+    const bookingUrl = `trimlyapp-phi.vercel.app/book/${barbershop?.slug}`;
+
     return (
       <div className="space-y-6">
         <div>
@@ -59,6 +61,60 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
           </h2>
           <p className="text-xs text-text-tertiary">Información pública de tu barbería.</p>
         </div>
+
+        {/* Link de Reservas */}
+        <Card className="bg-accent/5 border-accent/20 border-2 p-6 overflow-hidden relative group">
+          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+             <Smartphone size={120} className="rotate-12" />
+          </div>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-accent">
+                <Smartphone size={18} />
+                <h3 className="text-sm font-black uppercase tracking-widest">Link de Reservas Público</h3>
+              </div>
+              <p className="text-xs text-text-tertiary max-w-md">Comparte este link en tu Instagram o WhatsApp para que tus clientes agenden solos 24/7.</p>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="bg-background-primary border border-border rounded-lg px-4 py-2 text-[11px] font-mono text-text-secondary flex items-center gap-3 shadow-sm">
+                {bookingUrl}
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(`https://${bookingUrl}`);
+                    toast.success("Link copiado");
+                  }}
+                  className="text-accent hover:scale-110 transition-transform"
+                  title="Copiar link"
+                >
+                  <Copy size={14} />
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="secondary" 
+                  size="sm"
+                  onClick={() => window.open(`https://${bookingUrl}`, '_blank')}
+                  className="px-3"
+                >
+                  <ExternalLink size={14} />
+                </Button>
+                <Button 
+                  variant="primary" 
+                  size="sm"
+                  onClick={() => {
+                    const url = `https://wa.me/?text=${encodeURIComponent(`¡Hola! Ya puedes agendar tu cita en ${barbershop.name} aquí: https://${bookingUrl}`)}`;
+                    window.open(url, '_blank');
+                  }}
+                  className="flex-1 font-bold"
+                >
+                  <MessageCircle size={15} /> Compartir
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
 
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
