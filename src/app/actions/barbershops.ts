@@ -231,29 +231,73 @@ export async function getAutomationStats() {
   }
 }
 
+export async function saveOnboardingStep1(data: { name: string, city: string, whatsapp: string }) {
+  const barbershopId = await getBarbershopId();
+  if (!barbershopId) throw new Error("No barbershop found");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("barbershops").update({
+    name: data.name,
+    city: data.city,
+    whatsapp: data.whatsapp
+  }).eq("id", barbershopId);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+export async function saveOnboardingStep2(opening_hours: any) {
+  const barbershopId = await getBarbershopId();
+  if (!barbershopId) throw new Error("No barbershop found");
+
+  const supabase = await createClient();
+  const { error } = await supabase.from("barbershops").update({
+    opening_hours
+  }).eq("id", barbershopId);
+
+  if (error) throw error;
+  return { success: true };
+}
+
+export async function completeOnboardingAction() {
+  const barbershopId = await getBarbershopId();
+  if (!barbershopId) throw new Error("No barbershop found");
+
+  const supabase = await createClient();
+  
+  // 1. Mark as completed
+  const { error } = await supabase.from("barbershops").update({
+    onboarding_completed: true
+  }).eq("id", barbershopId);
+
+  if (error) throw error;
+
+  // 2. Initialize Automations if not already done
+  await initializeAutomations(barbershopId);
+  
+  revalidatePath("/dashboard");
+  revalidatePath("/onboarding");
+  return { success: true };
+}
+
+// Keep the old one for compatibility if needed, but updated to use new fields
 export async function completeOnboarding(businessName: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("No user found");
 
-  // 1. Create Barbershop (Upsert based on owner_id)
   const { data: bShop, error: bError } = await supabase
     .from("barbershops")
     .upsert({
       name: businessName,
-      owner_id: user.id
+      owner_id: user.id,
+      onboarding_completed: true
     }, { onConflict: 'owner_id' })
     .select()
     .single();
 
-  console.log('ONBOARDING Barbershop Result:', bShop);
-  if (bError) {
-    console.error('Onboarding Barbershop Error:', bError.message, bError.details, bError.hint);
-    throw bError;
-  }
+  if (bError) throw bError;
 
-  // 2. Initialize Automations
   await initializeAutomations(bShop.id);
-  
   revalidatePath("/dashboard");
 }
