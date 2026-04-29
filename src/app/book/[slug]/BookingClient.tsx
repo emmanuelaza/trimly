@@ -164,6 +164,8 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     }
   }, [slots, step, selectedTime]);
 
+  const [confirmedAppointment, setConfirmedAppointment] = useState<any>(null);
+
   const handleConfirm = async () => {
     if (!clientInfo.name || !clientInfo.phone) return;
     
@@ -175,28 +177,40 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       scheduledAt.setHours(hours, minutes, 0, 0);
       const scheduledAtISO = scheduledAt.toISOString();
 
-      const res = await confirmBooking({
-        barbershopId: barbershop.id,
-        serviceId: selectedService.id,
-        barberId: selectedBarber?.id || null,
-        scheduledAt: scheduledAtISO,
-        clientName: clientInfo.name,
-        clientPhone: clientInfo.phone,
-        clientEmail: clientInfo.email,
-        priceCharged: selectedService.price
+      console.log('scheduledAt:', scheduledAtISO);
+
+      const response = await fetch('/api/book/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barbershopId: barbershop.id,
+          barberId: selectedBarber?.id || null,
+          serviceId: selectedService.id,
+          scheduledAt: scheduledAtISO,
+          clientName: clientInfo.name,
+          clientPhone: clientInfo.phone,
+          clientEmail: clientInfo.email,
+          priceCharged: selectedService.price
+        })
       });
 
-      if (res.success) {
-        setFinished(true);
-      } else {
-        if (res.error === 'slot_taken') {
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error('Confirmation error:', response.status, result);
+        if (response.status === 409) {
           setSelectedTime(null);
           setStep(3);
           fetchSlots();
         }
+        return;
       }
+
+      setConfirmedAppointment(result);
+      setFinished(true);
+
     } catch (error: any) {
-      console.error("Booking error:", error);
+      console.error("Network error during confirmation:", error);
     } finally {
       setLoading(false);
     }
