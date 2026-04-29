@@ -1,5 +1,23 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { DollarSign, ArrowUpRight, ArrowDownRight, Printer, Download } from 'lucide-react';
+
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
 import { StatCard, Card, Badge, Button, Avatar } from '@/components/ui/RedesignComponents';
 
 export default async function IngresosPage() {
@@ -135,8 +153,8 @@ export default async function IngresosPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 hidden sm:table-cell">
-                          <p className="text-sm text-text-secondary">{new Date(c.scheduled_at).toLocaleDateString()}</p>
-                          <p className="text-[10px] text-text-tertiary font-mono">{new Date(c.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</p>
+                          <p className="text-sm text-text-secondary">{formatDate(c.scheduled_at)}</p>
+                          <p className="text-[10px] text-text-tertiary font-mono">{formatTime(c.scheduled_at)}</p>
                         </td>
                         <td className="px-6 py-4 text-right">
                           <p className="text-sm font-bold text-success font-mono">+${Number(c.price_charged).toLocaleString()}</p>

@@ -9,6 +9,24 @@ import { Badge } from '@/components/ui/Badge';
 import { StatCard } from '@/components/ui/StatCard';
 import { createClient } from '@/lib/supabase/server';
 
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
+
 export const revalidate = 60;
 
 export default async function DashboardHome() {
@@ -103,7 +121,7 @@ export default async function DashboardHome() {
                     </span>
                   </div>
                   <span className="text-xs text-text-tertiary font-mono">
-                    Inició {new Date(activeTurn.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} · {Math.floor((now.getTime() - new Date(activeTurn.scheduled_at).getTime()) / 60000)} min
+                    Inició {formatTime(activeTurn.scheduled_at)} · {Math.floor((now.getTime() - new Date(activeTurn.scheduled_at).getTime()) / 60000)} min
                   </span>
                 </div>
                 <div className="flex items-end justify-between">
@@ -168,7 +186,7 @@ export default async function DashboardHome() {
                       
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-text-primary truncate">{(cita as any).client?.name}</p>
-                        <p className="text-xs text-text-secondary">{(cita as any).service?.name} · {new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                        <p className="text-xs text-text-secondary">{(cita as any).service?.name} · {formatTime(cita.scheduled_at)}</p>
                       </div>
 
                       <div className="text-right flex-shrink-0">
@@ -176,7 +194,7 @@ export default async function DashboardHome() {
                         <p className={`text-xs ${
                           isNext ? 'text-warning' : 'text-text-tertiary'
                         }`}>
-                          {isNext ? `en ${getTimeLeft(cita.scheduled_at)}` : cita.status === 'completed' ? 'Completada' : new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                          {isNext ? `en ${getTimeLeft(cita.scheduled_at)}` : cita.status === 'completed' ? 'Completada' : formatTime(cita.scheduled_at)}
                         </p>
                       </div>
                       

@@ -13,6 +13,24 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { exportReportData } from '@/app/actions/reports';
 
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
+
 type Periodo = 'hoy' | 'semana' | 'mes' | 'todo';
 
 const PERIODOS: { id: Periodo; label: string }[] = [
@@ -70,7 +88,7 @@ export default function ReportesClient({
       const resumenData = [
         ["Trimly", "Reporte de Negocio"],
         [],
-        ["Período", `${startDate.toLocaleDateString()} - ${now.toLocaleDateString()}`],
+        ["Período", `${formatDate(startDate.toISOString())} - ${formatDate(now.toISOString())}`],
         ["Total de citas", data.appointments.length],
         ["Citas completadas", data.appointments.filter((a: any) => a.status === 'completed').length],
         ["Citas canceladas", data.appointments.filter((a: any) => a.status === 'cancelled').length],
@@ -89,8 +107,8 @@ export default function ReportesClient({
       const citasRows = data.appointments.map((a: any) => {
           const d = new Date(a.scheduled_at);
           return [
-              d.toLocaleDateString('es-CO'),
-              d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+              formatDate(a.scheduled_at),
+              formatTime(a.scheduled_at),
               a.client?.name || 'N/A',
               a.client?.phone || 'N/A',
               a.service?.name || 'N/A',
@@ -109,7 +127,7 @@ export default function ReportesClient({
           c.phone || 'N/A',
           c.email || 'N/A',
           c.totalVisits,
-          c.last_visit ? new Date(c.last_visit).toLocaleDateString('es-CO') : 'N/A',
+          c.last_visit ? formatDate(c.last_visit) : 'N/A',
           Number(c.totalSpent) || 0
       ]);
       const wsClientes = XLSX.utils.aoa_to_sheet([...clientesHeaders, ...clientesRows]);

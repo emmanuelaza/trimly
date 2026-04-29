@@ -7,6 +7,13 @@ import { getResend } from "@/lib/resend";
 import { getBaseEmailTemplate } from "@/lib/emailTemplates";
 import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 
+function buildScheduledAt(dateStr: string, timeStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  return date.toISOString();
+}
+
 /**
  * FETCH APPOINTMENTS
  */
@@ -48,22 +55,7 @@ export async function createAppointment(formData: FormData) {
       return { success: false, error: "Faltan datos obligatorios" };
     }
     
-    // Localization
-    const { data: bShop } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
-    const timezone = bShop?.config?.timezone || "America/Bogota";
-    
-    const tempDate = new Date(`${date}T12:00:00`); 
-    const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
-    let offset = offsetParts.find((p: any) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
-    
-    if (offset === "") offset = "+00:00";
-    if (!offset.includes(":")) {
-      const sign = offset.startsWith('-') ? '-' : '+';
-      const hours = offset.replace(/[+-]/, "").padStart(2, '0');
-      offset = `${sign}${hours}:00`;
-    }
-
-    const scheduled_at = `${date}T${time}:00${offset}`;
+    const scheduled_at = buildScheduledAt(date, time);
 
     if (barber_id) {
       const { data: conflict } = await supabase
@@ -181,18 +173,7 @@ export async function updateAppointment(id: string, formData: FormData) {
 
     if (!client_id || !service_id || !date || !time) return { success: false, error: "Faltan datos" };
 
-    const { data: bShop } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
-    const timezone = bShop?.config?.timezone || "America/Bogota";
-    const tempDate = new Date(`${date}T12:00:00`); 
-    const offsetParts = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'shortOffset' }).formatToParts(tempDate);
-    let offset = offsetParts.find((p: any) => p.type === 'timeZoneName')?.value.replace('GMT', '') || '-05:00';
-    if (offset === "") offset = "+00:00";
-    if (!offset.includes(":")) {
-      const sign = offset.startsWith('-') ? '-' : '+';
-      const hours = offset.replace(/[+-]/, "").padStart(2, '0');
-      offset = `${sign}${hours}:00`;
-    }
-    const scheduled_at = `${date}T${time}:00${offset}`;
+    const scheduled_at = buildScheduledAt(date, time);
 
     if (barber_id) {
       const { data: conflict } = await supabase.from("appointments").select("id").eq("barber_id", barber_id).eq("scheduled_at", scheduled_at).neq("id", id).neq("status", "cancelled").maybeSingle();

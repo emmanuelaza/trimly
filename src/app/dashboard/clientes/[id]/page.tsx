@@ -6,6 +6,24 @@ import { ChevronLeft, Plus, Edit2, Calendar, Star } from 'lucide-react';
 import { Card, Avatar, Button, Badge, StatCard } from '@/components/ui/RedesignComponents';
 import ClientProfileActions from './ClientProfileActions';
 
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
+
 // Using dynamic route params Next.js 15+ Pattern
 export default async function PerfilCliente({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -111,7 +129,7 @@ export default async function PerfilCliente({ params }: { params: Promise<{ id: 
                         <div className="flex-1 px-4">
                            <div className="flex justify-between md:flex-col lg:flex-row lg:justify-between items-start gap-1 mb-2">
                               <p className="text-sm font-bold text-text-primary">
-                                {new Date(cita.scheduled_at).toLocaleDateString()} · {new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                {formatDate(cita.scheduled_at)} · {formatTime(cita.scheduled_at)}
                               </p>
                               <Badge variant={cita.status === 'completed' ? 'success' : cita.status === 'confirmed' ? 'info' : 'warning'}>
                                  {cita.status}

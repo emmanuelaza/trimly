@@ -21,6 +21,31 @@ import { toast } from 'react-hot-toast';
 import { getOccupiedSlots, confirmBooking } from '@/app/actions/booking';
 import { createClient } from '@/lib/supabase/client';
 
+function buildScheduledAt(dateStr: string, timeStr: string): string {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
+  return date.toISOString();
+}
+
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
+
 const supabaseClient = createClient();
 
 interface BookingClientProps {
@@ -172,10 +197,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     setLoading(true);
     try {
       if (!selectedTime) return;
-      const [hours, minutes] = selectedTime.split(':').map(Number);
-      const scheduledAt = new Date(selectedDate);
-      scheduledAt.setHours(hours, minutes, 0, 0);
-      const scheduledAtISO = scheduledAt.toISOString();
+      const scheduledAtISO = buildScheduledAt(selectedDate, selectedTime);
 
       console.log('scheduledAt:', scheduledAtISO);
 
@@ -232,13 +254,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
             <div className="flex justify-between text-sm">
               <span className="text-text-tertiary">Fecha</span>
               <span className="text-text-primary font-bold">
-                {new Date(selectedDate).toLocaleDateString('es-CO', { 
-                  weekday: 'long', 
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  timeZone: 'America/Bogota'
-                })}
+                {formatDate(selectedDate)}
               </span>
             </div>
             <div className="flex justify-between text-sm">
@@ -402,12 +418,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   <span className="text-sm font-black text-accent">${selectedService.price.toLocaleString()}</span>
                 </div>
                 <div className="text-xs text-text-tertiary">
-                  {new Date(selectedDate).toLocaleDateString('es-CO', { 
-                    day: 'numeric', 
-                    month: 'long',
-                    year: 'numeric',
-                    timeZone: 'America/Bogota'
-                  })} • {selectedTime}
+                  {formatDate(selectedDate)} • {selectedTime}
                 </div>
                 <div className="text-xs text-text-tertiary">
                   Barbero: {selectedBarber?.name || 'Sin preferencia'}

@@ -10,6 +10,24 @@ import { SlidePanel } from '@/components/ui/SlidePanel';
 import { AppointmentForm } from './AppointmentForm';
 import { AppointmentDetails } from './AppointmentDetails';
 
+function formatTime(isoString: string): string {
+  return new Date(isoString).toLocaleTimeString('es-CO', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'America/Bogota'
+  });
+}
+
+function formatDate(isoString: string): string {
+  return new Date(isoString).toLocaleDateString('es-CO', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    timeZone: 'America/Bogota'
+  });
+}
+
 interface Props {
   allCitas: any[];
   clientes: any[];
@@ -88,10 +106,10 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
     const date = new Date(cita.scheduled_at);
     
     const timeFormat = { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: timezone } as const;
-    const timeStart = date.toLocaleTimeString('es-CO', timeFormat);
+    const timeStart = formatTime(cita.scheduled_at);
     
     const duration = cita.service?.duration_minutes || 45;
-    const timeEnd = new Date(date.getTime() + duration * 60000).toLocaleTimeString('es-CO', timeFormat);
+    const timeEnd = formatTime(new Date(new Date(cita.scheduled_at).getTime() + duration * 60000).toISOString());
 
     let bgClass = "bg-orange-500/10 border-orange-500/20";
     let statusColor = "bg-orange-500";
