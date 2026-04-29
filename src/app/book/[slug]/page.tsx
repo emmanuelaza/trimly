@@ -2,6 +2,9 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop } from '@/app/actions/booking';
 import BookingClient from './BookingClient';
+import { createPublicClient } from '@/lib/supabase/public';
+
+const supabase = createPublicClient();
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;

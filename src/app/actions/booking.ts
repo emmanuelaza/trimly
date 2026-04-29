@@ -1,13 +1,14 @@
 "use server";
 
-import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
+import { createPublicClient } from "@/lib/supabase/public";
 import { revalidatePath } from "next/cache";
+
+const supabase = createPublicClient();
 
 /**
  * Fetch barbershop by slug
  */
 export async function getBarbershopBySlug(slug: string) {
-  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("barbershops")
     .select("id, name, city, whatsapp, opening_hours")
@@ -25,7 +26,6 @@ export async function getBarbershopBySlug(slug: string) {
  * Fetch services for a barbershop
  */
 export async function getServicesByBarbershop(barbershopId: string) {
-  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("services")
     .select("*")
@@ -40,7 +40,6 @@ export async function getServicesByBarbershop(barbershopId: string) {
  * Fetch barbers for a barbershop
  */
 export async function getBarbersByBarbershop(barbershopId: string) {
-  const supabase = getSupabaseAdmin();
   const { data, error } = await supabase
     .from("barbers")
     .select("*")
@@ -55,8 +54,6 @@ export async function getBarbersByBarbershop(barbershopId: string) {
  * Fetch occupied slots for a barber on a specific date
  */
 export async function getOccupiedSlots(barbershopId: string, barberId: string | null, date: string) {
-  const supabase = getSupabaseAdmin();
-  
   let query = supabase
     .from("appointments")
     .select("scheduled_at, duration_minutes:services(duration_minutes)")
@@ -88,8 +85,6 @@ export async function confirmBooking(data: {
   priceCharged: number;
 }) {
   try {
-    const supabase = getSupabaseAdmin();
-
     // 1. Find or create client
     const { data: existingClient } = await supabase
       .from("clients")
