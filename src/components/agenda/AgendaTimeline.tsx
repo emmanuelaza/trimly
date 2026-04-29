@@ -147,7 +147,13 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             {getDayName(day)}
           </p>
           <p className="text-xl font-bold text-text-primary">
-            {new Date(day).getDate()} <span className="text-xs text-text-tertiary font-medium">{new Date(day).toLocaleDateString('es-CO', { month: 'short' })}</span>
+            {(() => {
+              const [y, m, d] = day.split('-').map(Number);
+              return d;
+            })()} <span className="text-xs text-text-tertiary font-medium">{(() => {
+              const [y, m, d] = day.split('-').map(Number);
+              return new Date(y, m - 1, d).toLocaleDateString('es-CO', { month: 'short' });
+            })()}</span>
           </p>
         </div>
 
@@ -184,7 +190,11 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
             <ChevronLeft size={20} className="text-text-secondary" />
           </button>
           <div className="px-4 text-sm font-bold text-text-primary">
-            {isMobile ? formatDateLong(filterDate) : `Semana del ${new Date(currentWeekStart).getDate()} de ${new Date(currentWeekStart).toLocaleDateString('es-CO', { month: 'long' })}`}
+            {isMobile ? formatDateLong(filterDate) : (() => {
+              const [y, m, d] = currentWeekStart.split('-').map(Number);
+              const date = new Date(y, m - 1, d);
+              return `Semana del ${d} de ${date.toLocaleDateString('es-CO', { month: 'long' })}`;
+            })()}
           </div>
           <button onClick={() => changeWeek(1)} className="p-2 hover:bg-background-tertiary rounded-xl transition-all">
             <ChevronRight size={20} className="text-text-secondary" />
@@ -271,5 +281,6 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 };
 
 function formatDateLong(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
 }

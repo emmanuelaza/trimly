@@ -269,8 +269,10 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
             variant="primary" 
             className="w-full h-12 font-bold mb-4"
             onClick={() => {
-              const start = `${selectedDate.replace(/-/g, '')}T${selectedTime?.replace(/:/g, '')}00`;
-              const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+en+${encodeURIComponent(barbershop.name)}&dates=${start}/${start}&details=Servicio:+${encodeURIComponent(selectedService.name)}`;
+              const [y, m, d] = selectedDate.split('-').map(Number);
+              const [hh, mm] = (selectedTime || "00:00").split(':').map(Number);
+              const startStr = `${y}${m.toString().padStart(2, '0')}${d.toString().padStart(2, '0')}T${hh.toString().padStart(2, '0')}${mm.toString().padStart(2, '0')}00`;
+              const url = `https://www.google.com/calendar/render?action=TEMPLATE&text=Cita+en+${encodeURIComponent(barbershop.name)}&dates=${startStr}/${startStr}&details=Servicio:+${encodeURIComponent(selectedService.name)}`;
               window.open(url, '_blank');
             }}
           >
@@ -360,7 +362,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
               <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-3">Selecciona el día</p>
               <Input 
                 type="date" 
-                min={new Date().toISOString().split('T')[0]}
+                min={getTodayString()}
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
                 className="mb-8 h-12 font-bold"

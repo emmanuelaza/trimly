@@ -39,10 +39,24 @@ export function formatTime(isoString: string): string {
 
 /**
  * Formatea la fecha larga en español para Colombia.
+ * Maneja tanto ISO strings como fechas del calendario (YYYY-MM-DD).
  */
-export function formatDate(isoString: string): string {
-  if (!isoString) return '';
-  return new Date(isoString).toLocaleDateString(LOCALE, {
+export function formatDate(dateInput: string): string {
+  if (!dateInput) return '';
+  
+  let date: Date;
+  if (dateInput.includes('T')) {
+    // Es un ISO string
+    date = new Date(dateInput);
+  } else if (dateInput.includes('-')) {
+    // Es una fecha del calendario YYYY-MM-DD
+    const [y, m, d] = dateInput.split('-').map(Number);
+    date = new Date(y, m - 1, d);
+  } else {
+    date = new Date(dateInput);
+  }
+
+  return date.toLocaleDateString(LOCALE, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
