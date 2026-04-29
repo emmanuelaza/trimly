@@ -19,6 +19,9 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { toast } from 'react-hot-toast';
 import { getOccupiedSlots, confirmBooking } from '@/app/actions/booking';
+import { createClient } from '@/lib/supabase/client';
+
+const supabaseClient = createClient();
 
 interface BookingClientProps {
   barbershop: any;
@@ -46,18 +49,45 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
-  // Calculate slots when service, barber or date changes
+  // Fetch slots
+  const fetchSlots = async () => {
+    if (!selectedService || !selectedDate) return;
+    setLoading(true);
+    const slots = await getOccupiedSlots(barbershop.id, selectedBarber?.id || null, selectedDate);
+    setOccupiedSlots(slots);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    if (step === 3 && selectedService && selectedDate) {
-      const fetchSlots = async () => {
-        setLoading(true);
-        const slots = await getOccupiedSlots(barbershop.id, selectedBarber?.id || null, selectedDate);
-        setOccupiedSlots(slots);
-        setLoading(false);
-      };
+    if (step === 3) {
       fetchSlots();
     }
   }, [step, selectedBarber, selectedDate, selectedService, barbershop.id]);
+
+  // Realtime subscription
+  useEffect(() => {
+    if (step !== 3 || !supabaseClient) return;
+
+    const channel = supabaseClient
+      .channel('appointments-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'appointments',
+          filter: `barbershop_id=eq.${barbershop.id}`
+        },
+        () => {
+          fetchSlots();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+  }, [step, barbershop.id, selectedBarber, selectedDate]);
 
   const slots = useMemo(() => {
     if (!selectedService || !selectedDate) return [];
@@ -103,10 +133,16 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         }
       }
 
-      // 2. Check if occupied
-      const isOccupied = occupiedSlots.some(s => {
-        const sTime = new Date(s.scheduled_at).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-        return sTime === timeStr;
+      // 2. Check if occupied (exact duration logic)
+      const slotStart = new Date(y, m - 1, d, h, m);
+      const slotEnd = new Date(slotStart.getTime() + duration * 60000);
+
+      const isOccupied = occupiedSlots.some(apt => {
+        const aptStart = new Date(apt.scheduled_at);
+        const aptDuration = (apt.duration_minutes?.duration_minutes || 30);
+        const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
+        
+        return slotStart < aptEnd && slotEnd > aptStart;
       });
 
       if (isOccupied) isAvailable = false;
@@ -116,6 +152,18 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     }
     return generated;
   }, [selectedService, selectedDate, barbershop.opening_hours, occupiedSlots]);
+
+  // Check if selected slot became occupied
+  useEffect(() => {
+    if (step === 4 && selectedTime) {
+      const currentSlot = slots.find(s => s.time === selectedTime);
+      if (currentSlot && !currentSlot.available) {
+        toast.error("Este horario ya fue reservado. Por favor selecciona otro.");
+        setSelectedTime(null);
+        setStep(3);
+      }
+    }
+  }, [slots, step, selectedTime]);
 
   const handleConfirm = async () => {
     if (!clientInfo.name || !clientInfo.phone) {
@@ -302,12 +350,12 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                       disabled={!s.available}
                       onClick={() => { setSelectedTime(s.time); setStep(4); }}
                       className={`py-3 rounded-xl border-2 text-xs font-black transition-all ${
-                        !s.available ? 'bg-background-tertiary/20 border-transparent text-text-tertiary cursor-not-allowed opacity-50' :
+                        !s.available ? 'bg-background-tertiary/40 border-transparent text-text-tertiary cursor-not-allowed' :
                         selectedTime === s.time ? 'border-accent bg-accent text-background-primary' :
                         'border-border hover:border-accent text-text-primary'
                       }`}
                     >
-                      {s.time}
+                      {s.available ? s.time : 'Ocupado'}
                     </button>
                   ))}
                 </div>
