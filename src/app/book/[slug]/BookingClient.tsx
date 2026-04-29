@@ -62,8 +62,20 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   const slots = useMemo(() => {
     if (!selectedService || !selectedDate) return [];
     
-    const dayName = new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
-    const dayConfig = barbershop.opening_hours?.[dayName];
+    // Fix: Use local date parts to avoid timezone shifts when getting the day name
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const dateObj = new Date(y, m - 1, d);
+    const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' }).toLowerCase();
+    
+    const dayConfig = (barbershop.opening_hours || {
+      monday: { active: true, open: "09:00", close: "19:00" },
+      tuesday: { active: true, open: "09:00", close: "19:00" },
+      wednesday: { active: true, open: "09:00", close: "19:00" },
+      thursday: { active: true, open: "09:00", close: "19:00" },
+      friday: { active: true, open: "09:00", close: "19:00" },
+      saturday: { active: true, open: "09:00", close: "19:00" },
+      sunday: { active: false, open: "09:00", close: "19:00" }
+    })[dayName];
 
     if (!dayConfig || !dayConfig.active) return [];
 
