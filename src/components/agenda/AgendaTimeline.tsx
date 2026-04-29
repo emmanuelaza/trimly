@@ -10,23 +10,7 @@ import { SlidePanel } from '@/components/ui/SlidePanel';
 import { AppointmentForm } from './AppointmentForm';
 import { AppointmentDetails } from './AppointmentDetails';
 
-function formatTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Bogota'
-  });
-}
-
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Bogota'
-  });
-}
+import { formatTime, formatDate, getTodayString, getLocalDay } from '@/lib/dateUtils';
 
 interface Props {
   allCitas: any[];
@@ -38,21 +22,24 @@ interface Props {
 }
 
 function addDays(dateStr: string, n: number): string {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + n);
-  return d.toISOString().split('T')[0];
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  date.setDate(date.getDate() + n);
+  return date.toLocaleDateString('en-CA');
 }
 
 function weekStart(dateStr: string): string {
-  const d = new Date(dateStr);
-  const day = d.getDay(); // 0=Sun
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  const day = date.getDay(); // 0=Sun
   const diff = day === 0 ? -6 : 1 - day; // Monday as start
-  d.setDate(d.getDate() + diff);
-  return d.toISOString().split('T')[0];
+  date.setDate(date.getDate() + diff);
+  return date.toLocaleDateString('en-CA');
 }
 
 function getDayName(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('es-CO', { weekday: 'long' });
+  const [y, m, d] = dateStr.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('es-CO', { weekday: 'long' });
 }
 
 export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servicios, barberos, initialDate, barbershop }) => {
@@ -84,9 +71,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   const getCitasForDay = (dayStr: string) => {
     return allCitas.filter(c => {
-      const d = new Date(c.scheduled_at);
-      const isoLocal = d.toLocaleDateString('en-CA', { timeZone: timezone });
-      return isoLocal === dayStr;
+      return getLocalDay(c.scheduled_at) === dayStr;
     }).sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
   };
 
@@ -153,7 +138,7 @@ export const AgendaTimeline: React.FC<Props> = ({ allCitas = [], clientes, servi
 
   const DayColumn = ({ day }: { day: string }) => {
     const citas = getCitasForDay(day);
-    const isToday = day === new Date().toLocaleDateString('en-CA', { timeZone: timezone });
+    const isToday = day === getTodayString();
 
     return (
       <div className={`space-y-4 min-h-[300px] flex flex-col ${isMobile && day !== filterDate ? 'hidden' : ''}`}>

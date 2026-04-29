@@ -7,11 +7,10 @@ import { getResend } from "@/lib/resend";
 import { getBaseEmailTemplate } from "@/lib/emailTemplates";
 import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 
+import { buildScheduledAt as buildLocalScheduledAt, getTodayString } from "@/lib/dateUtils";
+
 function buildScheduledAt(dateStr: string, timeStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
-  return date.toISOString();
+  return buildLocalScheduledAt(dateStr, timeStr);
 }
 
 /**
@@ -203,10 +202,16 @@ export async function getReportStats(periodo: string = 'mes') {
     const now = new Date();
     let startDate = new Date();
 
-    if (periodo === 'hoy') startDate.setHours(0, 0, 0, 0);
+    if (periodo === 'hoy') startDate = new Date(new Date().toLocaleDateString('en-US', { timeZone: 'America/Bogota' }));
     else if (periodo === 'semana') startDate.setDate(now.getDate() - 7);
     else if (periodo === 'mes') startDate.setMonth(now.getMonth() - 1);
     else if (periodo === 'todo') startDate = new Date(2000, 0, 1);
+    
+    // For 'hoy', ensure we start at 00:00:00 Bogotá time
+    if (periodo === 'hoy') {
+      const bogotaToday = getTodayString();
+      startDate = new Date(`${bogotaToday}T00:00:00-05:00`);
+    }
 
     const startISO = startDate.toISOString();
     

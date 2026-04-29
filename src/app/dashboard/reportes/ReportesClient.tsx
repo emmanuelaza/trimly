@@ -13,23 +13,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { exportReportData } from '@/app/actions/reports';
 
-function formatTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Bogota'
-  });
-}
-
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Bogota'
-  });
-}
+import { formatTime, formatDate, getTodayString } from '@/lib/dateUtils';
 
 type Periodo = 'hoy' | 'semana' | 'mes' | 'todo';
 
@@ -73,7 +57,10 @@ export default function ReportesClient({
     try {
       const now = new Date();
       let startDate = new Date();
-      if (periodo === 'hoy') startDate.setHours(0, 0, 0, 0);
+      if (periodo === 'hoy') {
+        const bogotaToday = getTodayString();
+        startDate = new Date(`${bogotaToday}T00:00:00-05:00`);
+      }
       else if (periodo === 'semana') startDate.setDate(now.getDate() - 7);
       else if (periodo === 'mes') startDate.setMonth(now.getMonth() - 1);
       else if (periodo === 'todo') startDate = new Date(2000, 0, 1);

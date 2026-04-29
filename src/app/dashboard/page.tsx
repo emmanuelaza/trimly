@@ -9,23 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { StatCard } from '@/components/ui/StatCard';
 import { createClient } from '@/lib/supabase/server';
 
-function formatTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Bogota'
-  });
-}
-
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Bogota'
-  });
-}
+import { formatTime, formatDate, getTodayString, getLocalDay } from '@/lib/dateUtils';
 
 export const revalidate = 60;
 
@@ -34,12 +18,12 @@ export default async function DashboardHome() {
   const userName = barbershop?.name || "Dueño";
   
   const allCitas = await getAppointments();
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayString();
   const now = new Date();
 
   // Filtrar citas hoy y ordenar por hora
   const citasHoyStr = allCitas
-    .filter((c: any) => c.scheduled_at.startsWith(todayStr))
+    .filter((c: any) => getLocalDay(c.scheduled_at) === todayStr)
     .sort((a: any, b: any) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime());
 
   const ingresosHoy = citasHoyStr.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);

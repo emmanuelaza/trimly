@@ -1,43 +1,30 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { DollarSign, ArrowUpRight, ArrowDownRight, Printer, Download } from 'lucide-react';
 
-function formatTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Bogota'
-  });
-}
-
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Bogota'
-  });
-}
+import { formatTime, formatDate, getTodayString, getLocalDay } from '@/lib/dateUtils';
 import { StatCard, Card, Badge, Button, Avatar } from '@/components/ui/RedesignComponents';
 
 export default async function IngresosPage() {
   const citas = await getAppointments();
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = getTodayString();
   const currentMonthStr = todayStr.substring(0, 7);
 
-  // Calcula el inicio de la semana (Lunes)
-  const today = new Date();
-  const firstDay = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
+  // Calcula el inicio de la semana (Lunes) en Bogotá
+  const nowBogota = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const firstDay = new Date(nowBogota);
+  const day = nowBogota.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  firstDay.setDate(nowBogota.getDate() + diff);
   const firstDayStr = firstDay.toISOString().split('T')[0];
 
-  const citasHoy = citas.filter((c: any) => c.scheduled_at.startsWith(todayStr));
+  const citasHoy = citas.filter((c: any) => getLocalDay(c.scheduled_at) === todayStr);
   const ingresosHoy = citasHoy.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
   const citasSemana = citas.filter((c: any) => c.scheduled_at && c.scheduled_at >= firstDayStr && c.scheduled_at <= (todayStr + 'T23:59:59'));
   const ingresosSemana = citasSemana.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
-  const citasMes = citas.filter((c: any) => c.scheduled_at && c.scheduled_at.startsWith(currentMonthStr));
+  const citasMes = citas.filter((c: any) => c.scheduled_at && getLocalDay(c.scheduled_at).startsWith(currentMonthStr));
   const ingresosMes = citasMes.reduce((acc: number, c: any) => acc + (Number(c.price_charged) || 0), 0);
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);

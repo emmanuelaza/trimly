@@ -5,11 +5,13 @@ import { getBarbers } from '@/app/actions/barbers';
 import { getBarbershop } from '@/app/actions/barbershops';
 import { AgendaTimeline } from '@/components/agenda/AgendaTimeline';
 
+import { getTodayString } from '@/lib/dateUtils';
+
 export const revalidate = 60;
 
 export default async function AgendaPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   const params = await searchParams;
-  const filterDate = params.date || new Date().toISOString().split('T')[0];
+  const filterDate = params.date || getTodayString();
 
   // Fetch all necessary data
   const [allCitas, clientes, servicios, barberos, barbershop] = await Promise.all([

@@ -21,30 +21,7 @@ import { toast } from 'react-hot-toast';
 import { getOccupiedSlots, confirmBooking } from '@/app/actions/booking';
 import { createClient } from '@/lib/supabase/client';
 
-function buildScheduledAt(dateStr: string, timeStr: string): string {
-  const [year, month, day] = dateStr.split('-').map(Number);
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const date = new Date(year, month - 1, day, hours, minutes, 0, 0);
-  return date.toISOString();
-}
-
-function formatTime(isoString: string): string {
-  return new Date(isoString).toLocaleTimeString('es-CO', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'America/Bogota'
-  });
-}
-
-function formatDate(isoString: string): string {
-  return new Date(isoString).toLocaleDateString('es-CO', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-    timeZone: 'America/Bogota'
-  });
-}
+import { buildScheduledAt, formatTime, formatDate, getTodayString } from '@/lib/dateUtils';
 
 const supabaseClient = createClient();
 
@@ -62,7 +39,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   // Selection state
   const [selectedService, setSelectedService] = useState<any>(null);
   const [selectedBarber, setSelectedBarber] = useState<any>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
   const [bookedAppointments, setBookedAppointments] = useState<any[]>([]);
 
@@ -150,7 +127,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     const duration = selectedService.duration_minutes || 30;
 
     // Don't show past times if today
-    const isToday = selectedDate === new Date().toISOString().split('T')[0];
+    const isToday = selectedDate === getTodayString();
     const nowHours = new Date().getHours();
     const nowMinutes = new Date().getMinutes();
 
