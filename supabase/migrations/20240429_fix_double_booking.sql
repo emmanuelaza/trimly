@@ -1,11 +1,24 @@
--- 1. Enable Realtime for appointments table (ensure it's in the publication)
--- Note: If already added, this might need to be handled gracefully in Supabase UI, 
--- but SQL-wise we can re-verify or add other tables if needed.
-ALTER PUBLICATION supabase_realtime ADD TABLE appointments;
+-- 1. Enable Realtime for appointments table
+-- This publication might already exist, so we use a safe approach
+DO $$ 
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'appointments') THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE appointments;
+  END IF;
+END $$;
 
--- 2. Create Unique Index to prevent double bookings at the database level
--- This prevents the same barber from having two confirmed/pending appointments 
--- at the exact same scheduled_at time.
+-- 2. Ensure RLS is enabled
+ALTER TABLE appointments ENABLE ROW LEVEL SECURITY;
+
+-- 3. Add Public SELECT policy for appointments availability check
+DROP POLICY IF EXISTS "Public SELECT for appointments availability" ON appointments;
+CREATE POLICY "Public SELECT for appointments availability" ON appointments 
+FOR SELECT 
+TO anon
+USING (status IN ('confirmed', 'pending'));
+
+-- 4. Add unique index to prevent double booking at the database level
+-- This handles the case where multiple requests arrive at the same time
 CREATE UNIQUE INDEX IF NOT EXISTS appointments_barber_slot_unique 
 ON appointments (barber_id, scheduled_at) 
 WHERE status IN ('confirmed', 'pending');

@@ -55,16 +55,15 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   const fetchBookedSlots = async () => {
     if (!selectedBarber || !selectedDate) return;
     
-    const [y, m, d] = selectedDate.split('-').map(Number);
-    const dateStart = new Date(y, m - 1, d, 0, 0, 0, 0);
-    const dateEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
+    const startIso = buildScheduledAt(selectedDate, '00:00');
+    const endIso = buildScheduledAt(selectedDate, '23:59');
 
     const { data } = await supabaseClient
       .from('appointments')
       .select('scheduled_at, duration_minutes, status')
       .eq('barber_id', selectedBarber.id)
-      .gte('scheduled_at', dateStart.toISOString())
-      .lte('scheduled_at', dateEnd.toISOString())
+      .gte('scheduled_at', startIso)
+      .lte('scheduled_at', endIso)
       .in('status', ['confirmed', 'pending']);
 
     setBookedAppointments(data || []);
@@ -128,8 +127,10 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
     // Don't show past times if today
     const isToday = selectedDate === getTodayString();
-    const nowHours = new Date().getHours();
-    const nowMinutes = new Date().getMinutes();
+    const nowBogotaStr = new Date().toLocaleString("en-US", { timeZone: "America/Bogota" });
+    const nowBogota = new Date(nowBogotaStr);
+    const nowHours = nowBogota.getHours();
+    const nowMinutes = nowBogota.getMinutes();
 
     while (current < end) {
       const h = current.getHours();
@@ -150,7 +151,8 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
       const isOccupied = bookedAppointments.some(apt => {
-        const aptStart = new Date(apt.scheduled_at);
+        const aptBogotaStr = new Date(apt.scheduled_at).toLocaleString('en-US', { timeZone: 'America/Bogota' });
+        const aptStart = new Date(aptBogotaStr);
         const aptDuration = (apt.duration_minutes || 30);
         const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
         

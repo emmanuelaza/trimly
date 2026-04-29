@@ -92,6 +92,9 @@ export async function POST(req: Request) {
 
     if (appErr) {
       console.error('Supabase appointment insert error:', appErr);
+      if (appErr.code === '23505') {
+        return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
+      }
       return NextResponse.json({ error: appErr.message }, { status: 400 });
     }
 
