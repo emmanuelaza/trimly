@@ -64,7 +64,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   const [selectedBarber, setSelectedBarber] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [selectedTime, setSelectedTime] = useState<string | null>(null);
-  const [occupiedSlots, setOccupiedSlots] = useState<any[]>([]);
+  const [bookedAppointments, setBookedAppointments] = useState<any[]>([]);
 
   // Client info
   const [clientInfo, setClientInfo] = useState({
@@ -74,20 +74,30 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
-  // Fetch slots
-  const fetchSlots = async () => {
-    if (!selectedService || !selectedDate) return;
-    setLoading(true);
-    const slots = await getOccupiedSlots(barbershop.id, selectedBarber?.id || null, selectedDate);
-    setOccupiedSlots(slots);
-    setLoading(false);
+  // Fetch booked slots
+  const fetchBookedSlots = async () => {
+    if (!selectedBarber || !selectedDate) return;
+    
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const dateStart = new Date(y, m - 1, d, 0, 0, 0, 0);
+    const dateEnd = new Date(y, m - 1, d, 23, 59, 59, 999);
+
+    const { data } = await supabaseClient
+      .from('appointments')
+      .select('scheduled_at, duration_minutes, status')
+      .eq('barber_id', selectedBarber.id)
+      .gte('scheduled_at', dateStart.toISOString())
+      .lte('scheduled_at', dateEnd.toISOString())
+      .in('status', ['confirmed', 'pending']);
+
+    setBookedAppointments(data || []);
   };
 
   useEffect(() => {
     if (step === 3 && selectedBarber && selectedDate) {
-      fetchSlots();
+      fetchBookedSlots();
     }
-  }, [step, selectedBarber, selectedDate, selectedService, barbershop.id]);
+  }, [step, selectedBarber, selectedDate]);
 
   // Realtime subscription
   useEffect(() => {
@@ -104,7 +114,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
           filter: `barber_id=eq.${selectedBarber.id}`
         },
         () => {
-          fetchSlots();
+          fetchBookedSlots();
         }
       )
       .subscribe();
@@ -162,7 +172,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       const slotStart = new Date(y, m - 1, d, h, m);
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
-      const isOccupied = occupiedSlots.some(apt => {
+      const isOccupied = bookedAppointments.some(apt => {
         const aptStart = new Date(apt.scheduled_at);
         const aptDuration = (apt.duration_minutes || 30);
         const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
@@ -176,7 +186,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       current.setMinutes(current.getMinutes() + duration);
     }
     return generated;
-  }, [selectedService, selectedDate, barbershop.opening_hours, occupiedSlots]);
+  }, [selectedService, selectedDate, barbershop.opening_hours, bookedAppointments]);
 
   // Check if selected slot became occupied (silent reset)
   useEffect(() => {
@@ -223,7 +233,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         if (response.status === 409) {
           setSelectedTime(null);
           setStep(3);
-          fetchSlots();
+          fetchBookedSlots();
         }
         return;
       }
