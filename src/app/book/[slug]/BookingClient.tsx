@@ -167,20 +167,18 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     return generated;
   }, [selectedService, selectedDate, barbershop.opening_hours, bookedAppointments]);
 
-  // Check if selected slot became occupied (silent reset)
   useEffect(() => {
     // If we already finished or are loading, ignore updates to the slots list
     if (finished || loading) return;
 
-    if (step === 4 && selectedTime) {
+    if (selectedTime) {
       const currentSlot = slots.find(s => s.time === selectedTime);
       if (currentSlot && !currentSlot.available) {
-        // If it's taken by someone else while we are on Step 4, we go back
+        // If it's taken by someone else, we just deselect it silently
         setSelectedTime(null);
-        setStep(3);
       }
     }
-  }, [slots, step, selectedTime, finished, loading]);
+  }, [slots, selectedTime, finished, loading]);
 
   const [confirmedAppointment, setConfirmedAppointment] = useState<any>(null);
 
@@ -214,8 +212,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         
         if (response.status === 409) {
           // Case 2: Slot taken
-          setSelectedTime(null);
-          setStep(3);
+          // Just fetch updated slots, the useEffect will handle deselecting the time
           fetchBookedSlots();
         } else {
           // Case 3: Other errors - stay on step 4
@@ -471,8 +468,13 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   className="w-full h-14 text-lg font-black mt-4 shadow-xl shadow-accent/20"
                   onClick={handleConfirm}
                   loading={loading}
+                  disabled={!selectedTime}
                 >
-                  Confirmar cita <Check size={20} className="ml-2" />
+                  {selectedTime ? (
+                    <>Confirmar cita <Check size={20} className="ml-2" /></>
+                  ) : (
+                    "Hora ocupada, vuelve y elige otra"
+                  )}
                 </Button>
               </div>
             </motion.div>
