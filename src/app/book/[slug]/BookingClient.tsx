@@ -172,6 +172,11 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     }
     setLoading(true);
     try {
+      if (!selectedTime) {
+        toast.error("Por favor selecciona una hora");
+        setLoading(false);
+        return;
+      }
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const scheduledAt = new Date(selectedDate);
       scheduledAt.setHours(hours, minutes, 0, 0);
