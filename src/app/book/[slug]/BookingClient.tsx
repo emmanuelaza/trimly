@@ -66,17 +66,17 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   // Realtime subscription
   useEffect(() => {
-    if (step !== 3 || !supabaseClient) return;
+    if (step !== 3 || !supabaseClient || !selectedBarber) return;
 
     const channel = supabaseClient
-      .channel('appointments-realtime')
+      .channel(`appointments-${selectedBarber.id}-${selectedDate}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'appointments',
-          filter: `barbershop_id=eq.${barbershop.id}`
+          filter: `barber_id=eq.${selectedBarber.id}`
         },
         () => {
           fetchSlots();
@@ -172,11 +172,16 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     }
     setLoading(true);
     try {
+      const [hours, minutes] = selectedTime.split(':').map(Number);
+      const scheduledAt = new Date(selectedDate);
+      scheduledAt.setHours(hours, minutes, 0, 0);
+      const scheduledAtISO = scheduledAt.toISOString();
+
       const res = await confirmBooking({
         barbershopId: barbershop.id,
         serviceId: selectedService.id,
         barberId: selectedBarber?.id || null,
-        scheduledAt: `${selectedDate}T${selectedTime}:00-05:00`, // Assume GMT-5 for now, should ideally use shop timezone
+        scheduledAt: scheduledAtISO,
         clientName: clientInfo.name,
         clientPhone: clientInfo.phone,
         clientEmail: clientInfo.email,
@@ -208,18 +213,23 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
           <p className="text-text-tertiary mb-8">Te esperamos en la barbería.</p>
 
           <Card className="text-left p-6 space-y-4 mb-8 bg-background-secondary border-accent/20">
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Servicio</span>
-              <span className="text-text-primary font-bold">{selectedService.name}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Fecha</span>
-              <span className="text-text-primary font-bold">{new Date(selectedDate).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Hora</span>
-              <span className="text-text-primary font-bold">{selectedTime}</span>
-            </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-tertiary">Fecha</span>
+                <span className="text-text-primary font-bold">
+                  {new Date(selectedDate).toLocaleDateString('es-CO', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long',
+                    timeZone: 'America/Bogota'
+                  })}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-tertiary">Hora</span>
+                <span className="text-text-primary font-bold">
+                  {selectedTime}
+                </span>
+              </div>
             <div className="flex justify-between text-sm">
               <span className="text-text-tertiary">Barbero</span>
               <span className="text-text-primary font-bold">{selectedBarber?.name || 'Sin preferencia'}</span>
@@ -378,7 +388,11 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   <span className="text-sm font-black text-accent">${selectedService.price.toLocaleString()}</span>
                 </div>
                 <div className="text-xs text-text-tertiary">
-                  {new Date(selectedDate).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })} • {selectedTime}
+                  {new Date(selectedDate).toLocaleDateString('es-CO', { 
+                    day: 'numeric', 
+                    month: 'long',
+                    timeZone: 'America/Bogota'
+                  })} • {selectedTime}
                 </div>
                 <div className="text-xs text-text-tertiary">
                   Barbero: {selectedBarber?.name || 'Sin preferencia'}

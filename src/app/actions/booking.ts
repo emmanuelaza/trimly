@@ -54,13 +54,18 @@ export async function getBarbersByBarbershop(barbershopId: string) {
  * Fetch occupied slots for a barber on a specific date
  */
 export async function getOccupiedSlots(barbershopId: string, barberId: string | null, date: string) {
+  const dateStart = new Date(date);
+  dateStart.setHours(0, 0, 0, 0);
+  const dateEnd = new Date(date);
+  dateEnd.setHours(23, 59, 59, 999);
+
   let query = supabase
     .from("appointments")
-    .select("scheduled_at, duration_minutes:services(duration_minutes)")
+    .select("scheduled_at, duration_minutes:services(duration_minutes), status")
     .eq("barbershop_id", barbershopId)
-    .gte("scheduled_at", `${date}T00:00:00`)
-    .lte("scheduled_at", `${date}T23:59:59`)
-    .neq("status", "cancelled");
+    .gte("scheduled_at", dateStart.toISOString())
+    .lte("scheduled_at", dateEnd.toISOString())
+    .in('status', ['confirmed', 'pending']);
 
   if (barberId) {
     query = query.eq("barber_id", barberId);
@@ -117,7 +122,20 @@ export async function confirmBooking(data: {
       clientId = newClient.id;
     }
 
-    // 2. Create Appointment
+    // 2. Conflict check
+    const { data: conflict } = await supabase
+      .from('appointments')
+      .select('id')
+      .eq('barber_id', data.barberId)
+      .eq('scheduled_at', data.scheduledAt)
+      .in('status', ['confirmed', 'pending'])
+      .maybeSingle();
+
+    if (conflict) {
+      return { success: false, error: 'Este horario ya fue reservado. Por favor selecciona otro.' };
+    }
+
+    // 3. Create Appointment
     const { data: appointment, error: appErr } = await supabase
       .from("appointments")
       .insert({
@@ -134,7 +152,7 @@ export async function confirmBooking(data: {
 
     if (appErr) throw appErr;
 
-    // 3. Trigger Automations via QStash
+    // 4. Trigger Automations via QStash
     try {
       const { Client } = await import("@upstash/qstash");
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
