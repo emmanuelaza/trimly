@@ -16,6 +16,8 @@ export async function POST(req: Request) {
       clientEmail,
       priceCharged
     } = body;
+    
+    console.log('Processed fields:', { barbershopId, barberId, serviceId, scheduledAt, clientName, clientPhone });
 
     if (!barbershopId || !serviceId || !scheduledAt || !clientName || !clientPhone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -56,6 +58,7 @@ export async function POST(req: Request) {
         throw clientErr;
       }
       clientId = newClient.id;
+      console.log('Client resolved:', clientId);
     }
 
     // 2. Conflict check
@@ -91,6 +94,8 @@ export async function POST(req: Request) {
       console.error('Supabase appointment insert error:', appErr);
       return NextResponse.json({ error: appErr.message }, { status: 400 });
     }
+
+    console.log('Appointment created successfully:', appointment.id);
 
     // 4. Trigger Automations via QStash
     try {

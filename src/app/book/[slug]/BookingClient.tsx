@@ -190,14 +190,18 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   // Check if selected slot became occupied (silent reset)
   useEffect(() => {
+    // If we already finished or are loading, ignore updates to the slots list
+    if (finished || loading) return;
+
     if (step === 4 && selectedTime) {
       const currentSlot = slots.find(s => s.time === selectedTime);
       if (currentSlot && !currentSlot.available) {
+        // If it's taken by someone else while we are on Step 4, we go back
         setSelectedTime(null);
         setStep(3);
       }
     }
-  }, [slots, step, selectedTime]);
+  }, [slots, step, selectedTime, finished, loading]);
 
   const [confirmedAppointment, setConfirmedAppointment] = useState<any>(null);
 
@@ -208,8 +212,6 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     try {
       if (!selectedTime) return;
       const scheduledAtISO = buildScheduledAt(selectedDate, selectedTime);
-
-      console.log('scheduledAt:', scheduledAtISO);
 
       const response = await fetch('/api/book/confirm', {
         method: 'POST',
@@ -230,19 +232,26 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
       if (!response.ok) {
         console.error('Confirmation error:', response.status, result);
+        
         if (response.status === 409) {
+          // Case 2: Slot taken
           setSelectedTime(null);
           setStep(3);
           fetchBookedSlots();
+        } else {
+          // Case 3: Other errors - stay on step 4
+          toast.error("No se pudo confirmar la cita. Por favor intenta de nuevo.");
         }
         return;
       }
 
+      // Case 1: Success
       setConfirmedAppointment(result);
       setFinished(true);
 
     } catch (error: any) {
       console.error("Network error during confirmation:", error);
+      toast.error("Error de conexión. Revisa tu internet e intenta de nuevo.");
     } finally {
       setLoading(false);
     }
