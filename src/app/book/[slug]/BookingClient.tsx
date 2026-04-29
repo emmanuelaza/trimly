@@ -59,7 +59,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   };
 
   useEffect(() => {
-    if (step === 3) {
+    if (step === 3 && selectedBarber && selectedDate) {
       fetchSlots();
     }
   }, [step, selectedBarber, selectedDate, selectedService, barbershop.id]);
@@ -69,7 +69,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     if (step !== 3 || !supabaseClient || !selectedBarber) return;
 
     const channel = supabaseClient
-      .channel(`appointments-${selectedBarber.id}-${selectedDate}`)
+      .channel(`slots-${selectedBarber.id}-${selectedDate}`)
       .on(
         'postgres_changes',
         {
@@ -133,13 +133,13 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         }
       }
 
-      // 2. Check if occupied (exact duration logic)
+      // 2. Check if occupied (exact duration logic, no buffer)
       const slotStart = new Date(y, m - 1, d, h, m);
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
       const isOccupied = occupiedSlots.some(apt => {
         const aptStart = new Date(apt.scheduled_at);
-        const aptDuration = (apt.duration_minutes?.duration_minutes || 30);
+        const aptDuration = (apt.duration_minutes || 30);
         const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
         
         return slotStart < aptEnd && slotEnd > aptStart;
@@ -153,12 +153,11 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     return generated;
   }, [selectedService, selectedDate, barbershop.opening_hours, occupiedSlots]);
 
-  // Check if selected slot became occupied
+  // Check if selected slot became occupied (silent reset)
   useEffect(() => {
     if (step === 4 && selectedTime) {
       const currentSlot = slots.find(s => s.time === selectedTime);
       if (currentSlot && !currentSlot.available) {
-        toast.error("Este horario ya fue reservado. Por favor selecciona otro.");
         setSelectedTime(null);
         setStep(3);
       }
@@ -166,17 +165,10 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   }, [slots, step, selectedTime]);
 
   const handleConfirm = async () => {
-    if (!clientInfo.name || !clientInfo.phone) {
-      toast.error("Nombre y teléfono son obligatorios");
-      return;
-    }
+    if (!clientInfo.name || !clientInfo.phone) return;
+    
     setLoading(true);
     try {
-      if (!selectedTime) {
-        toast.error("Por favor selecciona una hora");
-        setLoading(false);
-        return;
-      }
       const [hours, minutes] = selectedTime.split(':').map(Number);
       const scheduledAt = new Date(selectedDate);
       scheduledAt.setHours(hours, minutes, 0, 0);
@@ -196,10 +188,14 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       if (res.success) {
         setFinished(true);
       } else {
-        toast.error(res.error || "Error al confirmar la reserva");
+        if (res.error === 'slot_taken') {
+          setSelectedTime(null);
+          setStep(3);
+          fetchSlots();
+        }
       }
     } catch (error: any) {
-      toast.error(error.message);
+      console.error("Booking error:", error);
     } finally {
       setLoading(false);
     }
@@ -218,23 +214,24 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
           <p className="text-text-tertiary mb-8">Te esperamos en la barbería.</p>
 
           <Card className="text-left p-6 space-y-4 mb-8 bg-background-secondary border-accent/20">
-              <div className="flex justify-between text-sm">
-                <span className="text-text-tertiary">Fecha</span>
-                <span className="text-text-primary font-bold">
-                  {new Date(selectedDate).toLocaleDateString('es-CO', { 
-                    weekday: 'long', 
-                    day: 'numeric', 
-                    month: 'long',
-                    timeZone: 'America/Bogota'
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-text-tertiary">Hora</span>
-                <span className="text-text-primary font-bold">
-                  {selectedTime}
-                </span>
-              </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-text-tertiary">Fecha</span>
+              <span className="text-text-primary font-bold">
+                {new Date(selectedDate).toLocaleDateString('es-CO', { 
+                  weekday: 'long', 
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  timeZone: 'America/Bogota'
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span className="text-text-tertiary">Hora</span>
+              <span className="text-text-primary font-bold">
+                {selectedTime}
+              </span>
+            </div>
             <div className="flex justify-between text-sm">
               <span className="text-text-tertiary">Barbero</span>
               <span className="text-text-primary font-bold">{selectedBarber?.name || 'Sin preferencia'}</span>
@@ -261,7 +258,6 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   return (
     <div className="max-w-md mx-auto min-h-screen flex flex-col">
-      {/* Header */}
       <header className="p-6 text-center space-y-2">
         <h1 className="text-3xl font-black text-text-primary tracking-tight">{barbershop.name}</h1>
         <div className="flex items-center justify-center gap-4 text-xs font-bold text-text-tertiary uppercase tracking-widest">
@@ -270,14 +266,12 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         </div>
       </header>
 
-      {/* Progress */}
       <div className="px-6 mb-8 flex gap-1">
         {[1, 2, 3, 4].map(s => (
           <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? 'bg-accent' : 'bg-border-strong'}`} />
         ))}
       </div>
 
-      {/* Content */}
       <main className="flex-1 px-6 pb-24">
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -365,9 +359,9 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                       disabled={!s.available}
                       onClick={() => { setSelectedTime(s.time); setStep(4); }}
                       className={`py-3 rounded-xl border-2 text-xs font-black transition-all ${
-                        !s.available ? 'bg-background-tertiary/40 border-transparent text-text-tertiary cursor-not-allowed' :
-                        selectedTime === s.time ? 'border-accent bg-accent text-background-primary' :
-                        'border-border hover:border-accent text-text-primary'
+                        !s.available ? 'bg-background-tertiary/50 border-transparent text-text-tertiary cursor-not-allowed opacity-50' :
+                        selectedTime === s.time ? 'bg-accent text-background-primary border-accent shadow-lg shadow-accent/20' :
+                        'bg-accent/10 border-accent/20 text-accent hover:bg-accent hover:text-background-primary hover:border-accent'
                       }`}
                     >
                       {s.available ? s.time : 'Ocupado'}
@@ -396,6 +390,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   {new Date(selectedDate).toLocaleDateString('es-CO', { 
                     day: 'numeric', 
                     month: 'long',
+                    year: 'numeric',
                     timeZone: 'America/Bogota'
                   })} • {selectedTime}
                 </div>
@@ -433,15 +428,17 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   />
                 </div>
 
-                <label className="flex items-center gap-3 p-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={clientInfo.acceptReminders}
-                    onChange={e => setClientInfo(prev => ({ ...prev, acceptReminders: e.target.checked }))}
-                    className="w-5 h-5 accent-accent"
-                  />
-                  <span className="text-xs text-text-tertiary">Acepto recibir recordatorios de mi cita</span>
-                </label>
+                {clientInfo.email && (
+                  <label className="flex items-center gap-3 p-2 cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={clientInfo.acceptReminders}
+                      onChange={e => setClientInfo(prev => ({ ...prev, acceptReminders: e.target.checked }))}
+                      className="w-5 h-5 accent-accent"
+                    />
+                    <span className="text-xs text-text-tertiary">Quiero recibir un recordatorio por email</span>
+                  </label>
+                )}
 
                 <Button 
                   variant="primary" 

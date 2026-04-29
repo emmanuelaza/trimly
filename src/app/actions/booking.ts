@@ -61,7 +61,7 @@ export async function getOccupiedSlots(barbershopId: string, barberId: string | 
 
   let query = supabase
     .from("appointments")
-    .select("scheduled_at, duration_minutes:services(duration_minutes), status")
+    .select("scheduled_at, duration_minutes, status")
     .eq("barbershop_id", barbershopId)
     .gte("scheduled_at", dateStart.toISOString())
     .lte("scheduled_at", dateEnd.toISOString())
@@ -132,7 +132,7 @@ export async function confirmBooking(data: {
       .maybeSingle();
 
     if (conflict) {
-      return { success: false, error: 'Este horario ya fue reservado. Por favor selecciona otro.' };
+      return { success: false, error: 'slot_taken' };
     }
 
     // 3. Create Appointment
