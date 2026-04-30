@@ -51,20 +51,28 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
-  // Fetch booked slots
   const fetchBookedSlots = async () => {
-    if (!selectedBarber || !selectedDate) return;
+    if (!selectedDate) return;
     
     const startIso = buildScheduledAt(selectedDate, '00:00');
     const endIso = buildScheduledAt(selectedDate, '23:59');
 
-    const { data } = await supabaseClient
+    let query = supabaseClient
       .from('appointments')
-      .select('scheduled_at, duration_minutes, status')
-      .eq('barber_id', selectedBarber.id)
+      .select('scheduled_at, duration_minutes, status, barber_id')
+      .eq('barbershop_id', barbershop.id)
       .gte('scheduled_at', startIso)
       .lte('scheduled_at', endIso)
       .in('status', ['confirmed', 'pending']);
+
+    if (selectedBarber) {
+      query = query.eq('barber_id', selectedBarber.id);
+    }
+
+    const { data, error } = await query;
+    if (error) {
+      console.error("Error fetching booked slots:", error);
+    }
 
     setBookedAppointments(data || []);
   };
@@ -77,17 +85,25 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   // Realtime subscription
   useEffect(() => {
-    if (step !== 3 || !supabaseClient || !selectedBarber) return;
+    if (step !== 3 || !supabaseClient) return;
+
+    const channelName = selectedBarber 
+      ? `slots-barber-${selectedBarber.id}-${selectedDate}`
+      : `slots-shop-${barbershop.id}-${selectedDate}`;
+
+    const filter = selectedBarber
+      ? `barber_id=eq.${selectedBarber.id}`
+      : `barbershop_id=eq.${barbershop.id}`;
 
     const channel = supabaseClient
-      .channel(`slots-${selectedBarber.id}-${selectedDate}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
           table: 'appointments',
-          filter: `barber_id=eq.${selectedBarber.id}`
+          filter: filter
         },
         () => {
           fetchBookedSlots();
@@ -150,16 +166,24 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       const slotStart = new Date(y, m - 1, d, h, m);
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
-      const isOccupied = bookedAppointments.some(apt => {
+      let overlappingCount = 0;
+      bookedAppointments.forEach(apt => {
         const aptBogotaStr = new Date(apt.scheduled_at).toLocaleString('en-US', { timeZone: 'America/Bogota' });
         const aptStart = new Date(aptBogotaStr);
         const aptDuration = (apt.duration_minutes || 30);
         const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
         
-        return slotStart < aptEnd && slotEnd > aptStart;
+        if (slotStart < aptEnd && slotEnd > aptStart) {
+          overlappingCount++;
+        }
       });
 
-      if (isOccupied) isAvailable = false;
+      if (selectedBarber) {
+        if (overlappingCount > 0) isAvailable = false;
+      } else {
+        const totalBarbers = barbers.length > 0 ? barbers.length : 1;
+        if (overlappingCount >= totalBarbers) isAvailable = false;
+      }
 
       generated.push({ time: timeStr, available: isAvailable });
       current.setMinutes(current.getMinutes() + duration);
@@ -387,7 +411,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                       disabled={!s.available}
                       onClick={() => { setSelectedTime(s.time); setStep(4); }}
                       className={`py-3 rounded-xl border-2 text-xs font-black transition-all ${
-                        !s.available ? 'bg-background-tertiary/50 border-transparent text-text-tertiary cursor-not-allowed opacity-50' :
+                        !s.available ? 'bg-background-tertiary/50 border-transparent text-text-tertiary opacity-50 cursor-default' :
                         selectedTime === s.time ? 'bg-accent text-background-primary border-accent shadow-lg shadow-accent/20' :
                         'bg-accent/10 border-accent/20 text-accent hover:bg-accent hover:text-background-primary hover:border-accent'
                       }`}
