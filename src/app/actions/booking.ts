@@ -217,12 +217,18 @@ export async function confirmBooking(data: {
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
       
-      // Post-visit Follow-up (24h delay)
-      await qstash.publishJSON({ 
-        url: `${appUrl}/api/jobs/post-visita`, 
-        body: { citaId: appointment.id },
-        delay: 86400 
-      });
+      const appointmentTime = new Date(data.scheduledAt).getTime();
+      const now = Date.now();
+      const delayMs = (appointmentTime - now) + (24 * 60 * 60 * 1000);
+      const delaySeconds = Math.floor(delayMs / 1000);
+
+      if (delaySeconds > 0) {
+        await qstash.publishJSON({ 
+          url: `${appUrl}/api/jobs/post-visita`, 
+          body: { citaId: appointment.id },
+          delay: delaySeconds 
+        });
+      }
     } catch (e) {
       console.error("QStash automation error:", e);
     }

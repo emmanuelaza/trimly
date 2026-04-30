@@ -90,8 +90,21 @@ export async function createAppointment(formData: FormData) {
       const { Client } = await import("@upstash/qstash");
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
+      
       await qstash.publishJSON({ url: `${appUrl}/api/jobs/confirmacion`, body: { citaId: insertData.id } });
-      await qstash.publishJSON({ url: `${appUrl}/api/jobs/post-visita`, body: { citaId: insertData.id }, delay: 86400 });
+      
+      const appointmentTime = new Date(scheduled_at).getTime();
+      const now = Date.now();
+      const delayMs = (appointmentTime - now) + (24 * 60 * 60 * 1000);
+      const delaySeconds = Math.floor(delayMs / 1000);
+
+      if (delaySeconds > 0) {
+        await qstash.publishJSON({ 
+          url: `${appUrl}/api/jobs/post-visita`, 
+          body: { citaId: insertData.id }, 
+          delay: delaySeconds 
+        });
+      }
     } catch(e) { console.error('QStash error:', e); }
 
     revalidatePath("/dashboard");
