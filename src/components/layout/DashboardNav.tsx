@@ -26,39 +26,55 @@ const mainNavItems = [
   { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
   { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
   { href: '/dashboard/servicios', label: 'Servicios', icon: Scissors },
-  { href: '/dashboard/reportes', label: 'Reportes', icon: TrendingUp },
   { href: '/dashboard/barberos', label: 'Barberos', icon: UserCircle },
+  { href: '/dashboard/reportes', label: 'Reportes', icon: TrendingUp },
+  { href: '/dashboard/retencion', label: 'Retención', icon: Users, filoProOnly: true },
 ];
 
 const secondaryNavItems = [
-  { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Zap, badge: 'NEW' },
+  { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Zap, filoProOnly: true },
   { href: '/dashboard/billing', label: 'Facturación', icon: CreditCard },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
 
-export const Sidebar = ({ negocio, userName = "Owner" }: { negocio: string, userName?: string }) => {
+export const Sidebar = ({ negocio, userName = "Owner", isFiloPro = true }: { negocio: string, userName?: string, isFiloPro?: boolean }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const pathname = usePathname();
 
   const userInitials = userName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
   const NavItemRender = ({ item }: { item: any }) => {
+    const isLocked = item.filoProOnly && !isFiloPro;
+    const targetHref = isLocked ? '/dashboard/billing' : item.href;
     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+    
     return (
       <Link 
         key={item.href} 
-        href={item.href}
+        href={targetHref}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-          isActive 
+          isActive && !isLocked
           ? 'bg-accent-muted text-accent font-medium' 
           : 'text-text-tertiary hover:bg-background-tertiary hover:text-text-primary'
         } ${isCollapsed ? 'justify-center' : ''}`}
       >
-        <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
+        {isLocked ? (
+          <Lock size={18} className="text-text-tertiary group-hover:text-accent opacity-50" />
+        ) : (
+          <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
+        )}
         {!isCollapsed && (
           <div className="flex-1 flex items-center justify-between">
-            <span className="text-[13px]">{item.label}</span>
-            {item.badge && <span className="bg-accent-muted text-accent text-[10px] font-bold px-1.5 py-0.5 rounded-sm">{item.badge}</span>}
+            <span className={`text-[13px] ${isLocked ? 'opacity-70' : ''}`}>{item.label}</span>
+            {isLocked ? (
+              <span className="bg-accent/10 text-accent border border-accent/20 text-[9px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+                <Lock size={8} /> Pro
+              </span>
+            ) : item.badge && (
+              <span className="bg-accent-muted text-accent text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
+                {item.badge}
+              </span>
+            )}
           </div>
         )}
       </Link>
@@ -125,7 +141,7 @@ export const Sidebar = ({ negocio, userName = "Owner" }: { negocio: string, user
   );
 };
 
-export const BottomNav = () => {
+export const BottomNav = ({ isFiloPro = true }: { isFiloPro?: boolean }) => {
   const pathname = usePathname();
 
   const mobileItems = [

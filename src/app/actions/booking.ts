@@ -23,6 +23,36 @@ export async function getBarbershopBySlug(slug: string) {
 }
 
 /**
+ * Fetch barbershop plan to verify access
+ */
+export async function getBarbershopPlan(barbershopId: string) {
+  const { createClient } = await import('@supabase/supabase-js');
+  const adminAuthClient = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: bShop } = await adminAuthClient
+    .from('barbershops')
+    .select('subscription_status, trial_ends_at')
+    .eq('id', barbershopId)
+    .maybeSingle();
+
+  const isTrial = bShop?.subscription_status === 'trialing';
+
+  const { data: sub } = await adminAuthClient
+    .from('subscriptions')
+    .select('plan_type')
+    .eq('barbershop_id', barbershopId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return isTrial || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
+}
+
+/**
  * Fetch services for a barbershop
  */
 export async function getServicesByBarbershop(barbershopId: string) {

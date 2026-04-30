@@ -44,12 +44,12 @@ export default function ReportesClient({
     router.push(`/dashboard/reportes?p=${p}`);
   };
 
-  const isPremiumPlan = planType === 'anual' || planType === 'lifetime';
+  const isPremiumPlan = planType === 'filo_pro' || planType === 'anual' || planType === 'lifetime';
   const canExport = isPremiumPlan && subscriptionStatus === 'active';
 
   const handleExport = async () => {
     if (!canExport) {
-        toast.error("Exportación disponible en plan Anual o Lifetime");
+        toast.error("Exportación disponible en plan Filo Pro");
         return;
     }
 
@@ -142,7 +142,7 @@ export default function ReportesClient({
         </div>
 
         <div className="flex items-center gap-3">
-            <div title={!canExport ? "Disponible en plan anual" : ""}>
+            <div title={!canExport ? "Disponible en plan Filo Pro" : ""}>
                 <Button 
                     variant="secondary" 
                     size="sm" 

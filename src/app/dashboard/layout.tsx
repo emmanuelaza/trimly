@@ -33,10 +33,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const isTrial = bShop?.subscription_status === 'trialing';
   const trialDaysLeft = isTrial ? Math.ceil((new Date(bShop.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
 
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('plan_type')
+    .eq('barbershop_id', barbershopId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const isFiloPro = isTrial || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
+
   return (
     <div className="flex min-h-screen bg-background-primary overflow-hidden">
       {/* Sidebar for Desktop */}
-      <Sidebar negocio={negocio} userName={user.user_metadata?.full_name || "Owner"} />
+      <Sidebar negocio={negocio} userName={user.user_metadata?.full_name || "Owner"} isFiloPro={isFiloPro} />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -63,7 +74,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       {/* Mobile Navigation */}
-      <BottomNav />
+      <BottomNav isFiloPro={isFiloPro} />
 
       {/* Global Modals */}
       <Suspense fallback={null}>

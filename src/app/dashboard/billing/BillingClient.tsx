@@ -21,7 +21,7 @@ interface BillingClientProps {
   currentPlanId?: string;
 }
 
-type PlanId = 'mensual' | 'anual' | 'lifetime';
+type PlanId = 'mensual' | 'filo_pro';
 
 interface PlanSection {
   title: string;
@@ -48,13 +48,13 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     id: 'mensual',
-    badge: 'Flexible',
+    badge: 'Básico',
     badgeClassName: 'bg-background-tertiary text-text-secondary',
     planLabel: 'MENSUAL',
     price: '$29.900',
     priceSuffix: '/mes',
-    priceSubtext: '~$7 USD/mes',
-    priceSubtextClassName: 'text-success/80',
+    priceSubtext: 'Gestión esencial',
+    priceSubtextClassName: 'text-text-secondary',
     checkBgClassName: 'bg-success-bg',
     checkColorClassName: 'text-success',
     buttonVariant: 'secondary',
@@ -85,57 +85,32 @@ const PLANS: Plan[] = [
     ],
   },
   {
-    id: 'anual',
-    badge: 'Más popular',
-    badgeClassName: 'bg-violet-500/10 text-violet-400',
-    planLabel: 'ANUAL',
-    price: '$249.000',
-    priceSuffix: '/año',
-    priceSubtext: 'Ahorras $109.800 — 2 meses gratis',
-    priceSubtextClassName: 'text-success',
+    id: 'filo_pro',
+    badge: 'Recomendado',
+    badgeClassName: 'bg-accent/10 text-accent',
+    planLabel: 'FILO PRO',
+    price: '$79.900',
+    priceSuffix: '/mes',
+    priceSubtext: 'Todo para crecer',
+    priceSubtextClassName: 'text-accent font-bold',
     highlighted: true,
-    checkBgClassName: 'bg-violet-500/10',
-    checkColorClassName: 'text-violet-400',
+    checkBgClassName: 'bg-accent/10',
+    checkColorClassName: 'text-accent',
     buttonVariant: 'primary',
     sections: [
       {
-        title: 'TODO LO DEL MENSUAL, MÁS:',
+        title: 'TODO LO DEL BÁSICO, MÁS:',
         items: [
+          'Página pública de reservas online con link personalizado',
+          'Reservas en tiempo real — slots se marcan ocupados automáticamente',
           'Barberos ilimitados',
-          'Recuperar clientes inactivos (45+ días)',
-          'Felicitación de cumpleaños con descuento',
-          'Seguimiento post-visita y reseñas',
+          'Recuperar clientes inactivos de más de 45 días',
+          'Felicitación de cumpleaños con descuento automático',
+          'Seguimiento post-visita y solicitud de reseñas',
           'Reportes avanzados',
           'Exportar reportes a Excel',
           'Métricas de retención de clientes',
           'Soporte prioritario',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'lifetime',
-    badge: 'Mejor valor',
-    badgeClassName: 'bg-teal-500/10 text-teal-400',
-    planLabel: 'PAGO ÚNICO',
-    price: '$599.000',
-    priceSuffix: ' una vez',
-    priceSubtext: '~$143 USD · Acceso de por vida',
-    priceSubtextClassName: 'text-success',
-    checkBgClassName: 'bg-teal-500/10',
-    checkColorClassName: 'text-teal-400',
-    buttonVariant: 'primary',
-    buttonClassName: 'bg-success hover:bg-success/90 text-background-primary border-none',
-    sections: [
-      {
-        title: 'TODO LO DEL ANUAL, MÁS:',
-        items: [
-          'Sin pagos mensuales nunca más',
-          'Todas las nuevas funciones gratis',
-          'Onboarding personalizado 1 a 1',
-          'Acceso anticipado a funciones',
-          'Canal directo con el fundador',
-          'Paga hoy, usa para siempre',
         ],
       },
     ],

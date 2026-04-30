@@ -1,8 +1,59 @@
 import { getClients } from '@/app/actions/clients';
 import { MessageCircle, Mail, AlertCircle, Phone, ArrowRight } from 'lucide-react';
 import { Card, Badge, Avatar, Button } from '@/components/ui/RedesignComponents';
+import { getBarbershopId } from '@/lib/getBarbershopId';
+import { createClient } from '@/lib/supabase/server';
+import { Lock } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function RetencionPage() {
+  const supabase = await createClient();
+  const barbershopId = await getBarbershopId();
+
+  const { data: bShop } = await supabase.from('barbershops').select('subscription_status').eq('id', barbershopId).maybeSingle();
+  const isTrial = bShop?.subscription_status === 'trialing';
+
+  const { data: sub } = await supabase
+    .from('subscriptions')
+    .select('plan_type')
+    .eq('barbershop_id', barbershopId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const isFiloPro = isTrial || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
+
+  if (!isFiloPro) {
+    return (
+      <div className="space-y-10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-text-primary flex items-center gap-3">
+              Estrategia de Retención <Badge variant="accent" className="text-[10px] font-bold"><Lock size={10} className="inline mr-1" /> FILO PRO</Badge>
+            </h1>
+            <p className="text-sm text-text-tertiary mt-1">Recupera a tus clientes antes de que se olviden de ti.</p>
+          </div>
+        </div>
+
+        <div className="py-20 flex flex-col items-center justify-center text-center bg-background-secondary rounded-2xl border border-border">
+          <div className="w-16 h-16 bg-accent/10 text-accent flex items-center justify-center rounded-full mb-6">
+            <Lock size={32} />
+          </div>
+          <h2 className="text-xl font-bold text-text-primary mb-3">Exclusivo de Filo Pro</h2>
+          <p className="text-text-tertiary max-w-md mx-auto mb-8">
+            Mejora la retención de tus clientes viendo qué tan inactivos están y contactándolos fácilmente para asegurar que vuelvan.
+          </p>
+          <Link href="/dashboard/billing">
+            <Button variant="primary" className="h-12 px-8 font-bold">
+              Actualizar Plan
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   const clientes = await getClients();
 
   const parseDays = (dateStr?: string | null) => {

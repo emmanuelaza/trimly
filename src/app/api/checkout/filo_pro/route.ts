@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 export async function POST() {
-  const planId = process.env.MP_PLAN_ID_ANUAL;
+  const planId = process.env.MP_PLAN_ID_FILO_PRO;
   if (!planId) {
     return NextResponse.json({ error: 'Plan ID not configured' }, { status: 500 });
   }
