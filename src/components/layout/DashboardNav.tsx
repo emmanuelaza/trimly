@@ -16,7 +16,8 @@ import {
   LogOut,
   Plus,
   Zap,
-  CreditCard
+  CreditCard,
+  Lock
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { Badge } from '../ui/Badge';
