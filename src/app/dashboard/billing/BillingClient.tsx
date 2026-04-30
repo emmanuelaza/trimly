@@ -120,7 +120,7 @@ const PLANS: Plan[] = [
     badge: 'Único Pago',
     badgeClassName: 'bg-violet-500/10 text-violet-400',
     planLabel: 'PLAN ANUAL / LIFETIME',
-    price: '$450.000',
+    price: '$559.000',
     priceSuffix: '',
     priceSubtext: 'Paga 1 vez, úsalo para siempre',
     priceSubtextClassName: 'text-violet-400 font-bold',
