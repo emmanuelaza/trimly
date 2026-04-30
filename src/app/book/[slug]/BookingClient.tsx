@@ -51,6 +51,26 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
+  const showOccupiedToast = () => {
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    toast.custom((t) => (
+      <div
+        className={`${
+          t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        } transition-all duration-300 max-w-sm w-full bg-background-elevated text-text-primary shadow-2xl rounded-2xl flex items-center p-4 border border-border-strong`}
+      >
+        <Clock className="w-5 h-5 text-accent mr-3 shrink-0" />
+        <p className="text-sm font-bold leading-tight">
+          Este horario ya no está disponible. Escoge el que más te convenga.
+        </p>
+      </div>
+    ), {
+      duration: 3000,
+      position: isMobile ? 'bottom-center' : 'top-right',
+      id: 'occupied-toast'
+    });
+  };
+
   const fetchBookedSlots = async () => {
     if (!selectedDate) return;
     
@@ -236,6 +256,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
         
         if (response.status === 409) {
           // Case 2: Slot taken
+          showOccupiedToast();
           // Just fetch updated slots, the useEffect will handle deselecting the time
           fetchBookedSlots();
         } else {
@@ -408,8 +429,14 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                   {slots.map(s => (
                     <button
                       key={s.time}
-                      disabled={!s.available}
-                      onClick={() => { setSelectedTime(s.time); setStep(4); }}
+                      onClick={() => { 
+                        if (!s.available) {
+                          showOccupiedToast();
+                          return;
+                        }
+                        setSelectedTime(s.time); 
+                        setStep(4); 
+                      }}
                       className={`py-3 rounded-xl border-2 text-xs font-black transition-all ${
                         !s.available ? 'bg-background-tertiary/50 border-transparent text-text-tertiary opacity-50 cursor-default' :
                         selectedTime === s.time ? 'bg-accent text-background-primary border-accent shadow-lg shadow-accent/20' :
