@@ -1,9 +1,12 @@
 "use server";
 
-import { createPublicClient } from "@/lib/supabase/public";
 import { revalidatePath } from "next/cache";
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createPublicClient();
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 /**
  * Fetch barbershop by slug

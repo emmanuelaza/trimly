@@ -19,11 +19,14 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { toast } from 'react-hot-toast';
 import { getOccupiedSlots, confirmBooking } from '@/app/actions/booking';
-import { createClient } from '@/lib/supabase/client';
+import { createClient } from '@supabase/supabase-js';
 
 import { buildScheduledAt, formatTime, formatDate, getTodayString } from '@/lib/dateUtils';
 
-const supabaseClient = createClient();
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 interface BookingClientProps {
   barbershop: any;
