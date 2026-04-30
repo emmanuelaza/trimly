@@ -11,7 +11,7 @@ const supabase = createPublicClient();
 export async function getBarbershopBySlug(slug: string) {
   const { data, error } = await supabase
     .from("barbershops")
-    .select("id, name, city, whatsapp, opening_hours")
+    .select("*")
     .eq("slug", slug)
     .maybeSingle();
 
@@ -34,7 +34,7 @@ export async function getBarbershopPlan(barbershopId: string) {
 
   const { data: bShop } = await adminAuthClient
     .from('barbershops')
-    .select('subscription_status, trial_ends_at')
+    .select('*')
     .eq('id', barbershopId)
     .maybeSingle();
 
@@ -49,7 +49,7 @@ export async function getBarbershopPlan(barbershopId: string) {
     .limit(1)
     .maybeSingle();
 
-  return isTrial || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
+  return isTrial || bShop?.plan === 'pro' || sub?.plan_type === 'pro' || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
 }
 
 /**
