@@ -2,12 +2,6 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop, getBarbershopPlan } from '@/app/actions/booking';
 import BookingClient from './BookingClient';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
