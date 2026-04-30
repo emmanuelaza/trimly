@@ -185,18 +185,38 @@ export async function confirmBooking(data: {
 
     if (appErr) throw appErr;
 
-    // 4. Trigger Automations via QStash
+    // 4. Send Confirmation Email Directly
+    if (data.clientEmail) {
+      try {
+        const supabase = getSupabase();
+        const [{ data: shop }, { data: service }, { data: barber }] = await Promise.all([
+          supabase.from('barbershops').select('name, whatsapp').eq('id', data.barbershopId).single(),
+          supabase.from('services').select('name').eq('id', data.serviceId).single(),
+          data.barberId 
+            ? supabase.from('barbers').select('name').eq('id', data.barberId).single() 
+            : Promise.resolve({ data: { name: 'Cualquier barbero' } })
+        ]);
+
+        await (await import('@/lib/emails')).sendConfirmationEmail({
+          to: data.clientEmail,
+          clientName: data.clientName,
+          barbershopName: shop?.name || 'La Barbería',
+          serviceName: service?.name || 'Servicio',
+          barberName: barber?.name || 'Cualquier barbero',
+          date: data.scheduledAt,
+          phone: shop?.whatsapp || ''
+        });
+      } catch (emailErr) {
+        console.error('Error sending direct confirmation email (Action):', emailErr);
+      }
+    }
+
+    // 5. Trigger remaining Automations via QStash
     try {
       const { Client } = await import("@upstash/qstash");
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
       
-      // Confirmation Email
-      await qstash.publishJSON({ 
-        url: `${appUrl}/api/jobs/confirmacion`, 
-        body: { citaId: appointment.id } 
-      });
-
       // Post-visit Follow-up (24h delay)
       await qstash.publishJSON({ 
         url: `${appUrl}/api/jobs/post-visita`, 

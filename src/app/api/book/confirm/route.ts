@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { sendConfirmationEmail } from '@/lib/emails';
 
 export async function POST(req: Request) {
   try {
@@ -103,17 +104,41 @@ export async function POST(req: Request) {
 
     console.log('Appointment created successfully:', appointment.id);
 
-    // 4. Trigger Automations via QStash
+    // 4. Send Confirmation Email Directly
+    if (clientEmail) {
+      try {
+        // Fetch details for the email
+        const [{ data: shop }, { data: service }, { data: barber }] = await Promise.all([
+          supabase.from('barbershops').select('name, whatsapp').eq('id', barbershopId).single(),
+          supabase.from('services').select('name').eq('id', serviceId).single(),
+          barberId 
+            ? supabase.from('barbers').select('name').eq('id', barberId).single() 
+            : Promise.resolve({ data: { name: 'Cualquier barbero' } })
+        ]);
+
+        console.log('Sending direct confirmation email...');
+        await sendConfirmationEmail({
+          to: clientEmail,
+          clientName,
+          barbershopName: shop?.name || 'La Barbería',
+          serviceName: service?.name || 'Servicio',
+          barberName: barber?.name || 'Cualquier barbero',
+          date: scheduledAt,
+          phone: shop?.whatsapp || ''
+        });
+        console.log('Direct email sent successfully');
+      } catch (emailErr) {
+        console.error('Error sending direct confirmation email:', emailErr);
+        // We don't throw here to avoid failing the whole booking if only the email fails
+      }
+    }
+
+    // 5. Trigger remaining Automations via QStash (only post-visit)
     try {
       const { Client } = await import("@upstash/qstash");
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
       
-      await qstash.publishJSON({ 
-        url: `${appUrl}/api/jobs/confirmacion`, 
-        body: { citaId: appointment.id } 
-      });
-
       await qstash.publishJSON({ 
         url: `${appUrl}/api/jobs/post-visita`, 
         body: { citaId: appointment.id },
