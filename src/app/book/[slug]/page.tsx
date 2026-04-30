@@ -1,6 +1,6 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
-import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop, getBarbershopPlan } from '@/app/actions/booking';
+import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop } from '@/app/actions/booking';
 import BookingClient from './BookingClient';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +16,7 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
       notFound();
     }
 
-    const isFiloPro = await getBarbershopPlan(barbershop.id);
+    const isFiloPro = barbershop.subscription_status === 'trialing' || barbershop.plan === 'pro';
 
     if (!isFiloPro) {
       return (

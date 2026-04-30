@@ -3,16 +3,16 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+const getSupabase = () => createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
 /**
  * Fetch barbershop by slug
  */
 export async function getBarbershopBySlug(slug: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("barbershops")
     .select("*")
     .eq("slug", slug)
@@ -59,7 +59,7 @@ export async function getBarbershopPlan(barbershopId: string) {
  * Fetch services for a barbershop
  */
 export async function getServicesByBarbershop(barbershopId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("services")
     .select("*")
     .eq("barbershop_id", barbershopId)
@@ -73,7 +73,7 @@ export async function getServicesByBarbershop(barbershopId: string) {
  * Fetch barbers for a barbershop
  */
 export async function getBarbersByBarbershop(barbershopId: string) {
-  const { data, error } = await supabase
+  const { data, error } = await getSupabase()
     .from("barbers")
     .select("*")
     .eq("barbershop_id", barbershopId)
@@ -92,7 +92,7 @@ export async function getOccupiedSlots(barbershopId: string, barberId: string | 
   const dateEnd = new Date(date);
   dateEnd.setHours(23, 59, 59, 999);
 
-  let query = supabase
+  let query = getSupabase()
     .from("appointments")
     .select("scheduled_at, duration_minutes, status")
     .eq("barbershop_id", barbershopId)
@@ -124,7 +124,7 @@ export async function confirmBooking(data: {
 }) {
   try {
     // 1. Find or create client
-    const { data: existingClient } = await supabase
+    const { data: existingClient } = await getSupabase()
       .from("clients")
       .select("id")
       .eq("barbershop_id", data.barbershopId)
@@ -134,12 +134,12 @@ export async function confirmBooking(data: {
     let clientId;
     if (existingClient) {
       clientId = existingClient.id;
-      await supabase
+      await getSupabase()
         .from("clients")
         .update({ last_visit: new Date().toISOString(), email: data.clientEmail || null })
         .eq("id", clientId);
     } else {
-      const { data: newClient, error: clientErr } = await supabase
+      const { data: newClient, error: clientErr } = await getSupabase()
         .from("clients")
         .insert({
           barbershop_id: data.barbershopId,
@@ -156,7 +156,7 @@ export async function confirmBooking(data: {
     }
 
     // 2. Conflict check
-    const { data: conflict } = await supabase
+    const { data: conflict } = await getSupabase()
       .from('appointments')
       .select('id')
       .eq('barber_id', data.barberId)
@@ -169,7 +169,7 @@ export async function confirmBooking(data: {
     }
 
     // 3. Create Appointment
-    const { data: appointment, error: appErr } = await supabase
+    const { data: appointment, error: appErr } = await getSupabase()
       .from("appointments")
       .insert({
         barbershop_id: data.barbershopId,

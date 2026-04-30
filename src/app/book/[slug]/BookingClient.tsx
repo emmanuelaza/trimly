@@ -23,10 +23,17 @@ import { createClient } from '@supabase/supabase-js';
 
 import { buildScheduledAt, formatTime, formatDate, getTodayString } from '@/lib/dateUtils';
 
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
-);
+let supabaseClientInstance: ReturnType<typeof createClient> | null = null;
+
+const getSupabase = () => {
+  if (!supabaseClientInstance) {
+    supabaseClientInstance = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
+  }
+  return supabaseClientInstance;
+};
 
 interface BookingClientProps {
   barbershop: any;
@@ -80,7 +87,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     const startIso = buildScheduledAt(selectedDate, '00:00');
     const endIso = buildScheduledAt(selectedDate, '23:59');
 
-    let query = supabaseClient
+    let query = getSupabase()
       .from('appointments')
       .select('scheduled_at, duration_minutes, status, barber_id')
       .eq('barbershop_id', barbershop.id)
@@ -108,7 +115,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   // Realtime subscription
   useEffect(() => {
-    if (step !== 3 || !supabaseClient) return;
+    if (step !== 3) return;
 
     const channelName = selectedBarber 
       ? `slots-barber-${selectedBarber.id}-${selectedDate}`
@@ -118,7 +125,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       ? `barber_id=eq.${selectedBarber.id}`
       : `barbershop_id=eq.${barbershop.id}`;
 
-    const channel = supabaseClient
+    const channel = getSupabase()
       .channel(channelName)
       .on(
         'postgres_changes',
@@ -135,7 +142,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       .subscribe();
 
     return () => {
-      supabaseClient.removeChannel(channel);
+      getSupabase().removeChannel(channel);
     };
   }, [step, barbershop.id, selectedBarber, selectedDate]);
 
