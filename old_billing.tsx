@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -21,7 +21,7 @@ interface BillingClientProps {
   currentPlanId?: string;
 }
 
-type PlanId = 'mensual' | 'filo_pro' | 'lifetime';
+type PlanId = 'mensual' | 'filo_pro';
 
 interface PlanSection {
   title: string;
@@ -48,12 +48,12 @@ interface Plan {
 const PLANS: Plan[] = [
   {
     id: 'mensual',
-    badge: 'Básico',
+    badge: 'B├ísico',
     badgeClassName: 'bg-background-tertiary text-text-secondary',
     planLabel: 'MENSUAL',
     price: '$29.900',
     priceSuffix: '/mes',
-    priceSubtext: 'Gestión esencial',
+    priceSubtext: 'Gesti├│n esencial',
     priceSubtextClassName: 'text-text-secondary',
     checkBgClassName: 'bg-success-bg',
     checkColorClassName: 'text-success',
@@ -65,20 +65,20 @@ const PLANS: Plan[] = [
           'Citas ilimitadas',
           'Hasta 3 barberos',
           'Historial de clientes completo',
-          'Recordatorios automáticos 24h antes',
+          'Recordatorios autom├íticos 24h antes',
         ],
       },
       {
         title: 'AUTOMATIZACIONES',
         items: [
-          'Confirmación inmediata al agendar',
+          'Confirmaci├│n inmediata al agendar',
           'Reporte diario del negocio por email',
         ],
       },
       {
         title: 'SOPORTE',
         items: [
-          'Reportes básicos del negocio',
+          'Reportes b├ísicos del negocio',
           'Soporte por WhatsApp',
         ],
       },
@@ -99,45 +99,18 @@ const PLANS: Plan[] = [
     buttonVariant: 'primary',
     sections: [
       {
-        title: 'TODO LO DEL BÁSICO, MÁS:',
+        title: 'TODO LO DEL B├üSICO, M├üS:',
         items: [
-          'Página pública de reservas online con link personalizado',
-          'Reservas en tiempo real — slots se marcan ocupados automáticamente',
+          'P├ígina p├║blica de reservas online con link personalizado',
+          'Reservas en tiempo real ÔÇö slots se marcan ocupados autom├íticamente',
           'Barberos ilimitados',
-          'Recuperar clientes inactivos de más de 45 días',
-          'Felicitación de cumpleaños con descuento automático',
-          'Seguimiento post-visita y solicitud de reseñas',
+          'Recuperar clientes inactivos de m├ís de 45 d├¡as',
+          'Felicitaci├│n de cumplea├▒os con descuento autom├ítico',
+          'Seguimiento post-visita y solicitud de rese├▒as',
           'Reportes avanzados',
           'Exportar reportes a Excel',
-          'Métricas de retención de clientes',
+          'M├®tricas de retenci├│n de clientes',
           'Soporte prioritario',
-        ],
-      },
-    ],
-  },
-  {
-    id: 'lifetime',
-    badge: 'Único Pago',
-    badgeClassName: 'bg-violet-500/10 text-violet-400',
-    planLabel: 'PLAN ANUAL / LIFETIME',
-    price: '$450.000',
-    priceSuffix: '',
-    priceSubtext: 'Paga 1 vez, úsalo para siempre',
-    priceSubtextClassName: 'text-violet-400 font-bold',
-    checkBgClassName: 'bg-violet-500/10',
-    checkColorClassName: 'text-violet-400',
-    buttonVariant: 'secondary',
-    sections: [
-      {
-        title: 'ACCESO TOTAL DE POR VIDA:',
-        items: [
-          'Todas las funciones del plan Filo Pro',
-          'Página pública de reservas online',
-          'Barberos ilimitados',
-          'Reportes y automatizaciones avanzadas',
-          'Soporte prioritario',
-          'Actualizaciones futuras incluidas sin costo',
-          'Sin mensualidades ni pagos ocultos',
         ],
       },
     ],
@@ -153,7 +126,7 @@ const TRUST_ITEMS = [
   {
     icon: <Check size={16} />,
     iconClassName: 'bg-violet-500/10 text-violet-400',
-    text: '3 días gratis sin tarjeta',
+    text: '3 d├¡as gratis sin tarjeta',
   },
   {
     icon: <RefreshCcw size={16} />,
@@ -168,7 +141,7 @@ const TRUST_ITEMS = [
   {
     icon: <Globe size={16} />,
     iconClassName: 'bg-green-500/10 text-green-500',
-    text: 'Tarjetas de cualquier país',
+    text: 'Tarjetas de cualquier pa├¡s',
   },
 ];
 
@@ -184,14 +157,6 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
     if (currentPlanId === planId) return;
 
     setLoading(planId);
-
-    if (planId === 'lifetime') {
-      // El plan lifetime es un link de pago directo
-      window.open('https://mpago.li/13xDfff', '_blank');
-      setLoading(null);
-      return;
-    }
-
     try {
       const res = await fetch(`/api/checkout/${planId}`, { method: 'POST' });
       const data = await res.json();
@@ -199,7 +164,7 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
       if (data.url || data.init_point) {
         window.location.href = data.url || data.init_point;
       } else if (data.success) {
-        toast.success('¡Prueba de 3 días activada!');
+        toast.success('┬íPrueba de 3 d├¡as activada!');
         router.refresh();
         setLoading(null);
       } else {
@@ -213,7 +178,7 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
 
   return (
     <div className="max-w-6xl mx-auto py-12 px-4 sm:px-6 space-y-12">
-      {/* ── Post-payment Status Banners ── */}
+      {/* ÔöÇÔöÇ Post-payment Status Banners ÔöÇÔöÇ */}
       {status === 'success' && (
         <div className="bg-success-bg border border-success/20 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
           <div className="flex items-center gap-3">
@@ -221,7 +186,7 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
               <Check size={20} />
             </div>
             <p className="text-success font-semibold">
-              ¡Bienvenido a Trimly! Tu plan está activo.
+              ┬íBienvenido a Trimly! Tu plan est├í activo.
             </p>
           </div>
           <Button
@@ -246,32 +211,32 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
         <div className="bg-warning-bg border border-warning/20 rounded-xl p-5 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
           <RefreshCcw className="text-warning animate-spin-slow" size={20} />
           <p className="text-warning font-semibold">
-            Tu pago está siendo procesado. Te avisaremos por email.
+            Tu pago est├í siendo procesado. Te avisaremos por email.
           </p>
         </div>
       )}
 
-      {/* ── Header ── */}
+      {/* ÔöÇÔöÇ Header ÔöÇÔöÇ */}
       <div className="text-center space-y-3">
         <h1 className="text-4xl sm:text-5xl font-bold text-text-primary tracking-tight">
           Elige tu plan
         </h1>
         <p className="text-text-tertiary text-lg max-w-2xl mx-auto leading-relaxed">
-          Trimly trabaja por ti mientras tú cortas. <br className="hidden sm:block" />
+          Trimly trabaja por ti mientras t├║ cortas. <br className="hidden sm:block" />
           Sin comisiones ocultas.
         </p>
       </div>
 
-      {/* ── Trial Banner ── */}
+      {/* ÔöÇÔöÇ Trial Banner ÔöÇÔöÇ */}
       {isTrialing && (
         <div className="bg-accent-muted border border-accent/20 rounded-xl px-6 py-4 text-center max-w-3xl mx-auto">
           <p className="text-accent font-medium">
-            Tienes 3 días de prueba gratis — todas las funciones disponibles, sin tarjeta
+            Tienes 3 d├¡as de prueba gratis ÔÇö todas las funciones disponibles, sin tarjeta
           </p>
         </div>
       )}
 
-      {/* ── Plans Grid ── */}
+      {/* ÔöÇÔöÇ Plans Grid ÔöÇÔöÇ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-[14px]">
         {PLANS.map((plan) => {
           const isCurrentPlan = currentPlanId === plan.id;
@@ -362,7 +327,7 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
                   {isCurrentPlan ? 'Plan actual' : 'Elegir Plan'}
                 </Button>
                 <p className="text-center text-xs text-text-tertiary font-medium">
-                  Pago seguro · Cancela en cualquier momento
+                  Pago seguro ┬À Cancela en cualquier momento
                 </p>
               </div>
             </Card>
@@ -370,7 +335,7 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
         })}
       </div>
 
-      {/* ── Trust Elements ── */}
+      {/* ÔöÇÔöÇ Trust Elements ÔöÇÔöÇ */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6 py-8">
         {TRUST_ITEMS.map((item, idx) => (
           <div key={idx} className="flex items-center gap-3">
@@ -386,11 +351,11 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
         ))}
       </div>
 
-      {/* ── Footnote ── */}
+      {/* ÔöÇÔöÇ Footnote ÔöÇÔöÇ */}
       <div className="text-center pt-4 border-t border-border">
         <p className="text-xs text-text-tertiary max-w-2xl mx-auto leading-relaxed">
           Precios en COP. El equivalente en USD es referencial. <br />
-          Mercado Pago convierte automáticamente según la tasa del día.
+          Mercado Pago convierte autom├íticamente seg├║n la tasa del d├¡a.
         </p>
       </div>
     </div>
