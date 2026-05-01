@@ -27,8 +27,6 @@ export async function getBarbershopId() {
       })
       .select('id')
       .single();
-      .select('id')
-      .single();
 
     if (createError) {
       console.error("Error creating barbershop fallback:", createError);
