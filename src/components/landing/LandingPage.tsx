@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Menu, 
@@ -19,7 +19,14 @@ import {
   Check, 
   Star, 
   Scissors, 
-  ChevronRight
+  ChevronRight,
+  ChevronDown,
+  Smartphone,
+  Clock,
+  CreditCard,
+  MessageCircle,
+  TrendingUp,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -64,7 +71,6 @@ const DashboardMockup = () => {
       style={{ transform: isVisible ? "rotateY(-5deg) rotateX(2deg)" : "" }}
     >
       <div className="bg-background-secondary border border-border rounded-xl shadow-2xl shadow-accent/5 overflow-hidden">
-        {/* Browser Header */}
         <div className="bg-background-tertiary border-b border-border px-4 py-3 flex items-center gap-4">
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-red-500/50" />
@@ -77,7 +83,6 @@ const DashboardMockup = () => {
         </div>
 
         <div className="flex h-[400px]">
-          {/* Sidebar */}
           <div className="w-40 border-r border-border p-4 space-y-6 hidden lg:block">
             <div className="text-sm font-bold text-text-primary">Trimly</div>
             <div className="space-y-2">
@@ -87,7 +92,6 @@ const DashboardMockup = () => {
             </div>
           </div>
 
-          {/* Main Content */}
           <div className="flex-1 p-6 space-y-6 overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="h-4 w-24 bg-background-tertiary rounded" />
@@ -107,7 +111,6 @@ const DashboardMockup = () => {
               ))}
             </div>
 
-            {/* Calendar Mini View */}
             <div className="bg-background-tertiary border border-border rounded-lg p-4 h-full">
               <div className="flex justify-between mb-4 border-b border-border pb-2">
                 {['L', 'M', 'M', 'J', 'V'].map(d => (
@@ -143,7 +146,6 @@ const BookingPageMockup = () => {
   return (
     <div className="relative w-64 mx-auto animate-float">
       <div className="bg-background-secondary border-[8px] border-border-strong rounded-[3rem] overflow-hidden shadow-2xl relative aspect-[9/19]">
-        {/* Notch */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-border-strong rounded-b-2xl z-20" />
         
         <div className="p-4 pt-10 space-y-6">
@@ -198,7 +200,6 @@ const BookingPageMockup = () => {
           <Button className="w-full h-11 text-xs font-black uppercase tracking-widest">Confirmar reserva</Button>
         </div>
 
-        {/* Home bar */}
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-border-strong rounded-full" />
       </div>
 
@@ -211,6 +212,93 @@ const BookingPageMockup = () => {
           animation: float 3s ease-in-out infinite;
         }
       `}</style>
+    </div>
+  );
+};
+
+const StatItem = ({ target, label, suffix = "" }: { target: string, label: string, suffix?: string }) => {
+  const [count, setCount] = useState(0);
+  const { elementRef, isVisible } = useScrollReveal(0.3);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (isVisible && !hasAnimated.current) {
+      hasAnimated.current = true;
+      const targetNum = parseInt(target.replace(/[^0-9]/g, ''));
+      const duration = 1500;
+      const steps = 60;
+      const increment = targetNum / steps;
+      let current = 0;
+      const timer = setInterval(() => {
+        current += increment;
+        if (current >= targetNum) {
+          setCount(targetNum);
+          clearInterval(timer);
+        } else {
+          setCount(Math.floor(current));
+        }
+      }, duration / steps);
+    }
+  }, [isVisible, target]);
+
+  return (
+    <div ref={elementRef} className="flex flex-col items-center justify-center space-y-2 px-8">
+      <div className="text-5xl font-black text-accent tracking-tighter">
+        {count.toLocaleString()}{suffix || target.replace(/[0-9]/g, '')}
+      </div>
+      <div className="text-sm text-text-tertiary font-bold uppercase tracking-widest text-center">{label}</div>
+    </div>
+  );
+};
+
+const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div className="border-b border-border">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full py-6 flex items-center justify-between text-left group"
+      >
+        <span className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{question}</span>
+        <ChevronDown 
+          className={cn("text-text-tertiary transition-transform duration-300", isOpen && "rotate-180 text-accent")} 
+          size={20} 
+        />
+      </button>
+      <div className={cn(
+        "overflow-hidden transition-all duration-300 ease-out",
+        isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0"
+      )}>
+        <p className="text-text-secondary leading-relaxed">{answer}</p>
+      </div>
+    </div>
+  );
+};
+
+const StickyCTA = () => {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsVisible(window.scrollY > 600);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <div className={cn(
+      "fixed bottom-0 left-0 right-0 z-40 bg-background-primary border-t border-border px-4 py-4 shadow-2xl transition-all duration-500 md:hidden",
+      isVisible ? "translate-y-0" : "translate-y-full"
+    )}>
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-bold text-text-primary text-center uppercase tracking-widest hidden sm:block">¿Listo para digitalizar tu barbería?</p>
+        <Link href="/auth/register">
+          <Button className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20">
+            Comenzar gratis →
+          </Button>
+        </Link>
+      </div>
     </div>
   );
 };
@@ -254,7 +342,6 @@ export default function LandingPage() {
           <span className="text-xl font-bold text-text-primary tracking-tight">Trimly</span>
         </Link>
 
-        {/* Desktop Links */}
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map(link => (
             <button 
@@ -279,7 +366,6 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Mobile Menu Panel */}
         <div 
           className={cn(
             "fixed inset-0 top-16 bg-background-primary/95 backdrop-blur-xl z-40 transition-all duration-500 md:hidden flex flex-col p-8 gap-8",
@@ -302,7 +388,7 @@ export default function LandingPage() {
       </nav>
 
       <main>
-        {/* Hero Section */}
+        {/* 1. Hero Section */}
         <section id="hero" className="relative pt-32 pb-20 md:pt-48 md:pb-40 px-6">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[140px] -z-10 translate-x-1/3 -translate-y-1/4" />
           <div className="absolute inset-0 -z-20 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(var(--color-text-tertiary) 0.8px, transparent 0.8px)', backgroundSize: '32px 32px' }} />
@@ -348,7 +434,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Social Proof */}
+        {/* 2. Social Proof */}
         <section className="bg-background-secondary/30 border-y border-border/40 py-16 px-6">
           <div className="max-w-7xl mx-auto flex flex-col items-center gap-10">
             <p className="text-xs font-black text-text-tertiary uppercase tracking-[0.4em] text-center">
@@ -378,7 +464,63 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Features Section */}
+        {/* 3. ¿Para quién es Trimly? (NEW) */}
+        <section className="py-24 md:py-40 px-6">
+          <div className="max-w-7xl mx-auto space-y-16">
+            <h2 className="text-4xl md:text-6xl font-black text-text-primary text-center tracking-tight">Trimly es para ti si...</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Sí es para ti */}
+              <div className="bg-accent/5 border border-accent/20 rounded-3xl p-8 md:p-12 space-y-8">
+                <div className="flex items-center gap-3 text-accent font-black uppercase tracking-widest text-sm">
+                  <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                    <Check size={18} strokeWidth={3} />
+                  </div>
+                  Sí es para ti
+                </div>
+                <ul className="space-y-4">
+                  {[
+                    'Tienes una barbería con 1 o más barberos',
+                    'Recibes citas por WhatsApp o llamada y ya te cansaste',
+                    'Se te han cruzado citas o se te han olvidado clientes',
+                    'Quieres saber exactamente cuánto ganas cada mes',
+                    'Tienes clientes que dejaron de venir y no sabes por qué',
+                    'Quieres crecer sin contratar a alguien solo para agendar'
+                  ].map((item, i) => (
+                    <li key={i} className="flex gap-4 text-text-primary font-bold leading-relaxed">
+                      <span className="text-accent mt-1">✓</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* No es para ti */}
+              <div className="bg-background-secondary/50 border border-border rounded-3xl p-8 md:p-12 space-y-8">
+                <div className="flex items-center gap-3 text-text-tertiary font-black uppercase tracking-widest text-sm">
+                  <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center">
+                    <X size={18} strokeWidth={3} />
+                  </div>
+                  Puede que no sea para ti todavía
+                </div>
+                <ul className="space-y-4">
+                  {[
+                    'Buscas solo una app de citas sin automatizaciones',
+                    'Tu barbería no tiene clientes recurrentes aún',
+                    'Prefieres gestionar todo manualmente por ahora'
+                  ].map((item, i) => (
+                    <li key={i} className="flex gap-4 text-text-secondary font-medium leading-relaxed">
+                      <span className="text-text-tertiary mt-1">✗</span>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 4. Características */}
         <section id="caracteristicas" className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto space-y-24">
             <div className="text-center space-y-6 max-w-4xl mx-auto">
@@ -443,8 +585,60 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* How it Works */}
-        <section id="como-funciona" className="py-24 md:py-40 px-6 bg-background-secondary/20">
+        {/* 5. Comparación (NEW) */}
+        <section className="py-24 md:py-40 px-6 bg-background-secondary/10">
+          <div className="max-w-7xl mx-auto space-y-20">
+            <div className="text-center space-y-6">
+              <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">¿Sigues con la libreta y el WhatsApp?</h2>
+              <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">Así se ve la diferencia entre gestionar tu barbería a la antigua versus con Trimly.</p>
+            </div>
+
+            <Card className="max-w-4xl mx-auto overflow-hidden border-border/60">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-background-tertiary">
+                      <th className="p-6 text-sm font-black uppercase tracking-widest text-text-tertiary">Situación</th>
+                      <th className="p-6 text-sm font-black uppercase tracking-widest text-red-500/80">Sin Trimly 😰</th>
+                      <th className="p-6 text-sm font-black uppercase tracking-widest text-accent">Con Trimly ✅</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      ['Agendar una cita', 'WhatsApp de ida y vuelta, 5 minutos por cliente', 'El cliente agenda solo en 30 segundos'],
+                      ['Dobles reservas', 'Pasan todo el tiempo, clientes molestos', 'Imposible. Los slots se bloquean solos'],
+                      ['Recordatorios', 'Te toca escribir uno por uno el día anterior', 'Automático. Trimly lo hace por ti'],
+                      ['Clientes inactivos', 'No sabes quién dejó de venir', 'Trimly los detecta y los contacta'],
+                      ['Ingresos del mes', 'Calculas en papel o de memoria', 'Dashboard con cifras exactas en tiempo real'],
+                      ['Tu tiempo libre', 'Contestando mensajes hasta de noche', 'Trabajando, no administrando']
+                    ].map((row, i) => (
+                      <tr key={i} className={cn("border-b border-border", i % 2 === 0 ? "bg-muted/5" : "bg-transparent")}>
+                        <td className="p-6 text-sm font-bold text-text-primary">{row[0]}</td>
+                        <td className="p-6 text-sm text-text-tertiary italic">
+                          <span className="flex items-center gap-2"><X size={14} className="text-red-500/50" /> {row[1]}</span>
+                        </td>
+                        <td className="p-6 text-sm font-bold text-text-primary">
+                          <span className="flex items-center gap-2"><Check size={14} className="text-accent" /> {row[2]}</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
+
+            <div className="text-center">
+              <Link href="/auth/register">
+                <Button size="lg" className="h-16 px-10 text-xl font-black uppercase tracking-widest group">
+                  Quiero trabajar con Trimly <ArrowRight size={22} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* 6. Cómo funciona */}
+        <section id="como-funciona" className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto space-y-24">
             <div className="text-center space-y-6">
               <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">De cero a digitalizado en 3 pasos</h2>
@@ -452,7 +646,6 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
-              {/* Connector lines (Desktop) */}
               <div className="hidden md:block absolute top-32 left-[15%] right-[15%] h-0.5 border-t-2 border-dashed border-border-strong -z-10" />
 
               {[
@@ -496,7 +689,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Featured Feature Spotlight */}
+        {/* 7. Feature Destacada */}
         <section className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto bg-background-secondary/40 border border-border rounded-[3rem] p-10 md:p-24 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
             <div className="space-y-10">
@@ -536,7 +729,57 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Testimonials */}
+        {/* 8. Objeción Directa / WhatsApp (NEW) */}
+        <section className="py-24 md:py-40 px-6">
+          <div className="max-w-7xl mx-auto space-y-20">
+            <div className="text-center space-y-6">
+              <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">¿Tus clientes saben usar WhatsApp?</h2>
+              <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">Entonces ya saben usar Trimly.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  icon: <Smartphone className="text-accent" size={32} />,
+                  obj: '¿Mis clientes van a saber usarlo?',
+                  resp: 'Si saben abrir un link de WhatsApp, saben reservar en Trimly. No hay nada que instalar ni aprender. Un link, tres clicks, cita confirmada.'
+                },
+                {
+                  icon: <Clock className="text-accent" size={32} />,
+                  obj: '¿Cuánto tiempo me toma configurarlo?',
+                  resp: 'Menos de 5 minutos. Creas tu cuenta, agregas tus barberos y servicios, copias tu link y listo. Ya puedes recibir citas el mismo día.'
+                },
+                {
+                  icon: <CreditCard className="text-accent" size={32} />,
+                  obj: '¿Y si no me sirve?',
+                  resp: 'El plan básico es gratis para siempre. Si subes al pro y en 14 días no ves el valor, te devolvemos tu dinero. Sin preguntas, sin tramites.'
+                }
+              ].map((item, i) => (
+                <Card key={i} className="p-8 space-y-6 border-border/60 hover:border-accent/30 transition-all duration-500">
+                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
+                    {item.icon}
+                  </div>
+                  <div>
+                    <div className="text-sm text-text-tertiary font-black uppercase tracking-widest">{item.obj}</div>
+                    <p className="text-lg font-bold text-text-primary mt-3 leading-relaxed">{item.resp}</p>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            <div className="bg-accent/5 rounded-3xl p-10 text-center max-w-3xl mx-auto border border-accent/10 space-y-4">
+              <div className="flex justify-center">
+                <div className="w-12 h-12 rounded-full bg-accent/20 flex items-center justify-center">
+                  <MessageCircle className="text-accent" />
+                </div>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black text-text-primary">Trimly funciona donde ya trabajan tus clientes: WhatsApp.</h3>
+              <p className="text-lg text-text-secondary leading-relaxed">Comparte tu link de reservas en tu estado, en tu Instagram o donde quieras. Tus clientes agendan sin salir de su celular.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* 9. Testimonios */}
         <section className="py-24 md:py-40 px-6 bg-background-secondary/10">
           <div className="max-w-7xl mx-auto space-y-24">
             <div className="text-center space-y-6 max-w-4xl mx-auto">
@@ -594,8 +837,20 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Pricing */}
-        <section id="precios" className="py-24 md:py-40 px-6 bg-background-secondary/20">
+        {/* 10. Stats / Contador (NEW) */}
+        <section className="bg-background-secondary/40 border-y border-border/40 py-24 px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 divide-y md:divide-y-0 md:divide-x divide-border/60">
+              <div className="pt-0"><StatItem target="2.400+" label="Citas agendadas este mes" /></div>
+              <div className="pt-12 md:pt-0"><StatItem target="50+" label="Barberías activas" /></div>
+              <div className="pt-12 md:pt-0"><StatItem target="98%" label="De clientes que no cancelan" /></div>
+              <div className="pt-12 md:pt-0"><StatItem target="5 min" label="Para tener tu barbería lista" /></div>
+            </div>
+          </div>
+        </section>
+
+        {/* 11. Precios */}
+        <section id="precios" className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto space-y-24">
             <div className="text-center space-y-6">
               <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">Planes simples, sin sorpresas</h2>
@@ -683,18 +938,48 @@ export default function LandingPage() {
                 </div>
               </Card>
             </div>
+          </div>
+        </section>
 
-            <div className="flex flex-col items-center gap-4 mt-12">
-              <p className="text-sm text-text-tertiary font-bold tracking-widest uppercase">
-                🔒 Sin tarjeta de crédito · Cancela cuando quieras · Soporte en español
-              </p>
+        {/* 12. FAQ (NEW) */}
+        <section className="py-24 md:py-40 px-6">
+          <div className="max-w-3xl mx-auto space-y-16">
+            <div className="text-center space-y-4">
+              <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">Preguntas frecuentes</h2>
+              <p className="text-lg text-text-secondary">Si tienes otra duda, escríbenos directo por WhatsApp.</p>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                {
+                  q: '¿Necesito saber de tecnología para usar Trimly?',
+                  a: 'Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí. No tienes que instalar nada ni aprender ningún software complicado.'
+                },
+                {
+                  q: '¿Funciona con WhatsApp Business?',
+                  a: 'Sí. El link de reservas de Trimly funciona desde cualquier dispositivo y cualquier app de mensajería. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras. Tus clientes solo necesitan abrirlo.'
+                },
+                {
+                  q: '¿Qué pasa si mi cliente no tiene internet?',
+                  a: 'Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos, exactamente igual que si el cliente lo hiciera desde su celular.'
+                },
+                {
+                  q: '¿Puedo cancelar cuando quiera?',
+                  a: 'Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento y no te cobramos nada más. Tus datos y los de tus clientes quedan disponibles para descargar por 30 días después de cancelar.'
+                },
+                {
+                  q: '¿Mis datos y los de mis clientes están seguros?',
+                  a: 'Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás. Tus clientes son tuyos, no nuestros.'
+                }
+              ].map((faq, i) => (
+                <FAQItem key={i} question={faq.q} answer={faq.a} />
+              ))}
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
+        {/* 13. Final CTA */}
         <section className="bg-accent py-32 md:py-48 px-6 relative overflow-hidden">
-          {/* Decorative scissors */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] -z-0">
             <Scissors size={800} className="-rotate-12" />
           </div>
@@ -736,16 +1021,7 @@ export default function LandingPage() {
               </p>
               <div className="flex gap-5">
                 <a href="#" className="w-12 h-12 rounded-2xl bg-background-secondary flex items-center justify-center text-text-secondary hover:text-accent transition-all border border-border hover:border-accent/40 shadow-sm">
-                  <svg
-                    width="22"
-                    height="22"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                     <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                     <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
@@ -782,6 +1058,9 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* 14. Sticky CTA Móvil (NEW) */}
+      <StickyCTA />
     </div>
   );
 }
