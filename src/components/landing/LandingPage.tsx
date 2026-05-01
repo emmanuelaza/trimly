@@ -1079,7 +1079,7 @@ export default function LandingPage() {
                 <li><button onClick={() => scrollTo('#caracteristicas')} className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Características</button></li>
                 <li><button onClick={() => scrollTo('#precios')} className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Precios</button></li>
                 <li><Link href="/auth/register" className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Comenzar gratis</Link></li>
-                <li><Link href="/login" className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Iniciar sesión</Link></li>
+                <li><Link href="/auth/login" className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Iniciar sesión</Link></li>
               </ul>
             </div>
           </div>

@@ -27,11 +27,13 @@ export async function signUpAction(formData: FormData) {
   if (user) {
     const randomSuffix = Math.random().toString(36).substring(2, 7);
     const slug = `${slugify(businessName || 'mi-barberia')}-${randomSuffix}`;
+    const whatsapp = formData.get("whatsapp") as string;
 
     const { error: insertError } = await supabase.from('barbershops').insert({
       owner_id: user.id,
       name: businessName || 'Mi Barbería',
       slug: slug,
+      whatsapp: whatsapp || null,
       created_at: new Date().toISOString()
     });
 
