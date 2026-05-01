@@ -310,7 +310,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] items-center gap-16 md:gap-24">
             <div className="space-y-10">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <span className="text-base">✂️</span> HECHO PARA BARBERÍAS COLOMBIANAS
+                <span className="text-base">🌍</span> DISPONIBLE EN COLOMBIA, ESPAÑA Y EE.UU.
               </div>
               
               <h1 className="text-5xl md:text-8xl font-black text-text-primary leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
@@ -352,14 +352,14 @@ export default function LandingPage() {
         <section className="bg-background-secondary/30 border-y border-border/40 py-16 px-6">
           <div className="max-w-7xl mx-auto flex flex-col items-center gap-10">
             <p className="text-xs font-black text-text-tertiary uppercase tracking-[0.4em] text-center">
-              Barberías en toda Colombia ya confían en Trimly
+              Barberías en Colombia, España y EE.UU. ya confían en Trimly
             </p>
             <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-8">
               {[
                 { n: 'Barbería Don Pedro', w: 'font-black' },
-                { n: 'Filo & Estilo', w: 'font-medium' },
+                { n: 'The Barber Shop NY', w: 'font-medium' },
                 { n: 'El Corte Perfecto', w: 'font-bold' },
-                { n: 'Kings Cut', w: 'font-semibold' },
+                { n: 'Madrid Kings', w: 'font-semibold' },
                 { n: 'Barbería Medellín', w: 'font-extrabold' }
               ].map((b, i) => {
                 const { elementRef, className } = useScrollReveal();
@@ -541,7 +541,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto space-y-24">
             <div className="text-center space-y-6 max-w-4xl mx-auto">
               <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">Los barberos hablan por sí solos</h2>
-              <p className="text-xl text-text-secondary leading-relaxed">Más de 50 barberías en Colombia ya organizaron su negocio con Trimly</p>
+              <p className="text-xl text-text-secondary leading-relaxed">Más de 50 barberías ya organizaron su negocio con Trimly</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -559,9 +559,9 @@ export default function LandingPage() {
                   stars: 5
                 },
                 {
-                  text: '“Los reportes me ayudaron a entender qué días son los más ocupados. Ahora organizo mejor mis horarios y gano más sin trabajar más horas. Vale cada peso.”',
+                  text: '“Los reportes me ayudaron a entender qué días son los más ocupados. Ahora organizo mejor mis horarios y gano más sin trabajar más horas. Vale cada euro.”',
                   author: 'Miguel T.',
-                  shop: 'Kings Cut · Cali',
+                  shop: 'Madrid Kings · España',
                   stars: 5
                 }
               ].map((testi, i) => {
@@ -732,7 +732,7 @@ export default function LandingPage() {
                 <span className="text-2xl font-black text-text-primary tracking-tight">Trimly</span>
               </div>
               <p className="text-lg text-text-secondary leading-relaxed max-w-md font-medium">
-                La plataforma de gestión para barberías colombianas. Digitaliza tu agenda y crece tu negocio hoy mismo.
+                La plataforma de gestión líder para barberías. Digitaliza tu agenda y crece tu negocio en cualquier parte del mundo.
               </p>
               <div className="flex gap-5">
                 <a href="#" className="w-12 h-12 rounded-2xl bg-background-secondary flex items-center justify-center text-text-secondary hover:text-accent transition-all border border-border hover:border-accent/40 shadow-sm">
@@ -778,7 +778,7 @@ export default function LandingPage() {
 
           <div className="pt-12 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-6">
             <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">© 2026 TRIMLY. HECHO CON ❤️ EN COLOMBIA</p>
-            <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Trimly.co • Digitalización para barberos</p>
+            <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Trimly.co • Digitalización global para barberos</p>
           </div>
         </div>
       </footer>

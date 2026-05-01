@@ -3,10 +3,10 @@ import LandingPage from '@/components/landing/LandingPage';
 
 export const metadata: Metadata = {
   title: "Trimly — Digitaliza tu barbería hoy",
-  description: "Agenda online, automatizaciones y reportes para barberías colombianas. Empieza gratis en minutos.",
+  description: "Agenda online, automatizaciones y reportes para barberías en Colombia, España y Estados Unidos. Empieza gratis en minutos.",
   openGraph: {
     title: "Trimly — Digitaliza tu barbería hoy",
-    description: "La plataforma de gestión para barberías colombianas.",
+    description: "La plataforma de gestión líder para barberías en Colombia, España y EE.UU.",
     type: 'website',
   },
   robots: {
