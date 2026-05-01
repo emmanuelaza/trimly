@@ -396,7 +396,7 @@ export default function LandingPage() {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] items-center gap-16 md:gap-24">
             <div className="space-y-10">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-1000">
-                <span className="text-base">🌍</span> DISPONIBLE EN COLOMBIA, ESPAÑA Y EE.UU.
+                <span className="text-base">🌍</span> DISPONIBLE PARA BARBERÍAS DE TODO EL MUNDO
               </div>
               
               <h1 className="text-5xl md:text-8xl font-black text-text-primary leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
@@ -857,27 +857,29 @@ export default function LandingPage() {
               <p className="text-xl text-text-secondary leading-relaxed">Empieza gratis. Escala cuando tu barbería lo necesite.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-5xl mx-auto">
-              {/* Basic Plan */}
-              <Card className="p-10 space-y-10 flex flex-col border-border/60 hover:border-accent/20 transition-all duration-500 bg-background-primary/40">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+              {/* Plan Mensual - Básico */}
+              <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-accent/20 transition-all duration-500 bg-background-primary/40">
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-text-primary uppercase tracking-widest">Básico</h3>
+                  <div className="bg-background-tertiary text-text-secondary px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Básico</div>
+                  <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">MENSUAL</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-text-primary">$29.900</span>
-                    <span className="text-lg font-bold text-text-tertiary">/ MES</span>
+                    <span className="text-4xl font-black text-text-primary">$29.900</span>
+                    <span className="text-sm font-bold text-text-tertiary">/ MES</span>
                   </div>
-                  <p className="text-text-secondary text-base leading-relaxed">Para barberías que están empezando a digitalizarse</p>
+                  <p className="text-text-secondary text-sm">Gestión esencial para tu barbería</p>
                 </div>
 
                 <div className="space-y-5 flex-1">
                   {[
-                    '1 barbero incluido',
-                    'Agenda online activa 24/7',
-                    'Link de reservas personalizado',
-                    'Recordatorios automáticos de cita',
-                    'Hasta 100 citas por mes'
+                    'Citas ilimitadas',
+                    'Hasta 3 barberos',
+                    'Historial de clientes completo',
+                    'Recordatorios automáticos 24h antes',
+                    'Confirmación inmediata al agendar',
+                    'Reporte diario por email'
                   ].map(item => (
-                    <div key={item} className="flex items-center gap-4 text-sm font-bold text-text-secondary">
+                    <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-secondary">
                       <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
                         <Check size={12} strokeWidth={3} className="text-green-500" />
                       </div>
@@ -887,41 +889,36 @@ export default function LandingPage() {
                 </div>
 
                 <Link href="/auth/register" className="w-full">
-                  <Button variant="secondary" size="lg" className="w-full h-16 text-lg font-black uppercase tracking-widest">Comenzar gratis</Button>
+                  <Button variant="secondary" size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest">Comenzar gratis</Button>
                 </Link>
               </Card>
 
-              {/* Pro Plan */}
-              <Card className="p-10 space-y-10 flex flex-col border-accent relative shadow-2xl shadow-accent/10 transform scale-[1.05] bg-background-secondary z-10">
+              {/* Plan Filo Pro - Recomendado */}
+              <Card className="p-10 space-y-8 flex flex-col border-accent relative shadow-2xl shadow-accent/10 transform scale-[1.05] bg-background-secondary z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-background-primary px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl">
-                  Más popular
+                  Recomendado
                 </div>
                 
                 <div className="space-y-4">
-                  <h3 className="text-2xl font-black text-text-primary uppercase tracking-widest">Filo Pro</h3>
+                  <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">FILO PRO</h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-5xl font-black text-text-primary">$79.900</span>
-                    <span className="text-lg font-bold text-text-tertiary">/ MES</span>
+                    <span className="text-4xl font-black text-text-primary">$79.900</span>
+                    <span className="text-sm font-bold text-text-tertiary">/ MES</span>
                   </div>
-                  <p className="text-text-secondary text-base leading-relaxed">Para barberías serias que quieren crecer sin límites</p>
+                  <p className="text-accent text-sm font-bold">Todo para crecer sin límites</p>
                 </div>
 
                 <div className="space-y-5 flex-1">
-                  <div className="flex items-center gap-4 text-base font-black text-accent mb-6">
-                    <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
-                      <Check size={14} strokeWidth={3} className="text-accent" />
-                    </div>
-                    Todo lo del plan Básico
-                  </div>
+                  <div className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">TODO LO DEL BÁSICO, MÁS:</div>
                   {[
+                    'Link personalizado de reservas online',
                     'Barberos ilimitados',
-                    'Citas ilimitadas',
-                    'Reportes avanzados de ingresos y servicios',
-                    'Recuperación automática de clientes inactivos',
-                    'Automatizaciones completas (seguimiento, cumpleaños)',
-                    'Soporte prioritario en español'
+                    'Recuperar clientes inactivos',
+                    'Felicitar cumpleaños automáticamente',
+                    'Seguimiento post-visita y reseñas',
+                    'Reportes avanzados y exportación'
                   ].map(item => (
-                    <div key={item} className="flex items-center gap-4 text-sm font-bold text-text-primary">
+                    <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-primary">
                       <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                         <Check size={12} strokeWidth={3} className="text-accent" />
                       </div>
@@ -932,10 +929,45 @@ export default function LandingPage() {
 
                 <div className="space-y-4">
                   <Link href="/auth/register" className="w-full">
-                    <Button size="lg" className="w-full h-16 text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20">Comenzar gratis</Button>
+                    <Button size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest shadow-xl shadow-accent/20">Comenzar gratis</Button>
                   </Link>
-                  <p className="text-[10px] text-text-tertiary text-center font-black uppercase tracking-[0.2em]">Preferido por barberías con 2 o más barberos</p>
+                  <p className="text-[9px] text-text-tertiary text-center font-black uppercase tracking-[0.2em]">El plan más elegido por los barberos</p>
                 </div>
+              </Card>
+
+              {/* Plan Lifetime / Anual */}
+              <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-violet-500/30 transition-all duration-500 bg-background-primary/40">
+                <div className="space-y-4">
+                  <div className="bg-violet-500/10 text-violet-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Único Pago</div>
+                  <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">LIFETIME</h3>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl font-black text-text-primary">$559.000</span>
+                  </div>
+                  <p className="text-violet-400 text-sm font-bold">Paga 1 vez, úsalo para siempre</p>
+                </div>
+
+                <div className="space-y-5 flex-1">
+                  <div className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">ACCESO TOTAL DE POR VIDA:</div>
+                  {[
+                    'Todas las funciones del plan Filo Pro',
+                    'Página pública de reservas online',
+                    'Barberos ilimitados',
+                    'Reportes y automatizaciones avanzadas',
+                    'Actualizaciones futuras incluidas',
+                    'Sin mensualidades de por vida'
+                  ].map(item => (
+                    <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-secondary">
+                      <div className="w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                        <Check size={12} strokeWidth={3} className="text-violet-400" />
+                      </div>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+
+                <Link href="/auth/register" className="w-full">
+                  <Button variant="secondary" size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest border-violet-500/30 hover:bg-violet-500/5">Comenzar gratis</Button>
+                </Link>
               </Card>
             </div>
           </div>
