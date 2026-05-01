@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
+import { slugify } from "@/lib/utils";
 
 export async function getBarbershop() {
   const barbershopId = await getBarbershopId();
@@ -236,11 +237,26 @@ export async function saveOnboardingStep1(data: { name: string, city: string, wh
   if (!barbershopId) throw new Error("No barbershop found");
 
   const supabase = await createClient();
-  const { error } = await supabase.from("barbershops").update({
+
+  // Check if slug exists
+  const { data: current } = await supabase
+    .from("barbershops")
+    .select("slug")
+    .eq("id", barbershopId)
+    .single();
+
+  const updates: any = {
     name: data.name,
     city: data.city,
     whatsapp: data.whatsapp
-  }).eq("id", barbershopId);
+  };
+
+  if (!current?.slug) {
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    updates.slug = `${slugify(data.name || 'mi-barberia')}-${randomSuffix}`;
+  }
+
+  const { error } = await supabase.from("barbershops").update(updates).eq("id", barbershopId);
 
   if (error) throw error;
   return { success: true };

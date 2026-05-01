@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
 
 export async function signUpAction(formData: FormData) {
   const email = formData.get("email") as string;
@@ -24,10 +25,13 @@ export async function signUpAction(formData: FormData) {
   if (signUpError) return { success: false, error: signUpError.message };
 
   if (user) {
-    // TAREA: Después de crear el usuario, hacer INSERT en barbershops
+    const randomSuffix = Math.random().toString(36).substring(2, 7);
+    const slug = `${slugify(businessName || 'mi-barberia')}-${randomSuffix}`;
+
     const { error: insertError } = await supabase.from('barbershops').insert({
       owner_id: user.id,
       name: businessName || 'Mi Barbería',
+      slug: slug,
       created_at: new Date().toISOString()
     });
 
