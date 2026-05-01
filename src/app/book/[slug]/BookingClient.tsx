@@ -67,10 +67,10 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       <div
         className={`${
           t.visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
-        } transition-all duration-300 max-w-sm w-full bg-background-elevated text-text-primary shadow-2xl rounded-2xl flex items-center p-4 border border-border-strong`}
+        } transition-all duration-300 max-w-sm w-full bg-background-secondary text-text-primary shadow-2xl rounded-xl flex items-center p-4 border border-border`}
       >
         <Clock className="w-5 h-5 text-accent mr-3 shrink-0" />
-        <p className="text-sm font-bold leading-tight">
+        <p className="text-sm font-semibold leading-tight">
           Este horario ya no está disponible. Escoge el que más te convenga.
         </p>
       </div>
@@ -293,35 +293,37 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   if (finished) {
     return (
       <div className="max-w-md mx-auto px-4 py-12 text-center">
-        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-          <div className="w-20 h-20 bg-success/20 rounded-full flex items-center justify-center mx-auto mb-6">
+        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-sm mx-auto">
+          <div className="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle size={40} className="text-success" />
           </div>
-          <h1 className="text-2xl font-black text-text-primary mb-2">¡Tu cita está confirmada!</h1>
-          <p className="text-text-tertiary mb-8">Te esperamos en la barbería.</p>
+          <h1 className="text-2xl font-semibold text-text-primary mb-2">¡Tu cita está confirmada!</h1>
+          <p className="text-sm text-text-secondary mb-8">Te esperamos en la barbería.</p>
 
-          <Card className="text-left p-6 space-y-4 mb-8 bg-background-secondary border-accent/20">
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Fecha</span>
-              <span className="text-text-primary font-bold">
-                {formatDate(selectedDate)}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Hora</span>
-              <span className="text-text-primary font-bold">
-                {selectedTime}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-text-tertiary">Barbero</span>
-              <span className="text-text-primary font-bold">{selectedBarber?.name || 'Sin preferencia'}</span>
+          <Card className="text-left border-accent/20">
+            <div className="space-y-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Fecha</span>
+                <span className="text-text-primary font-medium">
+                  {formatDate(selectedDate)}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Hora</span>
+                <span className="text-text-primary font-medium">
+                  {selectedTime}
+                </span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-text-secondary">Barbero</span>
+                <span className="text-text-primary font-medium">{selectedBarber?.name || 'Sin preferencia'}</span>
+              </div>
             </div>
           </Card>
 
           <Button 
             variant="primary" 
-            className="w-full h-12 font-bold mb-4"
+            className="w-full h-12 font-medium mt-8 mb-4"
             onClick={() => {
               const [y, m, d] = selectedDate.split('-').map(Number);
               const [hh, mm] = (selectedTime || "00:00").split(':').map(Number);
@@ -340,40 +342,44 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   }
 
   return (
-    <div className="max-w-md mx-auto min-h-screen flex flex-col">
-      <header className="p-6 text-center space-y-2">
-        <h1 className="text-3xl font-black text-text-primary tracking-tight">{barbershop.name}</h1>
-        <div className="flex items-center justify-center gap-4 text-xs font-bold text-text-tertiary uppercase tracking-widest">
-          <span className="flex items-center gap-1"><MapPin size={12} /> {barbershop.city}</span>
-          <a href={`https://wa.me/${barbershop.whatsapp?.replace(/\+/g, '')}`} className="flex items-center gap-1 text-accent"><MessageCircle size={12} /> WhatsApp</a>
+    <div className="max-w-md mx-auto min-h-screen flex flex-col bg-background-primary">
+      <header className="p-8 text-center space-y-3">
+        <h1 className="text-3xl font-semibold text-text-primary tracking-tight">{barbershop.name}</h1>
+        <div className="flex items-center justify-center gap-4 text-[10px] font-bold text-text-secondary uppercase tracking-widest">
+          <span className="flex items-center gap-1.5"><MapPin size={12} className="text-accent" /> {barbershop.city}</span>
+          <a href={`https://wa.me/${barbershop.whatsapp?.replace(/\+/g, '')}`} className="flex items-center gap-1.5 text-accent hover:opacity-80 transition-opacity">
+            <MessageCircle size={12} /> WhatsApp
+          </a>
         </div>
       </header>
 
-      <div className="px-6 mb-8 flex gap-1">
+      <div className="px-8 mb-10 flex gap-2">
         {[1, 2, 3, 4].map(s => (
-          <div key={s} className={`h-1 flex-1 rounded-full transition-colors ${step >= s ? 'bg-accent' : 'bg-border-strong'}`} />
+          <div key={s} className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= s ? 'bg-accent' : 'bg-border'}`} />
         ))}
       </div>
 
-      <main className="flex-1 px-6 pb-24">
+      <main className="flex-1 px-8 pb-32">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div key="step1" initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -10, opacity: 0 }}>
-              <h2 className="text-xl font-black text-text-primary mb-6">Selecciona un servicio</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Selecciona un servicio</h2>
               <div className="space-y-3">
                 {services.map(s => (
                   <button
                     key={s.id}
                     onClick={() => { setSelectedService(s); setStep(2); }}
-                    className={`w-full text-left p-5 rounded-2xl border-2 transition-all flex items-center justify-between group ${
-                      selectedService?.id === s.id ? 'border-accent bg-accent/5' : 'border-border hover:border-border-strong'
+                    className={`w-full text-left p-5 rounded-xl border transition-all flex items-center justify-between group ${
+                      selectedService?.id === s.id 
+                      ? 'border-accent bg-accent/5 ring-1 ring-accent/20' 
+                      : 'border-border bg-background-secondary hover:border-border-strong'
                     }`}
                   >
                     <div>
-                      <p className="text-sm font-black text-text-primary group-hover:text-accent transition-colors">{s.name}</p>
-                      <p className="text-xs text-text-tertiary mt-1">{s.duration_minutes} min • ${s.price.toLocaleString()}</p>
+                      <p className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors">{s.name}</p>
+                      <p className="text-xs text-text-secondary mt-1">{s.duration_minutes} min • ${s.price.toLocaleString()}</p>
                     </div>
-                    <ChevronRight size={18} className="text-text-tertiary" />
+                    <ChevronRight size={18} className="text-text-tertiary group-hover:text-accent transition-colors" />
                   </button>
                 ))}
               </div>
@@ -382,47 +388,51 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
           {step === 2 && (
             <motion.div key="step2" initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -10, opacity: 0 }}>
-              <h2 className="text-xl font-black text-text-primary mb-6">Barbero y Fecha</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Barbero y Fecha</h2>
               
-              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-3">¿Quién te atiende?</p>
+              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-3">¿Quién te atiende?</p>
               <div className="grid grid-cols-2 gap-3 mb-8">
                 <button
                   onClick={() => setSelectedBarber(null)}
-                  className={`p-4 rounded-xl border-2 text-center transition-all ${
-                    selectedBarber === null ? 'border-accent bg-accent/5' : 'border-border'
+                  className={`p-5 rounded-xl border transition-all ${
+                    selectedBarber === null 
+                    ? 'border-accent bg-accent/5 ring-1 ring-accent/20' 
+                    : 'border-border bg-background-secondary hover:border-border-strong'
                   }`}
                 >
-                  <div className="w-10 h-10 bg-background-tertiary rounded-full flex items-center justify-center mx-auto mb-2 text-text-tertiary">
+                  <div className="w-10 h-10 bg-background-tertiary rounded-full flex items-center justify-center mx-auto mb-2 text-text-secondary">
                     <User size={20} />
                   </div>
-                  <p className="text-xs font-bold">Sin preferencia</p>
+                  <p className="text-xs font-medium text-text-primary">Sin preferencia</p>
                 </button>
                 {barbers.map(b => (
                   <button
                     key={b.id}
                     onClick={() => setSelectedBarber(b)}
-                    className={`p-4 rounded-xl border-2 text-center transition-all ${
-                      selectedBarber?.id === b.id ? 'border-accent bg-accent/5' : 'border-border'
+                    className={`p-5 rounded-xl border transition-all ${
+                      selectedBarber?.id === b.id 
+                      ? 'border-accent bg-accent/5 ring-1 ring-accent/20' 
+                      : 'border-border bg-background-secondary hover:border-border-strong'
                     }`}
                   >
-                    <div className="w-10 h-10 bg-accent text-background-primary rounded-full flex items-center justify-center mx-auto mb-2 font-black text-xs">
+                    <div className="w-10 h-10 bg-accent text-background-primary rounded-full flex items-center justify-center mx-auto mb-2 font-semibold text-xs">
                       {b.name.substring(0, 2).toUpperCase()}
                     </div>
-                    <p className="text-xs font-bold">{b.name}</p>
+                    <p className="text-xs font-medium text-text-primary">{b.name}</p>
                   </button>
                 ))}
               </div>
 
-              <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-3">Selecciona el día</p>
+              <p className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-3">Selecciona el día</p>
               <Input 
                 type="date" 
                 min={getTodayString()}
                 value={selectedDate}
                 onChange={e => setSelectedDate(e.target.value)}
-                className="mb-8 h-12 font-bold"
+                className="mb-8 h-12 font-medium"
               />
 
-              <Button variant="primary" className="w-full h-12 font-bold" onClick={() => setStep(3)}>
+              <Button variant="primary" className="w-full h-12 font-medium" onClick={() => setStep(3)}>
                 Ver horas disponibles
               </Button>
             </motion.div>
@@ -430,7 +440,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
           {step === 3 && (
             <motion.div key="step3" initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -10, opacity: 0 }}>
-              <h2 className="text-xl font-black text-text-primary mb-6">Selecciona la hora</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Selecciona la hora</h2>
               
               {loading ? (
                 <div className="py-12 text-center text-text-tertiary">Cargando disponibilidad...</div>
@@ -447,18 +457,18 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                         setSelectedTime(s.time); 
                         setStep(4); 
                       }}
-                      className={`py-3 rounded-xl border-2 text-xs font-black transition-all ${
-                        !s.available ? 'bg-background-tertiary/50 border-transparent text-text-tertiary opacity-50 cursor-default' :
+                      className={`py-3 rounded-xl border transition-all text-xs font-semibold ${
+                        !s.available ? 'bg-background-primary border-border/50 text-text-tertiary opacity-40 cursor-default' :
                         selectedTime === s.time ? 'bg-accent text-background-primary border-accent shadow-lg shadow-accent/20' :
-                        'bg-accent/10 border-accent/20 text-accent hover:bg-accent hover:text-background-primary hover:border-accent'
+                        'bg-background-secondary border-border text-text-primary hover:border-accent hover:text-accent'
                       }`}
                     >
-                      {s.available ? s.time : 'Ocupado'}
+                      {s.available ? formatTime(s.time) : 'Ocupado'}
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="py-12 text-center text-text-tertiary bg-background-tertiary rounded-2xl">
+                <div className="py-12 text-center text-text-secondary bg-background-secondary border border-border rounded-xl">
                   No hay horas disponibles para este día.
                 </div>
               )}
@@ -467,48 +477,49 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
           {step === 4 && (
             <motion.div key="step4" initial={{ x: 10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} exit={{ x: -10, opacity: 0 }}>
-              <h2 className="text-xl font-black text-text-primary mb-6">Tus datos</h2>
+              <h2 className="text-xl font-semibold text-text-primary mb-6">Confirmar cita</h2>
               
-              <Card className="p-5 bg-background-secondary border-accent/20 mb-8 space-y-2">
-                <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Resumen</p>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-bold text-text-primary">{selectedService.name}</span>
-                  <span className="text-sm font-black text-accent">${selectedService.price.toLocaleString()}</span>
+              <Card className="mb-8 border-accent/20">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-accent">
+                    <Scissors size={20} />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-text-primary">{selectedService?.name}</p>
+                    <p className="text-xs text-text-secondary">
+                      {formatDate(selectedDate)} • {selectedTime}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-xs text-text-tertiary">
-                  {formatDate(selectedDate)} • {selectedTime}
-                </div>
-                <div className="text-xs text-text-tertiary">
-                  Barbero: {selectedBarber?.name || 'Sin preferencia'}
+                <div className="mt-4 pt-4 border-t border-border flex justify-between items-center text-xs">
+                  <span className="text-text-secondary">Barbero</span>
+                  <span className="font-medium text-text-primary">{selectedBarber?.name || 'Sin preferencia'}</span>
                 </div>
               </Card>
 
               <div className="space-y-4">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-tertiary uppercase tracking-widest px-1">Nombre completo</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Nombre completo</label>
                   <Input 
                     placeholder="Tu nombre" 
                     value={clientInfo.name}
                     onChange={e => setClientInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="h-12"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-tertiary uppercase tracking-widest px-1">Celular</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Celular</label>
                   <Input 
                     placeholder="300 123 4567" 
                     value={clientInfo.phone}
                     onChange={e => setClientInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="h-12"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="text-[10px] font-black text-text-tertiary uppercase tracking-widest px-1">Email (opcional)</label>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Email (opcional)</label>
                   <Input 
                     placeholder="tu@email.com" 
                     value={clientInfo.email}
                     onChange={e => setClientInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="h-12"
                   />
                 </div>
 
@@ -518,21 +529,21 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                       type="checkbox" 
                       checked={clientInfo.acceptReminders}
                       onChange={e => setClientInfo(prev => ({ ...prev, acceptReminders: e.target.checked }))}
-                      className="w-5 h-5 accent-accent"
+                      className="w-4 h-4 rounded border-border bg-background-tertiary text-accent focus:ring-accent accent-accent"
                     />
-                    <span className="text-xs text-text-tertiary">Quiero recibir un recordatorio por email</span>
+                    <span className="text-[11px] text-text-secondary">Quiero recibir un recordatorio por email</span>
                   </label>
                 )}
 
                 <Button 
                   variant="primary" 
-                  className="w-full h-14 text-lg font-black mt-4 shadow-xl shadow-accent/20"
+                  className="w-full h-14 text-base font-semibold mt-6 shadow-lg shadow-accent/10"
                   onClick={handleConfirm}
                   loading={loading}
                   disabled={!selectedTime}
                 >
                   {selectedTime ? (
-                    <>Confirmar cita <Check size={20} className="ml-2" /></>
+                    <>Confirmar cita <Check size={18} className="ml-1" /></>
                   ) : (
                     "Hora ocupada, vuelve y elige otra"
                   )}
@@ -545,12 +556,12 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
       {/* Fixed Footer for Back Button */}
       {step > 1 && !finished && (
-        <div className="fixed bottom-0 left-0 w-full p-6 bg-background-primary/80 backdrop-blur-md border-t border-border flex justify-center">
+        <div className="fixed bottom-0 left-0 w-full p-8 bg-background-primary/80 backdrop-blur-md border-t border-border flex justify-center z-40">
           <button 
             onClick={handleBack}
-            className="flex items-center gap-2 text-sm font-black text-text-tertiary hover:text-text-primary transition-colors uppercase tracking-widest"
+            className="flex items-center gap-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors tracking-widest"
           >
-            <ChevronLeft size={16} /> Atrás
+            <ChevronLeft size={16} /> VOLVER
           </button>
         </div>
       )}
