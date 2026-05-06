@@ -180,20 +180,20 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
     while (current < end) {
       const h = current.getHours();
-      const m = current.getMinutes();
-      const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+      const mins = current.getMinutes();
+      const timeStr = `${h.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 
       let isAvailable = true;
       
       // 1. Check if past
       if (isToday) {
-        if (h < nowHours || (h === nowHours && m <= nowMinutes)) {
+        if (h < nowHours || (h === nowHours && mins <= nowMinutes)) {
           isAvailable = false;
         }
       }
 
       // 2. Check if occupied (exact duration logic, no buffer)
-      const slotStart = new Date(y, m - 1, d, h, m);
+      const slotStart = new Date(y, m - 1, d, h, mins);
       const slotEnd = new Date(slotStart.getTime() + duration * 60000);
 
       let overlappingCount = 0;

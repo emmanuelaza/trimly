@@ -27,9 +27,22 @@ export function buildScheduledAt(dateStr: string, timeStr: string): string {
 /**
  * Formatea la hora en formato 12h (AM/PM) para Colombia.
  */
-export function formatTime(isoString: string): string {
-  if (!isoString) return '';
-  return new Date(isoString).toLocaleTimeString(LOCALE, {
+export function formatTime(timeInput: string): string {
+  if (!timeInput) return '';
+  
+  let date: Date;
+  if (timeInput.includes(':') && !timeInput.includes('T')) {
+    // Es un simple HH:mm
+    const [h, m] = timeInput.split(':').map(Number);
+    date = new Date();
+    date.setHours(h, m, 0, 0);
+  } else {
+    date = new Date(timeInput);
+  }
+
+  if (isNaN(date.getTime())) return timeInput;
+
+  return date.toLocaleTimeString(LOCALE, {
     hour: '2-digit',
     minute: '2-digit',
     hour12: true,

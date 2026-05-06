@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Check, ChevronRight, ChevronLeft, Store, Clock, Users, Scissors,
-  User, Plus, Trash2, Copy, ExternalLink, MessageCircle, Palette
+  User, Plus, Trash2, Copy, ExternalLink, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -12,7 +12,7 @@ import { Card } from '@/components/ui/Card';
 import { toast } from 'react-hot-toast';
 import {
   saveOnboardingStep1, saveOnboardingStep2,
-  completeOnboardingAction, updateBarbershopVisuals
+  completeOnboardingAction
 } from '@/app/actions/barbershops';
 import { createBarber } from '@/app/actions/barbers';
 import { createService } from '@/app/actions/services';
@@ -28,18 +28,6 @@ const PRESET_SERVICES = [
   { name: 'Arreglo de barba', price: 15000, duration: 20 },
   { name: 'Tinte', price: 45000, duration: 60 },
   { name: 'Tratamiento', price: 30000, duration: 30 },
-];
-
-const PALETTE = [
-  '#C9F53B', '#4ADE80', '#60A5FA', '#F472B6', '#FBBF24',
-  '#F87171', '#A78BFA', '#34D399', '#FB923C', '#22D3EE',
-  '#E879F9', '#1A1A2E',
-];
-
-const WELCOME_CHIPS = [
-  'Reserva tu cita online y llega directo a la silla.',
-  'Tu look, tu estilo. Agenda en segundos.',
-  'Cortes de calidad, sin esperas. Reserva ahora.',
 ];
 
 export default function OnboardingPage() {
@@ -71,10 +59,6 @@ export default function OnboardingPage() {
 
   // Step 4
   const [services, setServices] = useState<any[]>([]);
-
-  // Step 5
-  const [color, setColor] = useState('#C9F53B');
-  const [welcome, setWelcome] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -108,8 +92,6 @@ export default function OnboardingPage() {
         if (barbers.length === 0) { toast.error('Agrega al menos un barbero'); return; }
       } else if (step === 4) {
         if (services.length === 0) { toast.error('Selecciona al menos un servicio'); return; }
-      } else if (step === 5) {
-        await updateBarbershopVisuals({ primaryColor: color, welcomeMessage: welcome });
         await completeOnboardingAction();
         setDone(true);
         return;
@@ -158,13 +140,11 @@ export default function OnboardingPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // ── SUCCESS SCREEN ──────────────────────────────────────────
   if (done) {
     return (
       <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-6 text-center">
         <OnboardingConfetti />
         <div className="w-full max-w-sm space-y-8 relative z-10">
-          {/* Animated check */}
           <div className="mx-auto w-24 h-24 rounded-full border-4 border-accent flex items-center justify-center bg-accent/10 animate-in zoom-in duration-500">
             <Check size={44} className="text-accent" strokeWidth={3} />
           </div>
@@ -176,7 +156,6 @@ export default function OnboardingPage() {
             </p>
           </div>
 
-          {/* Link box */}
           <div className="bg-background-secondary border border-border rounded-xl p-4 flex items-center gap-3">
             <span className="text-xs font-mono text-accent flex-1 text-left break-all">{bookingUrl}</span>
             <button onClick={copyLink} className="text-text-secondary hover:text-accent transition-colors flex-shrink-0">
@@ -205,7 +184,6 @@ export default function OnboardingPage() {
     );
   }
 
-  // ── WIZARD ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="w-full max-w-lg">
@@ -218,11 +196,10 @@ export default function OnboardingPage() {
           </div>
         </div>
 
-        <OnboardingProgress current={step} total={5} onGoTo={s => s < step && setStep(s)} />
+        <OnboardingProgress current={step} total={4} onGoTo={s => s < step && setStep(s)} />
 
         <Card className="p-6 sm:p-8 border-border-strong bg-background-secondary space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
 
-          {/* STEP 1 */}
           {step === 1 && (
             <>
               <div className="text-center">
@@ -247,7 +224,6 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* STEP 2 */}
           {step === 2 && (
             <>
               <div className="text-center">
@@ -281,7 +257,6 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* STEP 3 */}
           {step === 3 && (
             <>
               <div className="text-center">
@@ -325,7 +300,6 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* STEP 4 */}
           {step === 4 && (
             <>
               <div className="text-center">
@@ -350,68 +324,6 @@ export default function OnboardingPage() {
             </>
           )}
 
-          {/* STEP 5 */}
-          {step === 5 && (
-            <>
-              <div className="text-center">
-                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Palette size={24} className="text-accent" /></div>
-                <h2 className="text-2xl font-black text-text-primary">El estilo de tu barbería</h2>
-                <p className="text-text-secondary text-sm mt-1">Personaliza tu página pública de reservas</p>
-              </div>
-
-              {/* Color picker */}
-              <div className="space-y-3">
-                <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Color principal</label>
-                <div className="flex flex-wrap gap-2">
-                  {PALETTE.map(c => (
-                    <button key={c} onClick={() => setColor(c)}
-                      className={cn('w-9 h-9 rounded-full border-2 transition-transform hover:scale-110', color === c ? 'border-white scale-110' : 'border-transparent')}
-                      style={{ background: c }} />
-                  ))}
-                  <label className="w-9 h-9 rounded-full border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden" title="Color personalizado">
-                    <input type="color" value={color} onChange={e => setColor(e.target.value)} className="opacity-0 absolute w-1 h-1" />
-                    <Palette size={14} className="text-text-secondary" />
-                  </label>
-                </div>
-                <div className="flex items-center gap-3 p-3 bg-background-tertiary rounded-xl">
-                  <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ background: color }} />
-                  <span className="text-xs font-mono text-text-secondary flex-1">Color activo:</span>
-                  <span className="text-xs font-black font-mono text-text-primary">{color}</span>
-                </div>
-              </div>
-
-              {/* Preview mini button */}
-              <div className="rounded-xl overflow-hidden border border-border">
-                <div className="h-10 flex items-center justify-center text-xs font-black text-white rounded-lg mx-3 my-3 transition-all"
-                  style={{ background: color, color: '#000' }}>
-                  Reservar cita — vista previa
-                </div>
-              </div>
-
-              {/* Welcome message */}
-              <div className="space-y-3">
-                <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Mensaje de bienvenida</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {WELCOME_CHIPS.map(chip => (
-                    <button key={chip} onClick={() => setWelcome(chip)}
-                      className="text-[11px] px-3 py-1.5 bg-background-tertiary border border-border rounded-full text-text-secondary hover:border-accent hover:text-accent transition-all">
-                      {chip.substring(0, 30)}…
-                    </button>
-                  ))}
-                </div>
-                <textarea
-                  value={welcome}
-                  onChange={e => e.target.value.length <= 150 && setWelcome(e.target.value)}
-                  placeholder={`Bienvenido a ${step1.name || 'tu barbería'}. Reserva tu cita en segundos.`}
-                  rows={3}
-                  className="w-full bg-background-tertiary border border-border rounded-xl px-4 py-3 text-sm text-text-primary resize-none focus:outline-none focus:border-accent transition-colors"
-                />
-                <p className="text-[11px] text-text-secondary text-right">{welcome.length}/150</p>
-              </div>
-            </>
-          )}
-
-          {/* Navigation */}
           <div className="flex items-center gap-3 pt-2">
             {step > 1 && (
               <Button variant="secondary" onClick={() => setStep(p => p - 1)} className="h-12 px-5">
@@ -423,7 +335,7 @@ export default function OnboardingPage() {
               onClick={handleNext}
               disabled={loading || (step === 3 && barbers.length === 0) || (step === 4 && services.length === 0)}
             >
-              {loading ? 'Guardando...' : step === 5 ? '🚀 Publicar mi barbería' : <>Continuar <ChevronRight size={18} /></>}
+              {loading ? 'Guardando...' : step === 4 ? '🚀 Finalizar' : <>Continuar <ChevronRight size={18} /></>}
             </Button>
           </div>
         </Card>

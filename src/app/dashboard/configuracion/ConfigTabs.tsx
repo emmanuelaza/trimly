@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Save, Building2, Clock, Bell, User2, Scissors, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle, DollarSign, Palette } from 'lucide-react';
+import { Save, Building2, Clock, Bell, User2, Scissors, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -42,17 +42,6 @@ const COUNTRY_CURRENCIES: Record<string, { code: string; symbol: string; name: s
   "Costa Rica":     { code: "CRC", symbol: "₡",  name: "Colón costarricense (CRC)" },
 };
 
-const PALETTE = [
-  '#C9F53B', '#4ADE80', '#60A5FA', '#F472B6', '#FBBF24',
-  '#F87171', '#A78BFA', '#34D399', '#FB923C', '#22D3EE',
-  '#E879F9', '#1A1A2E',
-];
-
-const WELCOME_CHIPS = [
-  'Reserva tu cita online y llega directo a la silla.',
-  'Tu look, tu estilo. Agenda en segundos.',
-  'Cortes de calidad, sin esperas. Reserva ahora.',
-];
 
 export default function ConfigTabs({ data }: { data: { barbershop: any, services: any[], barbers: any[] } }) {
   const [activeTab, setActiveTab] = useState('negocio');
@@ -66,8 +55,6 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
   function TabNegocio() {
     const [isPending, startTransition] = React.useTransition();
     const [selectedCountry, setSelectedCountry] = useState<string>(barbershop?.country || "Colombia");
-    const [selectedColor, setSelectedColor] = useState<string>(barbershop?.config?.primaryColor || "#C9F53B");
-    const [welcomeMsg, setWelcomeMsg] = useState<string>(barbershop?.config?.welcomeMessage || "");
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -189,88 +176,6 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
               </div>
             </div>
 
-            {/* Personalización Visual */}
-            <div className="pt-4 border-t border-border">
-              <h3 className="text-xs font-bold text-text-secondary uppercase mb-4 flex items-center gap-2">
-                <Palette size={14} className="text-accent" /> Estilo de tu Página Pública
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Color Picker */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-text-secondary uppercase">Color Principal</label>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 rounded-full" style={{ background: selectedColor }} />
-                      <span className="text-[10px] font-mono text-text-primary uppercase">{selectedColor}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {PALETTE.map(c => (
-                      <button 
-                        key={c} 
-                        type="button"
-                        onClick={() => setSelectedColor(c)}
-                        className={cn(
-                          'w-8 h-8 rounded-full border-2 transition-all hover:scale-110', 
-                          selectedColor === c ? 'border-white scale-110 shadow-lg shadow-white/10' : 'border-transparent'
-                        )}
-                        style={{ background: c }} 
-                      />
-                    ))}
-                    <label className="w-8 h-8 rounded-full border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden relative" title="Color personalizado">
-                      <input 
-                        type="color" 
-                        value={selectedColor} 
-                        onChange={e => setSelectedColor(e.target.value)} 
-                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer" 
-                      />
-                      <Palette size={12} className="text-text-secondary" />
-                    </label>
-                  </div>
-                  <input type="hidden" name="primaryColor" value={selectedColor} />
-                  
-                  {/* Mini Preview Button */}
-                  <div className="p-4 bg-background-tertiary rounded-xl border border-border/50">
-                    <p className="text-[9px] font-bold text-text-tertiary uppercase tracking-wider mb-3 text-center">Vista previa del botón</p>
-                    <div 
-                      className="h-10 rounded-lg flex items-center justify-center text-xs font-black transition-all shadow-lg"
-                      style={{ background: selectedColor, color: '#000' }}
-                    >
-                      RESERVAR CITA
-                    </div>
-                  </div>
-                </div>
-
-                {/* Welcome Message */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-[10px] font-bold text-text-secondary uppercase">Mensaje de Bienvenida</label>
-                    <span className="text-[9px] text-text-tertiary">{welcomeMsg.length}/150</span>
-                  </div>
-                  <textarea
-                    name="welcomeMessage"
-                    value={welcomeMsg}
-                    onChange={e => e.target.value.length <= 150 && setWelcomeMsg(e.target.value)}
-                    placeholder="Ej. Bienvenido a nuestra barbería. Reserva tu cita en segundos."
-                    rows={4}
-                    className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-3 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors resize-none"
-                  />
-                  <div className="flex flex-wrap gap-1.5">
-                    {WELCOME_CHIPS.map(chip => (
-                      <button 
-                        key={chip} 
-                        type="button"
-                        onClick={() => setWelcomeMsg(chip)}
-                        className="text-[9px] px-2.5 py-1 bg-background-tertiary border border-border rounded-full text-text-secondary hover:border-accent hover:text-accent transition-all"
-                      >
-                        {chip.substring(0, 20)}...
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
             
             {/* Currency Selector */}
             <div className="pt-4 border-t border-border">

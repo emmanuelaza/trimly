@@ -33,8 +33,6 @@ export async function updateBarbershop(formData: FormData) {
     const phone = formData.get("phone") as string;
     const country = formData.get("country") as string;
     const currency = formData.get("currency") as string;
-    const primaryColor = formData.get("primaryColor") as string;
-    const welcomeMessage = formData.get("welcomeMessage") as string;
 
     const COUNTRY_TIMEZONES: Record<string, string> = {
       "Colombia": "America/Bogota",
@@ -75,9 +73,7 @@ export async function updateBarbershop(formData: FormData) {
         ...(current?.config || {}), 
         hours, 
         timezone, 
-        currency: currency || current?.config?.currency || 'COP',
-        primaryColor: primaryColor || current?.config?.primaryColor || '#C9F53B',
-        welcomeMessage: welcomeMessage || current?.config?.welcomeMessage || ''
+        currency: currency || current?.config?.currency || 'COP'
       }
     }).eq("id", barbershopId);
 
@@ -90,32 +86,6 @@ export async function updateBarbershop(formData: FormData) {
   }
 }
 
-export async function updateBarbershopVisuals(data: {
-  primaryColor: string;
-  welcomeMessage: string;
-}) {
-  try {
-    const barbershopId = await getBarbershopId();
-    if (!barbershopId) return { success: false, error: "No se encontró la barbería" };
-
-    const supabase = await createClient();
-    const { data: current } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
-
-    const { error } = await supabase.from("barbershops").update({
-      config: {
-        ...(current?.config || {}),
-        primaryColor: data.primaryColor,
-        welcomeMessage: data.welcomeMessage,
-      }
-    }).eq("id", barbershopId);
-
-    if (error) return { success: false, error: error.message };
-    revalidatePath("/dashboard");
-    return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
 
 export async function getAutomations() {
   const barbershopId = await getBarbershopId();
