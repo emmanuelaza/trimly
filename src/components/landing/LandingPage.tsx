@@ -746,7 +746,7 @@ export default function LandingPage() {
                 {
                   icon: <CreditCard className="text-accent" size={32} />,
                   obj: '¿Y si no me sirve?',
-                  resp: 'El plan básico es gratis para siempre. Si subes al pro y en 14 días no ves el valor, te devolvemos tu dinero. Sin preguntas, sin tramites.'
+                  resp: 'El plan básico es gratis para siempre, sin límite de tiempo. Si decides subir al Pro, cancelas cuando quieras desde tu cuenta, sin llamadas, sin trámites, sin contratos. El riesgo es cero porque empiezas sin pagar nada.'
                 }
               ].map((item, i) => (
                 <Card key={i} className="p-8 space-y-6 border-border/60 hover:border-accent/30 transition-all duration-500">
