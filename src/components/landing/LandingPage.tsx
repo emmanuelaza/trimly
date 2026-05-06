@@ -242,7 +242,7 @@ const StatItem = ({ target, label, suffix = "" }: { target: string, label: strin
   }, [isVisible, target]);
 
   return (
-    <div ref={elementRef} className="flex flex-col items-center justify-center space-y-2 px-8">
+    <div ref={elementRef} className="flex flex-col items-center justify-center space-y-2 px-2 md:px-8">
       <div className="text-5xl font-black text-accent tracking-tighter">
         {count.toLocaleString()}{suffix || target.replace(/[0-9]/g, '')}
       </div>
@@ -381,35 +381,40 @@ export default function LandingPage() {
               {link.label}
             </button>
           ))}
-          <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
-            <Button size="lg" className="w-full h-14 text-lg font-black uppercase">Comenzar gratis</Button>
-          </Link>
+          <div className="flex flex-col gap-3 pt-2">
+            <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
+              <Button size="lg" className="w-full h-14 text-lg font-black uppercase">Comenzar gratis</Button>
+            </Link>
+            <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2">
+              Ya tengo cuenta → Iniciar sesión
+            </Link>
+          </div>
         </div>
       </nav>
 
       <main>
         {/* 1. Hero Section */}
-        <section id="hero" className="relative pt-32 pb-20 md:pt-48 md:pb-40 px-6">
+        <section id="hero" className="relative pt-28 pb-12 md:pt-48 md:pb-40 px-5 md:px-6">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[140px] -z-10 translate-x-1/3 -translate-y-1/4" />
           <div className="absolute inset-0 -z-20 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(var(--color-text-tertiary) 0.8px, transparent 0.8px)', backgroundSize: '32px 32px' }} />
 
-          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] items-center gap-16 md:gap-24">
-            <div className="space-y-10">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-[1.2fr_0.8fr] items-center gap-10 md:gap-24">
+            <div className="space-y-7 md:space-y-10">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <span className="text-base">🌍</span> DISPONIBLE PARA BARBERÍAS DE TODO EL MUNDO
               </div>
               
-              <h1 className="text-5xl md:text-8xl font-black text-text-primary leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+              <h1 className="text-4xl sm:text-5xl md:text-8xl font-black text-text-primary leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
                 Tu barbería merece trabajar con las <span className="text-accent">mejores herramientas</span>
               </h1>
               
-              <p className="text-lg md:text-2xl text-text-secondary max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
+              <p className="text-base md:text-2xl text-text-secondary max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 Trimly digitaliza tu barbería en minutos. Agenda online, clientes organizados y automatizaciones que trabajan mientras tú cortas.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
                 <Link href="/auth/register" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full h-16 px-10 text-xl font-black group shadow-2xl shadow-accent/20">
+                  <Button size="lg" className="w-full h-14 md:h-16 px-6 md:px-10 text-lg md:text-xl font-black group shadow-2xl shadow-accent/20">
                     Empieza gratis hoy <ArrowRight size={22} className="transition-transform group-hover:translate-x-1.5" />
                   </Button>
                 </Link>
@@ -417,7 +422,7 @@ export default function LandingPage() {
                   onClick={() => scrollTo('#como-funciona')}
                   className="w-full sm:w-auto"
                 >
-                  <Button variant="secondary" size="lg" className="w-full h-16 px-10 text-xl font-bold">
+                  <Button variant="secondary" size="lg" className="w-full h-14 md:h-16 px-6 md:px-10 text-lg md:text-xl font-bold">
                     <Play size={20} fill="currentColor" /> Ver demo
                   </Button>
                 </button>
@@ -440,7 +445,7 @@ export default function LandingPage() {
             <p className="text-xs font-black text-text-secondary uppercase tracking-[0.4em] text-center">
               Barberías en Colombia, España y EE.UU. ya confían en Trimly
             </p>
-            <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-8">
+            <div className="flex flex-wrap justify-center items-center gap-x-8 gap-y-6 md:gap-x-16">
               {[
                 { n: 'Barbería Don Pedro', w: 'font-black' },
                 { n: 'The Barber Shop NY', w: 'font-medium' },
@@ -497,7 +502,7 @@ export default function LandingPage() {
 
               {/* No es para ti */}
               <div className="bg-background-secondary/50 border border-border rounded-3xl p-8 md:p-12 space-y-8">
-                <div className="flex items-center gap-3 text-text-tertiary font-black uppercase tracking-widest text-sm">
+                <div className="flex items-center gap-3 text-text-secondary font-black uppercase tracking-widest text-sm">
                   <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center">
                     <X size={18} strokeWidth={3} />
                   </div>
@@ -593,44 +598,33 @@ export default function LandingPage() {
               <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">Así se ve la diferencia entre gestionar tu barbería a la antigua versus con Trimly.</p>
             </div>
 
-            <Card className="max-w-4xl mx-auto overflow-hidden border-border/60">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-background-tertiary">
-                      <th className="p-6 text-sm font-black uppercase tracking-widest text-text-tertiary">Situación</th>
-                      <th className="p-6 text-sm font-black uppercase tracking-widest text-red-500/80">Sin Trimly 😰</th>
-                      <th className="p-6 text-sm font-black uppercase tracking-widest text-accent">Con Trimly ✅</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      ['Agendar una cita', 'WhatsApp de ida y vuelta, 5 minutos por cliente', 'El cliente agenda solo en 30 segundos'],
-                      ['Dobles reservas', 'Pasan todo el tiempo, clientes molestos', 'Imposible. Los slots se bloquean solos'],
-                      ['Recordatorios', 'Te toca escribir uno por uno el día anterior', 'Automático. Trimly lo hace por ti'],
-                      ['Clientes inactivos', 'No sabes quién dejó de venir', 'Trimly los detecta y los contacta'],
-                      ['Ingresos del mes', 'Calculas en papel o de memoria', 'Dashboard con cifras exactas en tiempo real'],
-                      ['Tu tiempo libre', 'Contestando mensajes hasta de noche', 'Trabajando, no administrando']
-                    ].map((row, i) => (
-                      <tr key={i} className={cn("border-b border-border", i % 2 === 0 ? "bg-muted/5" : "bg-transparent")}>
-                        <td className="p-6 text-sm font-bold text-text-primary">{row[0]}</td>
-                        <td className="p-6 text-sm text-text-secondary italic">
-                          <span className="flex items-center gap-2"><X size={14} className="text-red-400/70" /> {row[1]}</span>
-                        </td>
-                        <td className="p-6 text-sm font-bold text-text-primary">
-                          <span className="flex items-center gap-2"><Check size={14} className="text-accent" /> {row[2]}</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </Card>
+            <div className="max-w-4xl mx-auto space-y-3">
+              {[
+                ['Agendar una cita', 'WhatsApp de ida y vuelta', 'El cliente agenda solo en 30 seg'],
+                ['Dobles reservas', 'Pasan todo el tiempo', 'Imposible. Se bloquean solos'],
+                ['Recordatorios', 'Escribes uno por uno', 'Automático. Trimly lo hace'],
+                ['Clientes inactivos', 'No sabes quién dejó de venir', 'Trimly los detecta y contacta'],
+                ['Ingresos del mes', 'Calculas en papel o de memoria', 'Dashboard con cifras en tiempo real'],
+                ['Tu tiempo libre', 'Contestando mensajes de noche', 'Trabajando, no administrando']
+              ].map((row, i) => (
+                <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr] gap-0 bg-background-secondary border border-border rounded-xl overflow-hidden">
+                  <div className="px-4 py-3 bg-background-tertiary border-b sm:border-b-0 sm:border-r border-border">
+                    <span className="text-xs font-black text-text-secondary uppercase tracking-wider">{row[0]}</span>
+                  </div>
+                  <div className="px-4 py-3 border-b sm:border-b-0 sm:border-r border-border">
+                    <span className="flex items-start gap-2 text-sm text-text-secondary italic"><X size={13} className="text-red-400/70 mt-0.5 flex-shrink-0" />{row[1]}</span>
+                  </div>
+                  <div className="px-4 py-3">
+                    <span className="flex items-start gap-2 text-sm font-bold text-text-primary"><Check size={13} className="text-accent mt-0.5 flex-shrink-0" />{row[2]}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
 
             <div className="text-center">
-              <Link href="/auth/register">
-                <Button size="lg" className="h-16 px-10 text-xl font-black uppercase tracking-widest group">
-                  Quiero trabajar con Trimly <ArrowRight size={22} className="ml-2 group-hover:translate-x-1 transition-transform" />
+              <Link href="/auth/register" className="w-full sm:w-auto inline-block">
+                <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base md:text-xl font-black uppercase tracking-widest group">
+                  Quiero trabajar con Trimly <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
             </div>
@@ -645,7 +639,7 @@ export default function LandingPage() {
               <p className="text-xl text-text-secondary leading-relaxed max-w-2xl mx-auto">Sin complicaciones técnicas. Sin esperar a nadie. Tú solo.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-16 relative">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 relative">
               <div className="hidden md:block absolute top-32 left-[15%] right-[15%] h-0.5 border-t-2 border-dashed border-border-strong -z-10" />
 
               {[
@@ -691,7 +685,7 @@ export default function LandingPage() {
 
         {/* 7. Feature Destacada */}
         <section className="py-24 md:py-40 px-6">
-          <div className="max-w-7xl mx-auto bg-background-secondary/40 border border-border rounded-[3rem] p-10 md:p-24 grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
+          <div className="max-w-7xl mx-auto bg-background-secondary/40 border border-border rounded-2xl md:rounded-[3rem] p-6 md:p-24 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
             <div className="space-y-10">
               <div className="text-sm font-black text-accent uppercase tracking-[0.3em]">✨ TU PÁGINA PÚBLICA DE RESERVAS</div>
               <h2 className="text-5xl md:text-6xl font-black text-text-primary leading-[1.1]">Tu página de reservas lista en segundos</h2>
@@ -840,11 +834,11 @@ export default function LandingPage() {
         {/* 10. Stats / Contador (NEW) */}
         <section className="bg-background-secondary/40 border-y border-border/40 py-24 px-6">
           <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-12 divide-y md:divide-y-0 md:divide-x divide-border/60">
-              <div className="pt-0"><StatItem target="2.400+" label="Citas agendadas este mes" /></div>
-              <div className="pt-12 md:pt-0"><StatItem target="50+" label="Barberías activas" /></div>
-              <div className="pt-12 md:pt-0"><StatItem target="98%" label="De clientes que no cancelan" /></div>
-              <div className="pt-12 md:pt-0"><StatItem target="5 min" label="Para tener tu barbería lista" /></div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
+              <div className="py-4 border-b border-border/40 md:border-b-0"><StatItem target="2.400+" label="Citas agendadas este mes" /></div>
+              <div className="py-4 border-b border-border/40 md:border-b-0"><StatItem target="50+" label="Barberías activas" /></div>
+              <div className="py-4"><StatItem target="98%" label="De clientes que no cancelan" /></div>
+              <div className="py-4"><StatItem target="5 min" label="Para tener tu barbería lista" /></div>
             </div>
           </div>
         </section>
@@ -857,7 +851,7 @@ export default function LandingPage() {
               <p className="text-xl text-text-secondary leading-relaxed">Empieza gratis. Escala cuando tu barbería lo necesite.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto items-start">
               {/* Plan Mensual - Básico */}
               <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-accent/20 transition-all duration-500 bg-background-primary/40">
                 <div className="space-y-4">
@@ -894,7 +888,7 @@ export default function LandingPage() {
               </Card>
 
               {/* Plan Filo Pro - Recomendado */}
-              <Card className="p-10 space-y-8 flex flex-col border-accent relative shadow-2xl shadow-accent/10 transform scale-[1.05] bg-background-secondary z-10">
+              <Card className="p-8 md:p-10 space-y-8 flex flex-col border-accent relative shadow-2xl shadow-accent/10 md:transform md:scale-[1.05] bg-background-secondary z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-background-primary px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl">
                   Recomendado
                 </div>
@@ -1017,7 +1011,7 @@ export default function LandingPage() {
           </div>
 
           <div className="max-w-5xl mx-auto text-center space-y-12 relative z-10">
-            <h2 className="text-5xl md:text-8xl font-black text-background-primary leading-tight tracking-tight">
+            <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-background-primary leading-tight tracking-tight">
               ¿Listo para llevar tu barbería al siguiente nivel?
             </h2>
             <p className="text-xl md:text-3xl text-background-primary/80 font-bold max-w-3xl mx-auto leading-relaxed">
@@ -1025,7 +1019,7 @@ export default function LandingPage() {
             </p>
             <div className="space-y-6">
               <Link href="/auth/register">
-                <Button size="lg" className="h-20 px-16 text-2xl font-black bg-background-primary text-accent hover:bg-background-secondary border-none transform hover:scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all uppercase tracking-widest">
+                <Button size="lg" className="w-full sm:w-auto h-16 md:h-20 px-8 md:px-16 text-lg md:text-2xl font-black bg-background-primary text-accent hover:bg-background-secondary border-none transform hover:scale-105 shadow-[0_20px_50px_rgba(0,0,0,0.3)] transition-all uppercase tracking-widest">
                   Crear mi cuenta gratis <ArrowRight size={28} className="ml-2" />
                 </Button>
               </Link>
@@ -1038,10 +1032,10 @@ export default function LandingPage() {
       </main>
 
       {/* Footer */}
-      <footer className="pt-32 pb-16 px-6 border-t border-border/40">
+      <footer className="pt-16 md:pt-32 pb-12 md:pb-16 px-5 md:px-6 border-t border-border/40">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-20 mb-20">
-            <div className="space-y-8 md:col-span-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-10 md:gap-20 mb-12 md:mb-20">
+            <div className="space-y-6 md:space-y-8 col-span-2">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center shadow-lg shadow-accent/20">
                   <Scissors size={24} className="text-background-primary" />
