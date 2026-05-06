@@ -366,27 +366,76 @@ export default function LandingPage() {
           </button>
         </div>
 
-        <div 
+        {/* Mobile menu backdrop */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/70 z-40 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Mobile menu — slide-in from right */}
+        <div
           className={cn(
-            "fixed inset-0 top-16 bg-background-primary/95 backdrop-blur-xl z-40 transition-all duration-500 md:hidden flex flex-col p-8 gap-8",
-            mobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4 pointer-events-none"
+            "fixed top-0 right-0 h-full w-[82vw] max-w-xs z-50 md:hidden flex flex-col transition-transform duration-300 ease-out",
+            mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           )}
+          style={{
+            background: "linear-gradient(160deg, #111113 0%, #0A0A0B 100%)",
+            borderLeft: "1px solid #1E1E24",
+            boxShadow: "-20px 0 60px rgba(0,0,0,0.7)",
+          }}
         >
-          {navLinks.map(link => (
-            <button 
-              key={link.id} 
-              onClick={() => scrollTo(link.id)}
-              className="text-2xl font-bold text-text-primary text-left border-b border-border pb-4"
+          {/* Accent glow top-right */}
+          <div className="absolute top-0 right-0 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 pt-8 pb-6 border-b border-border/40 relative">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
+                <Scissors size={14} className="text-background-primary" />
+              </div>
+              <span className="text-base font-black text-text-primary tracking-tight">Trimly</span>
+            </div>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
             >
-              {link.label}
+              <X size={16} />
             </button>
-          ))}
-          <div className="flex flex-col gap-3 pt-2">
+          </div>
+
+          {/* Nav links */}
+          <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+            <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] px-3 mb-4">Navegar</p>
+            {navLinks.map((link, i) => (
+              <button
+                key={link.id}
+                onClick={() => scrollTo(link.id)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all hover:bg-white/5 group"
+              >
+                <div className="w-1 h-5 rounded-full bg-accent/0 group-hover:bg-accent transition-all duration-200" />
+                <span className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">
+                  {link.label}
+                </span>
+              </button>
+            ))}
+          </nav>
+
+          {/* CTA block */}
+          <div className="px-4 pb-10 pt-4 border-t border-border/40 space-y-3 relative">
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
             <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
-              <Button size="lg" className="w-full h-14 text-lg font-black uppercase">Comenzar gratis</Button>
+              <Button size="lg" className="w-full h-12 text-base font-black uppercase shadow-lg shadow-accent/20">
+                Comenzar gratis →
+              </Button>
             </Link>
-            <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2">
-              Ya tengo cuenta → Iniciar sesión
+            <Link
+              href="/auth/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="block text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2"
+            >
+              Ya tengo cuenta · Iniciar sesión
             </Link>
           </div>
         </div>
