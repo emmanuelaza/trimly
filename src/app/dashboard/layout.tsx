@@ -74,7 +74,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       </div>
 
       {/* Mobile Navigation */}
-      <BottomNav isFiloPro={isFiloPro} />
+      <BottomNav isFiloPro={isFiloPro} negocio={negocio} userName={user.user_metadata?.full_name || "Owner"} />
 
       {/* Global Modals */}
       <Suspense fallback={null}>

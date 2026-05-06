@@ -246,7 +246,7 @@ const StatItem = ({ target, label, suffix = "" }: { target: string, label: strin
       <div className="text-5xl font-black text-accent tracking-tighter">
         {count.toLocaleString()}{suffix || target.replace(/[0-9]/g, '')}
       </div>
-      <div className="text-sm text-text-tertiary font-bold uppercase tracking-widest text-center">{label}</div>
+      <div className="text-sm text-text-secondary font-bold uppercase tracking-widest text-center">{label}</div>
     </div>
   );
 };
@@ -269,7 +269,7 @@ const FAQItem = ({ question, answer }: { question: string, answer: string }) => 
         "overflow-hidden transition-all duration-300 ease-out",
         isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0"
       )}>
-        <p className="text-text-secondary leading-relaxed">{answer}</p>
+        <p className="text-text-primary/80 leading-relaxed">{answer}</p>
       </div>
     </div>
   );
@@ -423,7 +423,7 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              <p className="text-sm text-text-tertiary font-bold tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
+              <p className="text-sm text-text-secondary font-bold tracking-wide animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-400">
                 🔒 GRATIS PARA SIEMPRE EN EL PLAN BÁSICO · SIN TARJETA DE CRÉDITO
               </p>
             </div>
@@ -437,7 +437,7 @@ export default function LandingPage() {
         {/* 2. Social Proof */}
         <section className="bg-background-secondary/30 border-y border-border/40 py-16 px-6">
           <div className="max-w-7xl mx-auto flex flex-col items-center gap-10">
-            <p className="text-xs font-black text-text-tertiary uppercase tracking-[0.4em] text-center">
+            <p className="text-xs font-black text-text-secondary uppercase tracking-[0.4em] text-center">
               Barberías en Colombia, España y EE.UU. ya confían en Trimly
             </p>
             <div className="flex flex-wrap justify-center items-center gap-x-16 gap-y-8">
@@ -453,7 +453,7 @@ export default function LandingPage() {
                   <div 
                     key={b.n} 
                     ref={elementRef}
-                    className={cn("text-xl md:text-2xl text-text-secondary/50 transition-colors hover:text-text-primary cursor-default", b.w, className)}
+                    className={cn("text-xl md:text-2xl text-text-secondary/70 transition-colors hover:text-text-primary cursor-default", b.w, className)}
                     style={{ transitionDelay: `${i * 100}ms` }}
                   >
                     {b.n}
@@ -614,8 +614,8 @@ export default function LandingPage() {
                     ].map((row, i) => (
                       <tr key={i} className={cn("border-b border-border", i % 2 === 0 ? "bg-muted/5" : "bg-transparent")}>
                         <td className="p-6 text-sm font-bold text-text-primary">{row[0]}</td>
-                        <td className="p-6 text-sm text-text-tertiary italic">
-                          <span className="flex items-center gap-2"><X size={14} className="text-red-500/50" /> {row[1]}</span>
+                        <td className="p-6 text-sm text-text-secondary italic">
+                          <span className="flex items-center gap-2"><X size={14} className="text-red-400/70" /> {row[1]}</span>
                         </td>
                         <td className="p-6 text-sm font-bold text-text-primary">
                           <span className="flex items-center gap-2"><Check size={14} className="text-accent" /> {row[2]}</span>
@@ -760,7 +760,7 @@ export default function LandingPage() {
                     {item.icon}
                   </div>
                   <div>
-                    <div className="text-sm text-text-tertiary font-black uppercase tracking-widest">{item.obj}</div>
+                    <div className="text-sm text-text-secondary font-black uppercase tracking-widest">{item.obj}</div>
                     <p className="text-lg font-bold text-text-primary mt-3 leading-relaxed">{item.resp}</p>
                   </div>
                 </Card>
@@ -827,7 +827,7 @@ export default function LandingPage() {
                           ))}
                         </div>
                         <p className="text-base font-black text-text-primary">{testi.author}</p>
-                        <p className="text-[11px] font-bold text-text-tertiary uppercase tracking-wider">{testi.shop}</p>
+                        <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">{testi.shop}</p>
                       </div>
                     </div>
                   </Card>
@@ -861,11 +861,11 @@ export default function LandingPage() {
               {/* Plan Mensual - Básico */}
               <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-accent/20 transition-all duration-500 bg-background-primary/40">
                 <div className="space-y-4">
-                  <div className="bg-background-tertiary text-text-secondary px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Básico</div>
+                  <div className="bg-background-tertiary text-text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Básico</div>
                   <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">MENSUAL</h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-text-primary">$29.900</span>
-                    <span className="text-sm font-bold text-text-tertiary">/ MES</span>
+                    <span className="text-sm font-bold text-text-secondary">/ MES</span>
                   </div>
                   <p className="text-text-secondary text-sm">Gestión esencial para tu barbería</p>
                 </div>
@@ -903,13 +903,13 @@ export default function LandingPage() {
                   <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">FILO PRO</h3>
                   <div className="flex items-baseline gap-2">
                     <span className="text-4xl font-black text-text-primary">$79.900</span>
-                    <span className="text-sm font-bold text-text-tertiary">/ MES</span>
+                    <span className="text-sm font-bold text-text-secondary">/ MES</span>
                   </div>
                   <p className="text-accent text-sm font-bold">Todo para crecer sin límites</p>
                 </div>
 
                 <div className="space-y-5 flex-1">
-                  <div className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">TODO LO DEL BÁSICO, MÁS:</div>
+                  <div className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2">TODO LO DEL BÁSICO, MÁS:</div>
                   {[
                     'Link personalizado de reservas online',
                     'Barberos ilimitados',
@@ -931,7 +931,7 @@ export default function LandingPage() {
                   <Link href="/auth/register" className="w-full">
                     <Button size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest shadow-xl shadow-accent/20">Comenzar gratis</Button>
                   </Link>
-                  <p className="text-[9px] text-text-tertiary text-center font-black uppercase tracking-[0.2em]">El plan más elegido por los barberos</p>
+                  <p className="text-[9px] text-text-secondary text-center font-black uppercase tracking-[0.2em]">El plan más elegido por los barberos</p>
                 </div>
               </Card>
 
@@ -947,7 +947,7 @@ export default function LandingPage() {
                 </div>
 
                 <div className="space-y-5 flex-1">
-                  <div className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-2">ACCESO TOTAL DE POR VIDA:</div>
+                  <div className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2">ACCESO TOTAL DE POR VIDA:</div>
                   {[
                     'Todas las funciones del plan Filo Pro',
                     'Página pública de reservas online',
@@ -1029,7 +1029,7 @@ export default function LandingPage() {
                   Crear mi cuenta gratis <ArrowRight size={28} className="ml-2" />
                 </Button>
               </Link>
-              <p className="text-xs text-background-primary/50 font-black uppercase tracking-[0.3em] mt-8">
+              <p className="text-xs text-background-primary/70 font-black uppercase tracking-[0.3em] mt-8">
                 Sin tarjeta de crédito · Configuración en 5 minutos · Cancela cuando quieras
               </p>
             </div>
@@ -1085,8 +1085,8 @@ export default function LandingPage() {
           </div>
 
           <div className="pt-12 border-t border-border/40 flex flex-col md:flex-row justify-between items-center gap-6">
-            <p className="text-xs font-bold text-text-tertiary uppercase tracking-widest">© 2026 TRIMLY. HECHO CON ❤️ EN COLOMBIA</p>
-            <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em]">Trimly.co • Digitalización global para barberos</p>
+            <p className="text-xs font-bold text-text-secondary uppercase tracking-widest">© 2026 TRIMLY. HECHO CON ❤️ EN COLOMBIA</p>
+            <p className="text-[10px] font-black text-text-secondary uppercase tracking-[0.3em]">Trimly.co • Digitalización global para barberos</p>
           </div>
         </div>
       </footer>

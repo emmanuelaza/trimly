@@ -32,6 +32,7 @@ export async function updateBarbershop(formData: FormData) {
     const address = formData.get("address") as string;
     const phone = formData.get("phone") as string;
     const country = formData.get("country") as string;
+    const currency = formData.get("currency") as string;
 
     const COUNTRY_TIMEZONES: Record<string, string> = {
       "Colombia": "America/Bogota",
@@ -71,7 +72,7 @@ export async function updateBarbershop(formData: FormData) {
       address: address || null,
       phone: phone || null,
       country,
-      config: { ...(current?.config || {}), hours, timezone }
+      config: { ...(current?.config || {}), hours, timezone, currency: currency || current?.config?.currency || 'COP' }
     }).eq("id", barbershopId);
 
     if (error) return { success: false, error: error.message };

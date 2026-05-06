@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Save, Building2, Clock, Bell, User2, Scissors, ChevronRight, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle } from 'lucide-react';
+import { Save, Building2, Clock, Bell, User2, Scissors, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle, DollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -25,6 +25,22 @@ const TABS: ConfigTab[] = [
   { id: 'cuenta', label: 'Mi Cuenta', icon: User2 },
 ];
 
+// Country → currency mapping
+const COUNTRY_CURRENCIES: Record<string, { code: string; symbol: string; name: string }> = {
+  "Colombia":       { code: "COP", symbol: "$",  name: "Peso colombiano (COP)" },
+  "España":         { code: "EUR", symbol: "€",  name: "Euro (EUR)" },
+  "México":         { code: "MXN", symbol: "$",  name: "Peso mexicano (MXN)" },
+  "Argentina":      { code: "ARS", symbol: "$",  name: "Peso argentino (ARS)" },
+  "Chile":          { code: "CLP", symbol: "$",  name: "Peso chileno (CLP)" },
+  "Estados Unidos": { code: "USD", symbol: "$",  name: "Dólar estadounidense (USD)" },
+  "Perú":           { code: "PEN", symbol: "S/", name: "Sol peruano (PEN)" },
+  "Ecuador":        { code: "USD", symbol: "$",  name: "Dólar (USD)" },
+  "Venezuela":      { code: "VES", symbol: "Bs", name: "Bolívar venezolano (VES)" },
+  "Uruguay":        { code: "UYU", symbol: "$",  name: "Peso uruguayo (UYU)" },
+  "Panamá":         { code: "PAB", symbol: "B/", name: "Balboa (PAB)" },
+  "Costa Rica":     { code: "CRC", symbol: "₡",  name: "Colón costarricense (CRC)" },
+};
+
 export default function ConfigTabs({ data }: { data: { barbershop: any, services: any[], barbers: any[] } }) {
   const [activeTab, setActiveTab] = useState('negocio');
   const [openAccordion, setOpenAccordion] = useState<string | null>('negocio');
@@ -36,6 +52,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
 
   function TabNegocio() {
     const [isPending, startTransition] = React.useTransition();
+    const [selectedCountry, setSelectedCountry] = useState<string>(barbershop?.country || "Colombia");
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
@@ -52,6 +69,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
     };
 
     const bookingUrl = `trimlyapp-phi.vercel.app/book/${barbershop?.slug}`;
+    const suggestedCurrency = COUNTRY_CURRENCIES[selectedCountry] || COUNTRY_CURRENCIES["Colombia"];
 
     return (
       <div className="space-y-6">
@@ -59,7 +77,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
           <h2 className="text-sm font-bold text-text-primary uppercase tracking-widest flex items-center gap-2 mb-1">
             <Building2 size={16} className="text-accent" /> Datos del Negocio
           </h2>
-          <p className="text-xs text-text-tertiary">Información pública de tu barbería.</p>
+          <p className="text-xs text-text-secondary">Información pública de tu barbería.</p>
         </div>
 
         {/* Link de Reservas */}
@@ -73,7 +91,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                 <Smartphone size={18} />
                 <h3 className="text-sm font-black uppercase tracking-widest">Link de Reservas Público</h3>
               </div>
-              <p className="text-xs text-text-tertiary max-w-md">Comparte este link en tu Instagram o WhatsApp para que tus clientes agenden solos 24/7.</p>
+              <p className="text-xs text-text-secondary max-w-md">Comparte este link en tu Instagram o WhatsApp para que tus clientes agenden solos 24/7.</p>
             </div>
             
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -120,18 +138,19 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-text-tertiary uppercase">Nombre Comercial</label>
+                <label className="text-[10px] font-bold text-text-secondary uppercase">Nombre Comercial</label>
                 <input name="name" defaultValue={barbershop?.name || ""} className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-text-tertiary uppercase">Dirección</label>
+                <label className="text-[10px] font-bold text-text-secondary uppercase">Dirección</label>
                 <input name="address" defaultValue={barbershop?.address || ""} placeholder="Calle 123..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider">País & Zona Horaria</label>
+                <label className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">País &amp; Zona Horaria</label>
                 <select 
                   name="country" 
-                  defaultValue={barbershop?.country || "Colombia"} 
+                  value={selectedCountry}
+                  onChange={e => setSelectedCountry(e.target.value)}
                   className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none"
                 >
                   <option value="Colombia">Colombia (GMT-5)</option>
@@ -144,12 +163,59 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                   <option value="Ecuador">Ecuador (GMT-5)</option>
                   <option value="Venezuela">Venezuela (GMT-4)</option>
                   <option value="Uruguay">Uruguay (GMT-3)</option>
+                  <option value="Panamá">Panamá (GMT-5)</option>
+                  <option value="Costa Rica">Costa Rica (GMT-6)</option>
                 </select>
-                <p className="text-[10px] text-text-tertiary italic">Esto ajusta automáticamente el horario de tu agenda.</p>
+                <p className="text-[10px] text-text-secondary italic">Esto ajusta automáticamente el horario de tu agenda.</p>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-text-tertiary uppercase">Teléfono</label>
+                <label className="text-[10px] font-bold text-text-secondary uppercase">Teléfono</label>
                 <input name="phone" defaultValue={barbershop?.phone || ""} placeholder="+57..." className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors" />
+              </div>
+            </div>
+
+            {/* Currency Selector */}
+            <div className="pt-4 border-t border-border">
+              <h3 className="text-xs font-bold text-text-secondary uppercase mb-4 flex items-center gap-2">
+                <DollarSign size={14} className="text-accent" /> Divisa del Negocio
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase">Moneda</label>
+                  <select
+                    name="currency"
+                    defaultValue={barbershop?.config?.currency || suggestedCurrency.code}
+                    className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary focus:outline-none focus:border-accent transition-colors appearance-none"
+                  >
+                    <option value="COP">Peso colombiano (COP) — $</option>
+                    <option value="EUR">Euro (EUR) — €</option>
+                    <option value="MXN">Peso mexicano (MXN) — $</option>
+                    <option value="ARS">Peso argentino (ARS) — $</option>
+                    <option value="CLP">Peso chileno (CLP) — $</option>
+                    <option value="USD">Dólar estadounidense (USD) — $</option>
+                    <option value="PEN">Sol peruano (PEN) — S/</option>
+                    <option value="VES">Bolívar venezolano (VES) — Bs</option>
+                    <option value="UYU">Peso uruguayo (UYU) — $</option>
+                    <option value="PAB">Balboa panameño (PAB) — B/</option>
+                    <option value="CRC">Colón costarricense (CRC) — ₡</option>
+                  </select>
+                  <p className="text-[10px] text-text-secondary italic">
+                    Sugerida para <span className="text-accent font-bold">{selectedCountry}</span>: <span className="font-bold">{suggestedCurrency.name}</span>
+                  </p>
+                </div>
+                <div className="flex items-end pb-1">
+                  <div className="bg-accent/5 border border-accent/20 rounded-xl px-5 py-4 flex items-center gap-4 w-full">
+                    <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center flex-shrink-0">
+                      <DollarSign size={18} className="text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider">Moneda activa</p>
+                      <p className="text-sm font-black text-text-primary mt-0.5">
+                        {barbershop?.config?.currency || suggestedCurrency.code} &mdash; {suggestedCurrency.symbol}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -160,10 +226,10 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map(day => (
                   <div key={day} className="p-3 bg-background-tertiary/50 border border-border rounded-lg">
-                    <p className="text-[10px] font-bold text-text-tertiary uppercase mb-2">{day}</p>
+                    <p className="text-[10px] font-bold text-text-secondary uppercase mb-2">{day}</p>
                     <div className="flex items-center gap-2">
                       <input name={`hours_${day.toLowerCase()}_open`} defaultValue={barbershop?.config?.hours?.[day.toLowerCase()]?.open || "09:00"} type="time" className="bg-transparent text-xs text-text-primary outline-none focus:text-accent" />
-                      <span className="text-text-tertiary">-</span>
+                      <span className="text-text-secondary">-</span>
                       <input name={`hours_${day.toLowerCase()}_close`} defaultValue={barbershop?.config?.hours?.[day.toLowerCase()]?.close || "19:00"} type="time" className="bg-transparent text-xs text-text-primary outline-none focus:text-accent" />
                     </div>
                   </div>
@@ -190,7 +256,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
             <h2 className="text-sm font-bold text-text-primary uppercase tracking-widest flex items-center gap-2 mb-1">
               <Scissors size={16} className="text-accent" /> Servicios y Precios
             </h2>
-            <p className="text-xs text-text-tertiary">Gestiona los servicios. (Para añadir nuevos, ve a la sección principal de Servicios)</p>
+            <p className="text-xs text-text-secondary">Gestiona los servicios. (Para añadir nuevos, ve a la sección principal de Servicios)</p>
           </div>
         </div>
 
@@ -203,7 +269,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-text-primary">{s.name}</p>
-                  <p className="text-xs text-text-tertiary">{s.duration_minutes} min</p>
+                  <p className="text-xs text-text-secondary">{s.duration_minutes} min</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 ml-12 sm:ml-0">
@@ -217,7 +283,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                      else toast.error('Error');
                    }
                   }}
-                  className="text-xs text-text-tertiary hover:text-danger px-2 py-1"
+                  className="text-xs text-text-secondary hover:text-danger px-2 py-1"
                 >
                   Eliminar
                 </button>
@@ -247,7 +313,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                 <Avatar fallback={b.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2)} />
                 <div>
                   <p className="text-sm font-semibold text-text-primary">{b.name}</p>
-                  <p className="text-xs text-text-tertiary">Barbero</p>
+                  <p className="text-xs text-text-secondary">Barbero</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -260,7 +326,7 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
                      else toast.error('Error');
                    }
                   }}
-                  className="text-xs text-text-tertiary hover:text-danger px-2 py-1"
+                  className="text-xs text-text-secondary hover:text-danger px-2 py-1"
                 >
                   Eliminar
                 </button>
@@ -273,11 +339,11 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
   }
 
   function TabNotificaciones() {
-    return <div className="space-y-5"><p className="text-sm text-text-tertiary">Las notificaciones del sistema están ahora automatizadas por Cron Jobs y están siempre pre-configuradas para dispararse según los registros de la agenda.</p></div>;
+    return <div className="space-y-5"><p className="text-sm text-text-secondary">Las notificaciones del sistema están ahora automatizadas por Cron Jobs y están siempre pre-configuradas para dispararse según los registros de la agenda.</p></div>;
   }
 
   function TabCuenta() {
-    return <div className="space-y-5"><p className="text-sm text-text-tertiary">Tu cuenta es administrada por la capa central de Auth de Supabase.</p></div>;
+    return <div className="space-y-5"><p className="text-sm text-text-secondary">Tu cuenta es administrada por la capa central de Auth de Supabase.</p></div>;
   }
 
   const TAB_CONTENT: Record<string, React.ReactNode> = {
@@ -289,33 +355,71 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
   };
 
   return (
-    <div className="hidden md:grid md:grid-cols-4 xl:grid-cols-5 gap-8">
-      <nav className="md:col-span-1 space-y-1">
-        {TABS.map(tab => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
-                isActive
-                  ? 'bg-accent-muted text-accent'
-                  : 'text-text-tertiary hover:bg-background-secondary hover:text-text-secondary'
-              }`}
-            >
-              <tab.icon size={16} className={isActive ? 'text-accent' : ''} />
-              <span className="text-sm font-medium">{tab.label}</span>
-              {isActive && <div className="ml-auto w-1 h-4 bg-accent rounded-full" />}
-            </button>
-          );
-        })}
-      </nav>
+    <>
+      {/* Desktop: sidebar tabs */}
+      <div className="hidden md:grid md:grid-cols-4 xl:grid-cols-5 gap-8">
+        <nav className="md:col-span-1 space-y-1">
+          {TABS.map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
+                  isActive
+                    ? 'bg-accent-muted text-accent'
+                    : 'text-text-secondary hover:bg-background-secondary hover:text-text-primary'
+                }`}
+              >
+                <tab.icon size={16} className={isActive ? 'text-accent' : ''} />
+                <span className="text-sm font-medium">{tab.label}</span>
+                {isActive && <div className="ml-auto w-1 h-4 bg-accent rounded-full" />}
+              </button>
+            );
+          })}
+        </nav>
 
-      <div className="md:col-span-3 xl:col-span-4">
-        <div className="page-fade" key={activeTab}>
-          {TAB_CONTENT[activeTab]}
+        <div className="md:col-span-3 xl:col-span-4">
+          <div className="page-fade" key={activeTab}>
+            {TAB_CONTENT[activeTab]}
+          </div>
         </div>
       </div>
-    </div>
+
+      {/* Mobile: accordion */}
+      <div className="md:hidden space-y-3">
+        {TABS.map(tab => {
+          const isOpen = openAccordion === tab.id;
+          return (
+            <div key={tab.id} className="bg-background-secondary border border-border rounded-xl overflow-hidden">
+              <button
+                onClick={() => toggleAccordion(tab.id)}
+                className={`w-full flex items-center gap-3 px-5 py-4 text-left transition-all ${
+                  isOpen ? 'text-accent bg-accent-muted/50' : 'text-text-primary'
+                }`}
+              >
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 ${isOpen ? 'bg-accent/15' : 'bg-background-tertiary'}`}>
+                  <tab.icon size={16} className={isOpen ? 'text-accent' : 'text-text-secondary'} />
+                </div>
+                <span className="text-sm font-bold flex-1">{tab.label}</span>
+                <ChevronDown
+                  size={16}
+                  className={`text-text-secondary transition-transform duration-300 ${isOpen ? 'rotate-180 text-accent' : ''}`}
+                />
+              </button>
+              <div
+                className={`transition-all duration-300 ease-out overflow-hidden ${isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}
+              >
+                <div className="px-5 pb-5 pt-2 border-t border-border">
+                  <div className="page-fade">
+                    {TAB_CONTENT[tab.id]}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </>
   );
 }
