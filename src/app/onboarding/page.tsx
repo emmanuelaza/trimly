@@ -2,40 +2,24 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Check, 
-  ChevronRight, 
-  ChevronLeft, 
-  Store, 
-  Clock, 
-  Users, 
-  Scissors, 
-  PartyPopper,
-  User,
-  Plus,
-  Trash2
+import {
+  Check, ChevronRight, ChevronLeft, Store, Clock, Users, Scissors,
+  User, Plus, Trash2, Copy, ExternalLink, MessageCircle, Palette
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { toast } from 'react-hot-toast';
-import { 
-  saveOnboardingStep1, 
-  saveOnboardingStep2, 
-  completeOnboardingAction 
+import {
+  saveOnboardingStep1, saveOnboardingStep2,
+  completeOnboardingAction, updateBarbershopVisuals
 } from '@/app/actions/barbershops';
 import { createBarber } from '@/app/actions/barbers';
 import { createService } from '@/app/actions/services';
 import { createClient } from '@/lib/supabase/client';
-
-const STEPS = [
-  { id: 1, title: 'Negocio', icon: <Store size={18} /> },
-  { id: 2, title: 'Horarios', icon: <Clock size={18} /> },
-  { id: 3, title: 'Barberos', icon: <Users size={18} /> },
-  { id: 4, title: 'Servicios', icon: <Scissors size={18} /> }
-];
+import { OnboardingProgress } from '@/components/onboarding/OnboardingProgress';
+import { OnboardingConfetti } from '@/components/onboarding/OnboardingConfetti';
+import { cn } from '@/lib/utils';
 
 const PRESET_SERVICES = [
   { name: 'Corte de cabello', price: 25000, duration: 30 },
@@ -43,39 +27,54 @@ const PRESET_SERVICES = [
   { name: 'Afeitado', price: 20000, duration: 20 },
   { name: 'Arreglo de barba', price: 15000, duration: 20 },
   { name: 'Tinte', price: 45000, duration: 60 },
-  { name: 'Tratamiento', price: 30000, duration: 30 }
+  { name: 'Tratamiento', price: 30000, duration: 30 },
+];
+
+const PALETTE = [
+  '#C9F53B', '#4ADE80', '#60A5FA', '#F472B6', '#FBBF24',
+  '#F87171', '#A78BFA', '#34D399', '#FB923C', '#22D3EE',
+  '#E879F9', '#1A1A2E',
+];
+
+const WELCOME_CHIPS = [
+  'Reserva tu cita online y llega directo a la silla.',
+  'Tu look, tu estilo. Agenda en segundos.',
+  'Cortes de calidad, sin esperas. Reserva ahora.',
 ];
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [userData, setUserData] = useState<any>(null);
+  const [slug, setSlug] = useState('');
   const router = useRouter();
 
-  // Step 1 State
-  const [step1Data, setStep1Data] = useState({
-    name: '',
-    city: '',
-    whatsapp: ''
-  });
+  // Step 1
+  const [step1, setStep1] = useState({ name: '', city: '', whatsapp: '' });
 
-  // Step 2 State
+  // Step 2
   const [hours, setHours] = useState<any>({
-    monday: { active: true, open: '09:00', close: '19:00' },
-    tuesday: { active: true, open: '09:00', close: '19:00' },
-    wednesday: { active: true, open: '09:00', close: '19:00' },
-    thursday: { active: true, open: '09:00', close: '19:00' },
-    friday: { active: true, open: '09:00', close: '19:00' },
-    saturday: { active: true, open: '09:00', close: '19:00' },
-    sunday: { active: false, open: '09:00', close: '19:00' }
+    monday:    { active: true,  open: '09:00', close: '19:00' },
+    tuesday:   { active: true,  open: '09:00', close: '19:00' },
+    wednesday: { active: true,  open: '09:00', close: '19:00' },
+    thursday:  { active: true,  open: '09:00', close: '19:00' },
+    friday:    { active: true,  open: '09:00', close: '19:00' },
+    saturday:  { active: true,  open: '09:00', close: '17:00' },
+    sunday:    { active: false, open: '09:00', close: '14:00' },
   });
 
-  // Step 3 State
+  // Step 3
   const [barbers, setBarbers] = useState<any[]>([]);
   const [newBarber, setNewBarber] = useState({ name: '', phone: '', email: '' });
 
-  // Step 4 State
+  // Step 4
   const [services, setServices] = useState<any[]>([]);
+
+  // Step 5
+  const [color, setColor] = useState('#C9F53B');
+  const [welcome, setWelcome] = useState('');
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -83,437 +82,352 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser();
       setUserData(user);
       if (user?.user_metadata?.negocio) {
-        setStep1Data(prev => ({ ...prev, name: user.user_metadata.negocio }));
+        setStep1(p => ({ ...p, name: user.user_metadata.negocio }));
       }
+      // get slug
+      const { data: bs } = await supabase.from('barbershops').select('slug,name').eq('owner_id', user?.id ?? '').maybeSingle();
+      setSlug(bs?.slug || '');
+      if (bs?.name) setStep1(p => ({ ...p, name: bs.name }));
     };
     fetchUser();
   }, []);
+
+  const bookingUrl = `trimlyapp-phi.vercel.app/book/${slug}`;
 
   const handleNext = async () => {
     setLoading(true);
     try {
       if (step === 1) {
-        if (!step1Data.name || !step1Data.city || !step1Data.whatsapp) {
-          toast.error("Por favor completa todos los campos");
-          setLoading(false);
-          return;
+        if (!step1.name || !step1.city || !step1.whatsapp) {
+          toast.error('Completa todos los campos'); return;
         }
-        await saveOnboardingStep1(step1Data);
+        await saveOnboardingStep1(step1);
       } else if (step === 2) {
         await saveOnboardingStep2(hours);
       } else if (step === 3) {
-        if (barbers.length === 0) {
-          toast.error("Agrega al menos un barbero");
-          setLoading(false);
-          return;
-        }
+        if (barbers.length === 0) { toast.error('Agrega al menos un barbero'); return; }
       } else if (step === 4) {
-        if (services.length === 0) {
-          toast.error("Selecciona al menos un servicio");
-          setLoading(false);
-          return;
-        }
+        if (services.length === 0) { toast.error('Selecciona al menos un servicio'); return; }
+      } else if (step === 5) {
+        await updateBarbershopVisuals({ primaryColor: color, welcomeMessage: welcome });
+        await completeOnboardingAction();
+        setDone(true);
+        return;
       }
-      setStep(prev => prev + 1);
-    } catch (error: any) {
-      toast.error(error.message || "Error al guardar los datos");
+      setStep(p => p + 1);
+    } catch (e: any) {
+      toast.error(e.message || 'Error');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleBack = () => setStep(prev => Math.max(1, prev - 1));
 
   const handleAddBarber = async () => {
-    if (!newBarber.name) {
-      toast.error("El nombre es obligatorio");
-      return;
-    }
+    if (!newBarber.name) { toast.error('El nombre es obligatorio'); return; }
     setLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('nombre', newBarber.name);
-      formData.append('telefono', newBarber.phone);
-      formData.append('email', newBarber.email);
-      
-      const res = await createBarber(formData);
+      const fd = new FormData();
+      fd.append('nombre', newBarber.name);
+      fd.append('telefono', newBarber.phone);
+      fd.append('email', newBarber.email);
+      const res = await createBarber(fd);
       if (res.success) {
-        setBarbers(prev => [...prev, { ...newBarber, id: Date.now() }]);
+        setBarbers(p => [...p, { ...newBarber, id: Date.now() }]);
         setNewBarber({ name: '', phone: '', email: '' });
-        toast.success("Barbero agregado");
-      } else {
-        toast.error(res.error || "Error al agregar barbero");
-      }
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleIAmBarber = () => {
-    if (userData) {
-      setNewBarber({
-        name: userData.user_metadata?.full_name || userData.email?.split('@')[0] || '',
-        phone: '',
-        email: userData.email || ''
-      });
-    }
+        toast.success('Barbero agregado');
+      } else toast.error(res.error || 'Error');
+    } catch (e: any) { toast.error(e.message); }
+    finally { setLoading(false); }
   };
 
   const toggleService = async (preset: any) => {
-    const isSelected = services.find(s => s.name === preset.name);
-    if (isSelected) {
-      setServices(prev => prev.filter(s => s.name !== preset.name));
-    } else {
-      const formData = new FormData();
-      formData.append('nombre', preset.name);
-      formData.append('precio', preset.price.toString());
-      formData.append('duracion', preset.duration.toString());
-      
-      const res = await createService(formData);
-      if (res.success) {
-        setServices(prev => [...prev, preset]);
-        toast.success(`${preset.name} agregado`);
-      } else {
-        toast.error(res.error || "Error al agregar servicio");
-      }
-    }
+    const exists = services.find(s => s.name === preset.name);
+    if (exists) { setServices(p => p.filter(s => s.name !== preset.name)); return; }
+    const fd = new FormData();
+    fd.append('nombre', preset.name);
+    fd.append('precio', preset.price.toString());
+    fd.append('duracion', preset.duration.toString());
+    const res = await createService(fd);
+    if (res.success) { setServices(p => [...p, preset]); toast.success(`${preset.name} agregado`); }
+    else toast.error(res.error || 'Error');
   };
 
-  const handleFinish = async () => {
-    setLoading(true);
-    try {
-      await completeOnboardingAction();
-      setStep(5);
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
+  const copyLink = () => {
+    navigator.clipboard.writeText(`https://${bookingUrl}`);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
-  if (step === 5) {
+  // ── SUCCESS SCREEN ──────────────────────────────────────────
+  if (done) {
     return (
-      <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-4">
-        <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md text-center"
-        >
-          <div className="w-20 h-20 bg-success/20 border-4 border-success/30 rounded-full flex items-center justify-center mx-auto mb-8">
-            <PartyPopper size={40} className="text-success" />
+      <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-6 text-center">
+        <OnboardingConfetti />
+        <div className="w-full max-w-sm space-y-8 relative z-10">
+          {/* Animated check */}
+          <div className="mx-auto w-24 h-24 rounded-full border-4 border-accent flex items-center justify-center bg-accent/10 animate-in zoom-in duration-500">
+            <Check size={44} className="text-accent" strokeWidth={3} />
           </div>
-          <h1 className="text-3xl font-black text-text-primary mb-3">¡Todo listo!</h1>
-          <p className="text-text-secondary text-lg mb-10 leading-relaxed">
-            Tu barbería <strong>{step1Data.name}</strong> está configurada y lista para recibir citas.
-          </p>
-          
-          <Card className="bg-background-secondary border-accent/20 mb-10 text-left">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-text-tertiary">Negocio</span>
-                <span className="text-text-primary font-bold">{step1Data.name}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-text-tertiary">Barberos</span>
-                <span className="text-text-primary font-bold">{barbers.length}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-text-tertiary">Servicios</span>
-                <span className="text-text-primary font-bold">{services.length}</span>
-              </div>
-            </div>
-          </Card>
 
-          <Button 
-            variant="primary" 
-            size="lg" 
-            className="w-full h-14 text-lg font-black shadow-xl shadow-accent/20"
-            onClick={() => window.location.href = '/dashboard'}
-          >
-            Ir al Dashboard
-          </Button>
-        </motion.div>
+          <div className="space-y-3">
+            <h1 className="text-3xl font-black text-text-primary">¡Tu barbería está lista! 🎉</h1>
+            <p className="text-text-secondary leading-relaxed">
+              Ya puedes recibir reservas. Comparte tu link con tus clientes.
+            </p>
+          </div>
+
+          {/* Link box */}
+          <div className="bg-background-secondary border border-border rounded-xl p-4 flex items-center gap-3">
+            <span className="text-xs font-mono text-accent flex-1 text-left break-all">{bookingUrl}</span>
+            <button onClick={copyLink} className="text-text-secondary hover:text-accent transition-colors flex-shrink-0">
+              <Copy size={16} />
+            </button>
+          </div>
+          {copied && <p className="text-xs text-accent font-bold -mt-4">✓ Link copiado</p>}
+
+          <div className="flex flex-col gap-3">
+            <Button variant="secondary" className="w-full" onClick={() => window.open(`https://${bookingUrl}`, '_blank')}>
+              <ExternalLink size={16} /> Ver mi página pública
+            </Button>
+            <Button
+              className="w-full"
+              style={{ background: '#25D366', border: 'none' }}
+              onClick={() => window.open(`https://wa.me/?text=${encodeURIComponent(`¡Hola! Ya puedes agendar tu cita en ${step1.name}: https://${bookingUrl}`)}`, '_blank')}
+            >
+              <MessageCircle size={16} /> Compartir por WhatsApp
+            </Button>
+            <Button variant="secondary" className="w-full" onClick={() => router.push('/dashboard')}>
+              Ir al dashboard →
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // ── WIZARD ──────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-4 sm:p-8">
       <div className="w-full max-w-lg">
-        {/* Progress Bar */}
-        <div className="flex items-center justify-between mb-12 relative">
-          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-border -translate-y-1/2 z-0" />
-          {STEPS.map((s) => (
-            <div key={s.id} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 border-2 ${
-                step > s.id ? 'bg-success border-success text-background-primary' :
-                step === s.id ? 'bg-accent border-accent text-background-primary shadow-lg shadow-accent/20' :
-                'bg-background-secondary border-border text-text-tertiary'
-              }`}>
-                {step > s.id ? <Check size={20} /> : s.icon}
-              </div>
-              <span className={`text-[10px] font-black uppercase tracking-widest ${
-                step >= s.id ? 'text-text-primary' : 'text-text-tertiary'
-              }`}>
-                {s.title}
-              </span>
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 mb-6">
+            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center">
+              <Scissors size={16} className="text-background-primary" />
             </div>
-          ))}
+            <span className="text-lg font-black text-text-primary">Trimly</span>
+          </div>
         </div>
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -20, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="p-8 border-border-strong bg-background-secondary">
-              {step === 1 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-black text-text-primary">Bienvenido a Trimly ✂️</h2>
-                    <p className="text-text-tertiary text-sm font-medium mt-1">Configura tu barbería en 4 pasos simples</p>
-                  </div>
-                  <div className="space-y-4">
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-black text-text-tertiary uppercase tracking-widest">Nombre de la barbería</label>
-                      <Input 
-                        placeholder="Ej. Barber King" 
-                        value={step1Data.name}
-                        onChange={e => setStep1Data(prev => ({ ...prev, name: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-black text-text-tertiary uppercase tracking-widest">Ciudad</label>
-                      <Input 
-                        placeholder="Ej. Bogotá" 
-                        value={step1Data.city}
-                        onChange={e => setStep1Data(prev => ({ ...prev, city: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <label className="text-[11px] font-black text-text-tertiary uppercase tracking-widest">WhatsApp del negocio</label>
-                      <Input 
-                        placeholder="Ej. +57 300 123 4567" 
-                        value={step1Data.whatsapp}
-                        onChange={e => setStep1Data(prev => ({ ...prev, whatsapp: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
+        <OnboardingProgress current={step} total={5} onGoTo={s => s < step && setStep(s)} />
 
-              {step === 2 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-black text-text-primary">¿Cuándo atiendes?</h2>
-                    <p className="text-text-tertiary text-sm font-medium mt-1">Define tus horarios base de trabajo</p>
-                  </div>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                    {Object.keys(hours).map((day) => (
-                      <div key={day} className={`p-4 rounded-xl border transition-all ${
-                        hours[day].active ? 'bg-background-tertiary border-accent/20' : 'bg-background-tertiary/20 border-transparent opacity-60'
-                      }`}>
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-bold capitalize text-text-primary">{day}</span>
-                          <button 
-                            onClick={() => setHours((prev: any) => ({
-                              ...prev,
-                              [day]: { ...prev[day], active: !prev[day].active }
-                            }))}
-                            className={`w-10 h-6 rounded-full transition-colors relative ${
-                              hours[day].active ? 'bg-accent' : 'bg-border-strong'
-                            }`}
-                          >
-                            <div className={`w-4 h-4 bg-background-primary rounded-full absolute top-1 transition-all ${
-                              hours[day].active ? 'left-5' : 'left-1'
-                            }`} />
-                          </button>
-                        </div>
-                        {hours[day].active && (
-                          <div className="grid grid-cols-2 gap-3">
-                            <Input 
-                              type="time" 
-                              value={hours[day].open}
-                              onChange={e => setHours((prev: any) => ({
-                                ...prev,
-                                [day]: { ...prev[day], open: e.target.value }
-                              }))}
-                              className="h-9 px-2"
-                            />
-                            <Input 
-                              type="time" 
-                              value={hours[day].close}
-                              onChange={e => setHours((prev: any) => ({
-                                ...prev,
-                                [day]: { ...prev[day], close: e.target.value }
-                              }))}
-                              className="h-9 px-2"
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+        <Card className="p-6 sm:p-8 border-border-strong bg-background-secondary space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-400">
 
-              {step === 3 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-black text-text-primary">Agrega tu primer barbero</h2>
-                    <p className="text-text-tertiary text-sm font-medium mt-1">Puedes agregar más después</p>
-                  </div>
-                  
-                  {barbers.length > 0 && (
-                    <div className="space-y-2 mb-6">
-                      {barbers.map((b, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 bg-success/10 border border-success/20 rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-success text-background-primary flex items-center justify-center">
-                              <Check size={16} />
-                            </div>
-                            <div>
-                              <p className="text-sm font-bold text-text-primary">{b.name}</p>
-                              <p className="text-[10px] text-text-tertiary">{b.email || 'Sin email'}</p>
-                            </div>
-                          </div>
-                          <button onClick={() => setBarbers(prev => prev.filter((_, idx) => idx !== i))}>
-                            <Trash2 size={16} className="text-danger/50 hover:text-danger" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="space-y-4">
-                    <Input 
-                      placeholder="Nombre del barbero" 
-                      value={newBarber.name}
-                      onChange={e => setNewBarber(prev => ({ ...prev, name: e.target.value }))}
-                    />
-                    <div className="grid grid-cols-2 gap-3">
-                      <Input 
-                        placeholder="WhatsApp (Opcional)" 
-                        value={newBarber.phone}
-                        onChange={e => setNewBarber(prev => ({ ...prev, phone: e.target.value }))}
-                      />
-                      <Input 
-                        placeholder="Email (Opcional)" 
-                        value={newBarber.email}
-                        onChange={e => setNewBarber(prev => ({ ...prev, email: e.target.value }))}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <Button variant="secondary" onClick={handleIAmBarber} className="h-10 text-xs border-dashed">
-                        <User size={14} /> Soy yo mismo el barbero
-                      </Button>
-                      <Button variant="primary" onClick={handleAddBarber} loading={loading} className="w-full">
-                        <Plus size={16} /> Agregar barbero
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {step === 4 && (
-                <div className="space-y-6">
-                  <div className="text-center mb-8">
-                    <h2 className="text-2xl font-black text-text-primary">¿Qué servicios ofreces?</h2>
-                    <p className="text-text-tertiary text-sm font-medium mt-1">Agrega tus servicios principales</p>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    {PRESET_SERVICES.map((s) => {
-                      const isActive = services.find(serv => serv.name === s.name);
-                      return (
-                        <button
-                          key={s.name}
-                          onClick={() => toggleService(s)}
-                          className={`p-4 rounded-xl border text-left transition-all relative ${
-                            isActive ? 'bg-accent/10 border-accent' : 'bg-background-tertiary/40 border-border hover:border-border-strong'
-                          }`}
-                        >
-                          {isActive && (
-                            <div className="absolute top-2 right-2 w-4 h-4 bg-accent rounded-full flex items-center justify-center text-background-primary">
-                              <Check size={10} />
-                            </div>
-                          )}
-                          <p className="text-xs font-bold text-text-primary mb-1">{s.name}</p>
-                          <p className="text-[10px] text-text-tertiary font-mono">
-                            ${s.price.toLocaleString()} • {s.duration} min
-                          </p>
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="pt-4 border-t border-border-strong">
-                    <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest text-center mb-4">
-                      Servicios seleccionados: {services.length}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Navigation Buttons */}
-              <div className="mt-10 flex items-center gap-3">
-                {step > 1 && (
-                  <Button 
-                    variant="secondary" 
-                    onClick={handleBack} 
-                    className="h-12 px-6"
-                  >
-                    <ChevronLeft size={20} />
-                  </Button>
-                )}
-                {step < 4 ? (
-                  <Button 
-                    variant="primary" 
-                    className="flex-1 h-12 text-base font-black"
-                    onClick={handleNext}
-                    loading={loading}
-                    disabled={step === 3 && barbers.length === 0}
-                  >
-                    Continuar <ChevronRight size={20} />
-                  </Button>
-                ) : (
-                  <Button 
-                    variant="primary" 
-                    className="flex-1 h-12 text-base font-black bg-success hover:bg-success-hover border-none"
-                    onClick={handleFinish}
-                    loading={loading}
-                    disabled={services.length === 0}
-                  >
-                    Finalizar configuración
-                  </Button>
-                )}
+          {/* STEP 1 */}
+          {step === 1 && (
+            <>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Store size={24} className="text-accent" /></div>
+                <h2 className="text-2xl font-black text-text-primary">Bienvenido a Trimly ✂️</h2>
+                <p className="text-text-secondary text-sm mt-1">Cuéntanos sobre tu barbería</p>
               </div>
-            </Card>
-          </motion.div>
-        </AnimatePresence>
-      </div>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Nombre de la barbería</label>
+                  <Input placeholder="Ej. Barber King" value={step1.name} onChange={e => setStep1(p => ({ ...p, name: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Ciudad</label>
+                  <Input placeholder="Ej. Bogotá" value={step1.city} onChange={e => setStep1(p => ({ ...p, city: e.target.value }))} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">WhatsApp del negocio</label>
+                  <Input placeholder="Ej. +57 300 123 4567" value={step1.whatsapp} onChange={e => setStep1(p => ({ ...p, whatsapp: e.target.value }))} />
+                </div>
+              </div>
+            </>
+          )}
 
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255,255,255,0.05);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255,255,255,0.1);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(255,255,255,0.2);
-        }
-      `}</style>
+          {/* STEP 2 */}
+          {step === 2 && (
+            <>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Clock size={24} className="text-accent" /></div>
+                <h2 className="text-2xl font-black text-text-primary">¿Cuándo atiendes?</h2>
+                <p className="text-text-secondary text-sm mt-1">Define tus horarios base</p>
+              </div>
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {Object.keys(hours).map(day => (
+                  <div key={day} className={cn('p-3 rounded-xl border transition-all', hours[day].active ? 'bg-background-tertiary border-accent/20' : 'bg-background-tertiary/20 border-transparent opacity-50')}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-bold capitalize text-text-primary">{day}</span>
+                      <button
+                        onClick={() => setHours((p: any) => ({ ...p, [day]: { ...p[day], active: !p[day].active } }))}
+                        className={cn('w-9 h-5 rounded-full relative transition-colors', hours[day].active ? 'bg-accent' : 'bg-border-strong')}
+                      >
+                        <div className={cn('w-3.5 h-3.5 bg-background-primary rounded-full absolute top-[3px] transition-all', hours[day].active ? 'left-[18px]' : 'left-[3px]')} />
+                      </button>
+                    </div>
+                    {hours[day].active && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input type="time" value={hours[day].open} className="h-8 px-2 text-sm"
+                          onChange={e => setHours((p: any) => ({ ...p, [day]: { ...p[day], open: e.target.value } }))} />
+                        <Input type="time" value={hours[day].close} className="h-8 px-2 text-sm"
+                          onChange={e => setHours((p: any) => ({ ...p, [day]: { ...p[day], close: e.target.value } }))} />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* STEP 3 */}
+          {step === 3 && (
+            <>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Users size={24} className="text-accent" /></div>
+                <h2 className="text-2xl font-black text-text-primary">Agrega tus barberos</h2>
+                <p className="text-text-secondary text-sm mt-1">Al menos uno para continuar</p>
+              </div>
+              {barbers.length > 0 && (
+                <div className="space-y-2">
+                  {barbers.map((b, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-accent/10 border border-accent/20 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-accent text-background-primary flex items-center justify-center font-black text-sm">
+                          {b.name[0].toUpperCase()}
+                        </div>
+                        <span className="text-sm font-bold text-text-primary">{b.name}</span>
+                      </div>
+                      <button onClick={() => setBarbers(p => p.filter((_, idx) => idx !== i))}>
+                        <Trash2 size={14} className="text-text-tertiary hover:text-danger" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="space-y-3">
+                <Input placeholder="Nombre del barbero" value={newBarber.name} onChange={e => setNewBarber(p => ({ ...p, name: e.target.value }))} />
+                <div className="grid grid-cols-2 gap-2">
+                  <Input placeholder="WhatsApp" value={newBarber.phone} onChange={e => setNewBarber(p => ({ ...p, phone: e.target.value }))} />
+                  <Input placeholder="Email" value={newBarber.email} onChange={e => setNewBarber(p => ({ ...p, email: e.target.value }))} />
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="secondary" className="flex-1 h-9 text-xs border-dashed"
+                    onClick={() => setNewBarber({ name: userData?.user_metadata?.full_name || userData?.email?.split('@')[0] || '', phone: '', email: userData?.email || '' })}>
+                    <User size={14} /> Soy yo el barbero
+                  </Button>
+                  <Button className="flex-1 h-9 text-xs" onClick={handleAddBarber} disabled={loading}>
+                    <Plus size={14} /> Agregar
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* STEP 4 */}
+          {step === 4 && (
+            <>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Scissors size={24} className="text-accent" /></div>
+                <h2 className="text-2xl font-black text-text-primary">¿Qué servicios ofreces?</h2>
+                <p className="text-text-secondary text-sm mt-1">Selecciona los más comunes · puedes editarlos después</p>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {PRESET_SERVICES.map(s => {
+                  const active = services.find(sv => sv.name === s.name);
+                  return (
+                    <button key={s.name} onClick={() => toggleService(s)}
+                      className={cn('p-3 rounded-xl border text-left transition-all relative', active ? 'bg-accent/10 border-accent' : 'bg-background-tertiary/40 border-border hover:border-border-strong')}>
+                      {active && <div className="absolute top-2 right-2 w-4 h-4 bg-accent rounded-full flex items-center justify-center"><Check size={10} className="text-background-primary" /></div>}
+                      <p className="text-xs font-bold text-text-primary mb-0.5">{s.name}</p>
+                      <p className="text-[10px] text-text-secondary font-mono">${s.price.toLocaleString()} · {s.duration}min</p>
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-text-secondary text-center">{services.length} servicio{services.length !== 1 ? 's' : ''} seleccionado{services.length !== 1 ? 's' : ''}</p>
+            </>
+          )}
+
+          {/* STEP 5 */}
+          {step === 5 && (
+            <>
+              <div className="text-center">
+                <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mx-auto mb-4"><Palette size={24} className="text-accent" /></div>
+                <h2 className="text-2xl font-black text-text-primary">El estilo de tu barbería</h2>
+                <p className="text-text-secondary text-sm mt-1">Personaliza tu página pública de reservas</p>
+              </div>
+
+              {/* Color picker */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Color principal</label>
+                <div className="flex flex-wrap gap-2">
+                  {PALETTE.map(c => (
+                    <button key={c} onClick={() => setColor(c)}
+                      className={cn('w-9 h-9 rounded-full border-2 transition-transform hover:scale-110', color === c ? 'border-white scale-110' : 'border-transparent')}
+                      style={{ background: c }} />
+                  ))}
+                  <label className="w-9 h-9 rounded-full border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-accent transition-colors overflow-hidden" title="Color personalizado">
+                    <input type="color" value={color} onChange={e => setColor(e.target.value)} className="opacity-0 absolute w-1 h-1" />
+                    <Palette size={14} className="text-text-secondary" />
+                  </label>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-background-tertiary rounded-xl">
+                  <div className="w-6 h-6 rounded-full flex-shrink-0" style={{ background: color }} />
+                  <span className="text-xs font-mono text-text-secondary flex-1">Color activo:</span>
+                  <span className="text-xs font-black font-mono text-text-primary">{color}</span>
+                </div>
+              </div>
+
+              {/* Preview mini button */}
+              <div className="rounded-xl overflow-hidden border border-border">
+                <div className="h-10 flex items-center justify-center text-xs font-black text-white rounded-lg mx-3 my-3 transition-all"
+                  style={{ background: color, color: '#000' }}>
+                  Reservar cita — vista previa
+                </div>
+              </div>
+
+              {/* Welcome message */}
+              <div className="space-y-3">
+                <label className="text-[11px] font-black text-text-secondary uppercase tracking-widest">Mensaje de bienvenida</label>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {WELCOME_CHIPS.map(chip => (
+                    <button key={chip} onClick={() => setWelcome(chip)}
+                      className="text-[11px] px-3 py-1.5 bg-background-tertiary border border-border rounded-full text-text-secondary hover:border-accent hover:text-accent transition-all">
+                      {chip.substring(0, 30)}…
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={welcome}
+                  onChange={e => e.target.value.length <= 150 && setWelcome(e.target.value)}
+                  placeholder={`Bienvenido a ${step1.name || 'tu barbería'}. Reserva tu cita en segundos.`}
+                  rows={3}
+                  className="w-full bg-background-tertiary border border-border rounded-xl px-4 py-3 text-sm text-text-primary resize-none focus:outline-none focus:border-accent transition-colors"
+                />
+                <p className="text-[11px] text-text-secondary text-right">{welcome.length}/150</p>
+              </div>
+            </>
+          )}
+
+          {/* Navigation */}
+          <div className="flex items-center gap-3 pt-2">
+            {step > 1 && (
+              <Button variant="secondary" onClick={() => setStep(p => p - 1)} className="h-12 px-5">
+                <ChevronLeft size={18} />
+              </Button>
+            )}
+            <Button
+              className="flex-1 h-12 text-base font-black"
+              onClick={handleNext}
+              disabled={loading || (step === 3 && barbers.length === 0) || (step === 4 && services.length === 0)}
+            >
+              {loading ? 'Guardando...' : step === 5 ? '🚀 Publicar mi barbería' : <>Continuar <ChevronRight size={18} /></>}
+            </Button>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 }

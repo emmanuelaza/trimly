@@ -51,20 +51,17 @@ export async function updateBarbershop(formData: FormData) {
 
     const timezone = COUNTRY_TIMEZONES[country] || "America/Bogota";
     
-    // Parse hours
-    const hours: any = {};
+    const hours: Record<string, { open: string | null; close: string | null }> = {};
     ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'].forEach(day => {
       hours[day] = {
-        open: formData.get(`hours_${day}_open`),
-        close: formData.get(`hours_${day}_close`)
+        open: formData.get(`hours_${day}_open`) as string | null,
+        close: formData.get(`hours_${day}_close`) as string | null
       };
     });
 
     if (!name) return { success: false, error: "El nombre es obligatorio" };
 
     const supabase = await createClient();
-    
-    // Get existing config to merge
     const { data: current } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
 
     const { error } = await supabase.from("barbershops").update({
@@ -78,6 +75,33 @@ export async function updateBarbershop(formData: FormData) {
     if (error) return { success: false, error: error.message };
     
     revalidatePath("/dashboard/configuracion");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function updateBarbershopVisuals(data: {
+  primaryColor: string;
+  welcomeMessage: string;
+}) {
+  try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return { success: false, error: "No se encontró la barbería" };
+
+    const supabase = await createClient();
+    const { data: current } = await supabase.from("barbershops").select("config").eq("id", barbershopId).single();
+
+    const { error } = await supabase.from("barbershops").update({
+      config: {
+        ...(current?.config || {}),
+        primaryColor: data.primaryColor,
+        welcomeMessage: data.welcomeMessage,
+      }
+    }).eq("id", barbershopId);
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath("/dashboard");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -108,7 +132,6 @@ export async function toggleAutomation(type: string, is_active: boolean) {
 
     const supabase = await createClient();
     
-    // Upsert rule
     const { error } = await supabase.from("automations").upsert({
       barbershop_id: barbershopId,
       type,
@@ -149,7 +172,6 @@ export async function getAutomationStats() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    // 1. Citas recordadas (count direct)
     const { count: recordadas, error: err1 } = await supabase
       .from("automation_logs")
       .select("*", { count: 'exact', head: true })
@@ -159,7 +181,6 @@ export async function getAutomationStats() {
 
     if (err1) console.error("Stats Error 1:", err1);
 
-    // 2. Clientes recuperados: Fetch unique client IDs who received recovery email
     const { data: logsRecuperacion, error: err2 } = await supabase
       .from("automation_logs")
       .select("client_id, sent_at")
@@ -173,7 +194,6 @@ export async function getAutomationStats() {
     if (logsRecuperacion && logsRecuperacion.length > 0) {
       const clientIds = Array.from(new Set(logsRecuperacion.map((l: any) => l.client_id)));
       
-      // Get all completed appointments for these clients after the startOfMonth
       const { data: recentApps, error: err3 } = await supabase
         .from("appointments")
         .select("client_id, scheduled_at")
@@ -184,9 +204,7 @@ export async function getAutomationStats() {
       if (err3) console.error("Stats Error 3:", err3);
 
       if (recentApps) {
-        // For each log, check if there's any appointment after sent_at
-        // Using a set of clientIds who were recovered to avoid double counting
-        const recoveredSet = new Set();
+        const recoveredSet = new Set<string>();
         logsRecuperacion.forEach((log: any) => {
           const hasAppAfter = recentApps.some((app: any) => 
             app.client_id === log.client_id && 
@@ -198,7 +216,6 @@ export async function getAutomationStats() {
       }
     }
 
-    // 3. No-shows evitados (estimado): Citas con recordatorio enviado que terminaron en 'completed'
     const { data: remindedApps, error: err4 } = await supabase
       .from("automation_logs")
       .select("appointment_id")
@@ -239,14 +256,13 @@ export async function saveOnboardingStep1(data: { name: string, city: string, wh
 
   const supabase = await createClient();
 
-  // Check if slug exists
   const { data: current } = await supabase
     .from("barbershops")
     .select("slug")
     .eq("id", barbershopId)
     .single();
 
-  const updates: any = {
+  const updates: Record<string, unknown> = {
     name: data.name,
     city: data.city,
     whatsapp: data.whatsapp
@@ -263,7 +279,7 @@ export async function saveOnboardingStep1(data: { name: string, city: string, wh
   return { success: true };
 }
 
-export async function saveOnboardingStep2(opening_hours: any) {
+export async function saveOnboardingStep2(opening_hours: unknown) {
   const barbershopId = await getBarbershopId();
   if (!barbershopId) throw new Error("No barbershop found");
 
@@ -282,14 +298,12 @@ export async function completeOnboardingAction() {
 
   const supabase = await createClient();
   
-  // 1. Mark as completed
   const { error } = await supabase.from("barbershops").update({
     onboarding_completed: true
   }).eq("id", barbershopId);
 
   if (error) throw error;
 
-  // 2. Initialize Automations if not already done
   await initializeAutomations(barbershopId);
   
   revalidatePath("/dashboard");
@@ -297,7 +311,6 @@ export async function completeOnboardingAction() {
   return { success: true };
 }
 
-// Keep the old one for compatibility if needed, but updated to use new fields
 export async function completeOnboarding(businessName: string) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

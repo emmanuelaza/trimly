@@ -1,7 +1,7 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { getBarbershop } from '@/app/actions/barbershops';
 import Link from 'next/link';
-import { Plus, Clock, CheckCircle2, User, ChevronRight } from 'lucide-react';
+import { Plus, Clock, CheckCircle2, User, ChevronRight, AlertCircle } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -16,6 +16,8 @@ export const revalidate = 60;
 export default async function DashboardHome() {
   const barbershop = await getBarbershop();
   const userName = barbershop?.name || "Dueño";
+  const onboardingDone = barbershop?.onboarding_completed ?? true;
+
   
   const allCitas = await getAppointments();
   const todayStr = getTodayString();
