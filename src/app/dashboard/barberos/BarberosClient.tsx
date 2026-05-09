@@ -1,15 +1,19 @@
 "use client";
 
-import React, { useTransition } from 'react';
-import { Plus, Trash2, UserCheck } from 'lucide-react';
+import React, { useTransition, useState } from 'react';
+import { Plus, Trash2, UserCheck, Wallet, Share2, MessageCircle, Copy, Check } from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
-import { createBarber, deleteBarber } from '@/app/actions/barbers';
+import { createBarber, deleteBarber, generateInvitationLink } from '@/app/actions/barbers';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { BarberPaymentSchemeModal } from '@/components/nomina/BarberPaymentSchemeModal';
 
-export default function BarberosClient({ initialBarberos }: { initialBarberos: any[] }) {
+export default function BarberosClient({ initialBarberos, services }: { initialBarberos: any[], services: any[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [selectedBarber, setSelectedBarber] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
@@ -42,6 +46,30 @@ export default function BarberosClient({ initialBarberos }: { initialBarberos: a
         toast.error(result.error || 'Error al eliminar');
       }
     });
+  };
+
+  const handleInvite = async (id: string) => {
+    const result = await generateInvitationLink(id);
+    if (result.success) {
+      toast.success('Link de invitación generado');
+      router.refresh();
+    } else {
+      toast.error('Error al generar invitación');
+    }
+  };
+
+  const copyToClipboard = (code: string, id: string) => {
+    const link = `https://trimlyapp-phi.vercel.app/invite/${code}`;
+    navigator.clipboard.writeText(link);
+    setCopiedId(id);
+    toast.success('Link copiado al portapapeles');
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const sendWhatsApp = (barber: any) => {
+    const link = `https://trimlyapp-phi.vercel.app/invite/${barber.invitation_code}`;
+    const message = encodeURIComponent(`Hola ${barber.name}, te invito a Trimly para que puedas ver tus citas y ganancias desde tu celular. Regístrate aquí: ${link}`);
+    window.open(`https://wa.me/${barber.phone?.replace(/\+/g, '')}?text=${message}`, '_blank');
   };
 
   return (
@@ -84,28 +112,107 @@ export default function BarberosClient({ initialBarberos }: { initialBarberos: a
           )}
           {initialBarberos.map((b: any) => (
             <Card key={b.id} className="group hover:border-border-strong transition-all overflow-hidden relative">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar initials={getInitials(b.name)} className="w-12 h-12 bg-accent-muted text-accent" />
-                  <div>
-                    <p className="text-base font-semibold text-text-primary">{b.name}</p>
-                    <p className="text-xs text-text-tertiary">Barbero Profesional · Activo</p>
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Avatar initials={getInitials(b.name)} className="w-12 h-12 bg-accent-muted text-accent" />
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <p className="text-base font-semibold text-text-primary">{b.name}</p>
+                        {b.invitation_status === 'accepted' ? (
+                          <Badge variant="success" className="text-[10px] py-0">Activo</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] py-0 opacity-50">Sin registrar</Badge>
+                        )}
+                      </div>
+                      <p className="text-xs text-text-tertiary">Barbero Profesional</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      onClick={() => {
+                        setSelectedBarber(b);
+                        setIsModalOpen(true);
+                      }}
+                      className="p-2 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-xl transition-colors"
+                      title="Configurar Esquema de Pago"
+                    >
+                      <Wallet size={18} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(b.id)}
+                      className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <button 
-                    onClick={() => handleDelete(b.id)}
-                    className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors"
-                  >
-                    <Trash2 size={18} />
-                  </button>
+
+                <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    {b.invitation_code ? (
+                      <div className="flex items-center gap-1">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-[11px] gap-1.5"
+                          onClick={() => copyToClipboard(b.invitation_code, b.id)}
+                        >
+                          {copiedId === b.id ? <Check size={12} /> : <Copy size={12} />}
+                          Copiar Link
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-8 text-[11px] gap-1.5 text-success hover:text-success"
+                          onClick={() => sendWhatsApp(b)}
+                        >
+                          <MessageCircle size={12} />
+                          WhatsApp
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        variant="secondary" 
+                        size="sm" 
+                        className="h-8 text-[11px] gap-1.5"
+                        onClick={() => handleInvite(b.id)}
+                      >
+                        <Share2 size={12} />
+                        Invitar a Trimly
+                      </Button>
+                    )}
+                  </div>
+
+                  {b.payment_scheme && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">Pago:</span>
+                      <Badge variant="outline" className="text-[10px] capitalize">
+                        {b.payment_scheme.type.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
             </Card>
           ))}
         </div>
       </div>
+
+      {selectedBarber && (
+        <BarberPaymentSchemeModal 
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setSelectedBarber(null);
+          }}
+          barber={selectedBarber}
+          services={services}
+          initialScheme={selectedBarber.barber_payment_schemes?.[0]}
+          initialRates={selectedBarber.barber_service_rates}
+        />
+      )}
     </div>
   );
 }

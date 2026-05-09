@@ -21,24 +21,35 @@ import {
   Menu,
   X,
   BarChart3,
+  Wallet,
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
 const mainNavItems = [
-  { href: '/dashboard', label: 'Inicio', icon: Home },
+  { href: '/dashboard', label: 'Dashboard', icon: Home },
   { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
   { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
   { href: '/dashboard/servicios', label: 'Servicios', icon: Scissors },
-  { href: '/dashboard/barberos', label: 'Barberos', icon: UserCircle },
-  { href: '/dashboard/reportes', label: 'Reportes', icon: BarChart3 },
-  { href: '/dashboard/retencion', label: 'Retención', icon: TrendingUp, filoProOnly: true },
+  { href: '/dashboard/nomina', label: 'Nómina', icon: Wallet, badge: 'Nuevo' },
+  { href: '/dashboard/equipo', label: 'Equipo', icon: UserCircle },
+  { href: '/dashboard/pagina', label: 'Mi página', icon: TrendingUp },
 ];
 
 const secondaryNavItems = [
-  { href: '/dashboard/automatizaciones', label: 'Automatizaciones', icon: Zap, filoProOnly: true },
-  { href: '/dashboard/billing', label: 'Facturación', icon: CreditCard },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
+
+import { MiloTooltip } from '../milo/MiloTooltip';
+
+const sectionTooltips: Record<string, string> = {
+  '/dashboard': 'Aquí ves el resumen de tu día',
+  '/dashboard/agenda': 'Todas tus citas organizadas por hora',
+  '/dashboard/clientes': 'La base de datos de tu barbería',
+  '/dashboard/nomina': 'Controla los pagos a tus barberos',
+  '/dashboard/servicios': 'Los servicios que ofreces',
+  '/dashboard/equipo': 'Gestiona a tu equipo de trabajo',
+  '/dashboard/configuracion': 'Personaliza tu barbería'
+};
 
 export const Sidebar = ({ negocio, userName = "Owner", isFiloPro = true }: { negocio: string, userName?: string, isFiloPro?: boolean }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -50,37 +61,40 @@ export const Sidebar = ({ negocio, userName = "Owner", isFiloPro = true }: { neg
     const isLocked = item.filoProOnly && !isFiloPro;
     const targetHref = isLocked ? '/dashboard/billing' : item.href;
     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+    const tooltipText = sectionTooltips[item.href];
     
     return (
-      <Link 
-        key={item.href} 
-        href={targetHref}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
-          isActive && !isLocked
-          ? 'bg-accent-muted text-accent font-medium' 
-          : 'text-text-tertiary hover:bg-background-tertiary hover:text-text-primary'
-        } ${isCollapsed ? 'justify-center' : ''}`}
-      >
-        {isLocked ? (
-          <Lock size={18} className="text-text-tertiary group-hover:text-accent opacity-50" />
-        ) : (
-          <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
-        )}
-        {!isCollapsed && (
-          <div className="flex-1 flex items-center justify-between">
-            <span className={`text-[13px] ${isLocked ? 'opacity-70' : ''}`}>{item.label}</span>
-            {isLocked ? (
-              <span className="bg-accent/10 text-accent border border-accent/20 text-[9px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-1">
-                <Lock size={8} /> Pro
-              </span>
-            ) : item.badge && (
-              <span className="bg-accent-muted text-accent text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
-                {item.badge}
-              </span>
-            )}
-          </div>
-        )}
-      </Link>
+      <MiloTooltip text={tooltipText || item.label}>
+        <Link 
+          key={item.href} 
+          href={targetHref}
+          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${
+            isActive && !isLocked
+            ? 'bg-accent-muted text-accent font-medium' 
+            : 'text-text-tertiary hover:bg-background-tertiary hover:text-text-primary'
+          } ${isCollapsed ? 'justify-center' : ''}`}
+        >
+          {isLocked ? (
+            <Lock size={18} className="text-text-tertiary group-hover:text-accent opacity-50" />
+          ) : (
+            <item.icon size={18} className={isActive ? 'text-accent' : 'group-hover:text-text-primary'} />
+          )}
+          {!isCollapsed && (
+            <div className="flex-1 flex items-center justify-between">
+              <span className={`text-[13px] ${isLocked ? 'opacity-70' : ''}`}>{item.label}</span>
+              {isLocked ? (
+                <span className="bg-accent/10 text-accent border border-accent/20 text-[9px] font-bold px-1.5 py-0.5 rounded-sm flex items-center gap-1">
+                  <Lock size={8} /> Pro
+                </span>
+              ) : item.badge && (
+                <span className="bg-accent-muted text-accent text-[10px] font-bold px-1.5 py-0.5 rounded-sm">
+                  {item.badge}
+                </span>
+              )}
+            </div>
+          )}
+        </Link>
+      </MiloTooltip>
     );
   };
 

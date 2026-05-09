@@ -6,6 +6,8 @@ import { getBarbershopId } from '@/lib/getBarbershopId';
 import { getClients } from '@/app/actions/clients';
 import { getServices } from '@/app/actions/services';
 import { Suspense } from 'react';
+import { MiloButton } from '@/components/milo/MiloButton';
+import { MiloWelcome } from '@/components/milo/MiloWelcome';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -80,6 +82,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <Suspense fallback={null}>
         <NewAppointmentModal clientes={clientes} servicios={servicios} />
       </Suspense>
+
+      {/* Milo - AI Assistant */}
+      <MiloButton />
+      <MiloWelcome />
     </div>
   );
 }

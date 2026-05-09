@@ -99,3 +99,42 @@ export async function deleteBarber(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+export async function generateInvitationLink(barberId: string) {
+  try {
+    const supabase = await createClient();
+    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
+    
+    const { error } = await supabase
+      .from("barbers")
+      .update({ 
+        invitation_code: code,
+        invitation_status: 'pending'
+      })
+      .eq("id", barberId);
+
+    if (error) throw error;
+
+    revalidatePath("/dashboard/barberos");
+    return { success: true, code };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getBarberByCode(code: string) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from("barbers")
+      .select("*, barbershops(name)")
+      .eq("invitation_code", code)
+      .eq("invitation_status", "pending")
+      .single();
+
+    if (error) return null;
+    return data;
+  } catch (error) {
+    return null;
+  }
+}
