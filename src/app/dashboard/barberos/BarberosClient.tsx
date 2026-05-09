@@ -154,7 +154,7 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
                     {b.invitation_code ? (
                       <div className="flex items-center gap-1">
                         <Button 
-                          variant="outline" 
+                          variant="secondary" 
                           size="sm" 
                           className="h-8 text-[11px] gap-1.5"
                           onClick={() => copyToClipboard(b.invitation_code, b.id)}
@@ -163,7 +163,7 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
                           Copiar Link
                         </Button>
                         <Button 
-                          variant="outline" 
+                          variant="secondary" 
                           size="sm" 
                           className="h-8 text-[11px] gap-1.5 text-success hover:text-success"
                           onClick={() => sendWhatsApp(b)}

@@ -107,7 +107,7 @@ export default function BarberInvitePage() {
             <h1 className="text-xl font-bold text-text-primary">Invitación Inválida</h1>
             <p className="text-sm text-text-tertiary">Este link no es válido o ya fue usado. Pídele a tu dueño que te envíe uno nuevo.</p>
           </div>
-          <Button variant="outline" className="w-full" onClick={() => router.push('/')}>Volver al Inicio</Button>
+          <Button variant="secondary" className="w-full" onClick={() => router.push('/')}>Volver al Inicio</Button>
         </Card>
       </div>
     );

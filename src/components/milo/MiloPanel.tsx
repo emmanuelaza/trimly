@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronLeft, MessageCircle, ArrowRight, ExternalLink } from 'lucide-react';
 import miloImg from '@/assets/milo.png';
+import { Button } from '@/components/ui/RedesignComponents';
 
 const SECTIONS = [
   { id: 'dashboard', label: 'Dashboard', icon: '📊', color: '#A8E063' },
@@ -174,7 +175,7 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
 
                   <div className="pt-8 space-y-3">
                     <Button 
-                      variant="outline" 
+                      variant="secondary" 
                       className="w-full justify-between h-12 text-xs font-bold border-dashed"
                       onClick={handleBack}
                     >
@@ -189,7 +190,7 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
             <div className="p-6 border-t border-border bg-background-secondary/30">
               <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-3 text-center">¿No encontraste lo que buscabas?</p>
               <Button 
-                variant="outline" 
+                variant="secondary" 
                 className="w-full gap-2 border-[#A8E063]/30 text-text-primary hover:bg-[#A8E063]/5 hover:border-[#A8E063]"
                 onClick={() => window.open('https://wa.me/573000000000?text=Hola, tengo una duda sobre Trimly: ', '_blank')}
               >

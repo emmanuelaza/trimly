@@ -196,7 +196,7 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
         </div>
 
         <div className="flex gap-3 pt-6 border-t border-border">
-          <Button variant="outline" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
           <Button className="flex-1 gap-2" onClick={handleSave} disabled={isSaving}>
             {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
             Guardar Esquema

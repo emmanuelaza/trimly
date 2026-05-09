@@ -4,6 +4,23 @@ import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
 
+interface Barber {
+  id: string;
+  name: string;
+  avatar_url?: string;
+  barber_payment_schemes?: any[];
+  barber_service_rates?: any[];
+}
+
+interface NominaAppointment {
+  id: string;
+  barber_id: string;
+  service_id: string;
+  price: number | string;
+  status: string;
+  date: string;
+}
+
 export async function getBarberPaymentScheme(barberId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -136,8 +153,8 @@ export async function getPayrollData(period: { start: string, end: string }) {
     if (pError) throw pError;
 
     // Calculate liquidation for each barber
-    const liquidation = barbers.map(barber => {
-      const barberAppointments = appointments?.filter(a => a.barber_id === barber.id) || [];
+    const liquidation = (barbers as Barber[]).map((barber: Barber) => {
+      const barberAppointments = (appointments as NominaAppointment[])?.filter((a: NominaAppointment) => a.barber_id === barber.id) || [];
       const scheme = barber.barber_payment_schemes?.[0];
       const serviceRates = barber.barber_service_rates || [];
 
@@ -145,20 +162,20 @@ export async function getPayrollData(period: { start: string, end: string }) {
       let amountBarber = 0;
 
       if (scheme?.type === 'percentage') {
-        amountGenerated = barberAppointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
         amountBarber = (amountGenerated * (Number(scheme.percentage) || 0)) / 100;
       } else if (scheme?.type === 'fixed_monthly') {
-        amountGenerated = barberAppointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
         amountBarber = Number(scheme.fixed_amount) || 0; // Should probably be pro-rated if period is not a month, but user didn't specify. I'll stick to full amount for now.
       } else if (scheme?.type === 'fixed_per_service') {
-        amountGenerated = barberAppointments.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
-        amountBarber = barberAppointments.reduce((sum, a) => {
-          const rate = serviceRates.find(r => r.service_id === a.service_id);
+        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
+        amountBarber = barberAppointments.reduce((sum: number, a: NominaAppointment) => {
+          const rate = serviceRates.find((r: any) => r.service_id === a.service_id);
           return sum + (Number(rate?.fixed_amount) || 0);
         }, 0);
       }
 
-      const payment = payments?.find(p => p.barber_id === barber.id);
+      const payment = payments?.find((p: any) => p.barber_id === barber.id);
 
       return {
         barber,

@@ -3,6 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 
+interface Appointment {
+  id: string;
+  status: string;
+  price: number | string;
+  service_id: string;
+  date: string;
+  [key: string]: any;
+}
+
 export async function getBarberDashboardData() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -46,15 +55,15 @@ export async function getBarberDashboardData() {
     .lte("date", monthEnd);
 
   // Calculate earnings
-  const calculateEarnings = (apps: any[]) => {
+  const calculateEarnings = (apps: Appointment[]) => {
     const scheme = barber.barber_payment_schemes?.[0];
     const rates = barber.barber_service_rates || [];
 
     if (scheme?.type === 'percentage') {
-      const total = apps.reduce((sum, a) => sum + (Number(a.price) || 0), 0);
+      const total = apps.reduce((sum: number, a: Appointment) => sum + (Number(a.price) || 0), 0);
       return (total * (Number(scheme.percentage) || 0)) / 100;
     } else if (scheme?.type === 'fixed_per_service') {
-      return apps.reduce((sum, a) => {
+      return apps.reduce((sum: number, a: Appointment) => {
         const rate = rates.find((r: any) => r.service_id === a.service_id);
         return sum + (Number(rate?.fixed_amount) || 0);
       }, 0);
@@ -67,8 +76,8 @@ export async function getBarberDashboardData() {
     return 0;
   };
 
-  const earningsToday = calculateEarnings(todayAppointments?.filter(a => a.status === 'completed') || []);
-  const earningsMonth = calculateEarnings(monthAppointments || []);
+  const earningsToday = calculateEarnings((todayAppointments as Appointment[])?.filter((a: Appointment) => a.status === 'completed') || []);
+  const earningsMonth = calculateEarnings((monthAppointments as Appointment[]) || []);
 
   return {
     barber,

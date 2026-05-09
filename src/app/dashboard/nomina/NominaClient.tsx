@@ -109,7 +109,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
         <div className="flex items-center gap-2 bg-background-secondary px-3 py-2 rounded-xl border border-border">
           <Calendar size={16} className="text-text-tertiary" />
           <span className="text-xs font-medium text-text-secondary">{period.start} — {period.end}</span>
-          <Button variant="outline" size="sm" className="h-7 text-[10px] px-2 ml-2">Cambiar</Button>
+          <Button variant="secondary" size="sm" className="h-7 text-[10px] px-2 ml-2">Cambiar</Button>
         </div>
       </div>
 
@@ -135,7 +135,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
               label="Total Generado" 
               value={`$${(totalToPay + totalPaid).toLocaleString()}`} 
               icon={FileText} 
-              color="primary"
+              color="accent"
             />
             <StatCard 
               label="Top Barbero" 
@@ -188,7 +188,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
                       <td className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button 
-                            variant="outline" 
+                            variant="secondary" 
                             size="sm" 
                             className="h-8 text-[11px]"
                             onClick={() => {
@@ -222,7 +222,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
         <Card className="p-0 overflow-hidden">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <h3 className="text-sm font-bold text-text-primary">Registro Histórico</h3>
-            <Button variant="outline" size="sm" className="gap-2" onClick={exportToCSV}>
+            <Button variant="secondary" size="sm" className="gap-2" onClick={exportToCSV}>
               <Download size={14} /> Exportar CSV
             </Button>
           </div>

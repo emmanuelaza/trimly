@@ -45,7 +45,7 @@ export default function BarberDashboardClient({ initialData }: any) {
           label="Citas Hoy" 
           value={initialData.stats.appointmentsToday} 
           icon={Calendar} 
-          color="primary"
+          color="accent"
         />
         <StatCard 
           label="Ganancia Hoy" 
