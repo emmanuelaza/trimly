@@ -54,7 +54,7 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
       toast.success('Link de invitación generado');
       router.refresh();
     } else {
-      toast.error('Error al generar invitación');
+      toast.error(result.error || 'Error al generar invitación');
     }
   };
 

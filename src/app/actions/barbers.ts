@@ -105,15 +105,25 @@ export async function generateInvitationLink(barberId: string) {
     const supabase = await createClient();
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
     
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from("barbers")
       .update({ 
         invitation_code: code,
         invitation_status: 'pending'
-      })
+      }, { count: 'exact' })
       .eq("id", barberId);
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error generating invitation code:", error);
+      if (error.code === '42703') {
+        return { success: false, error: "Faltan columnas en la base de datos (invitation_code). Ejecuta el SQL de migraciones." };
+      }
+      return { success: false, error: error.message };
+    }
+
+    if (count === 0) {
+      return { success: false, error: "No se encontró el barbero o no tienes permisos." };
+    }
 
     revalidatePath("/dashboard/equipo");
     return { success: true, code };
