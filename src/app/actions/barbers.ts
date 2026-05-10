@@ -148,3 +148,29 @@ export async function getBarberByCode(code: string) {
     return null;
   }
 }
+
+export async function linkBarberAccount(barberId: string, userId: string, email: string) {
+  try {
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from("barbers")
+      .update({
+        user_id: userId,
+        invitation_status: 'accepted',
+        email: email
+      })
+      .eq("id", barberId);
+
+    if (error) {
+      console.error("Error linking barber account:", error);
+      return { success: false, error: error.message };
+    }
+
+    revalidatePath("/barber/dashboard");
+    revalidatePath("/dashboard/equipo");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}

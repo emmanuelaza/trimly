@@ -36,6 +36,8 @@ export default function BarberInvitePage() {
     fetchBarber();
   }, [code]);
 
+  const [isRedirecting, setIsRedirecting] = useState(false);
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.password !== formData.confirmPassword) {
@@ -68,23 +70,28 @@ export default function BarberInvitePage() {
         return;
       }
 
-      // 2. Link barber record to the new user and mark as accepted
-      const { error: updateError } = await supabase
-        .from('barbers')
-        .update({
-          user_id: authData.user?.id,
-          invitation_status: 'accepted',
-          email: formData.email
-        })
-        .eq('id', barber.id);
+      const userId = authData.user?.id;
+      if (!userId) {
+        toast.error('Error al crear el usuario. Intenta de nuevo.');
+        return;
+      }
 
-      if (updateError) {
-        toast.error('Error al vincular cuenta: ' + updateError.message);
+      // 2. Link barber record using Server Action (bypasses some client-side RLS issues)
+      const { linkBarberAccount } = await import('@/app/actions/barbers');
+      const linkResult = await linkBarberAccount(barber.id, userId, formData.email);
+
+      if (!linkResult.success) {
+        toast.error('Error al vincular cuenta: ' + linkResult.error);
         return;
       }
 
       toast.success('¡Cuenta creada correctamente!');
-      router.push('/barber/dashboard');
+      setIsRedirecting(true);
+      
+      // Pequeño delay para asegurar que las cookies se propaguen antes de la redirección
+      setTimeout(() => {
+        router.push('/barber/dashboard');
+      }, 1500);
     });
   };
 
@@ -173,14 +180,20 @@ export default function BarberInvitePage() {
               />
             </div>
 
-            <Button type="submit" className="w-full h-12 text-sm font-bold gap-2 group" disabled={isPending}>
-              {isPending ? <Loader2 size={18} className="animate-spin" /> : (
+            <Button type="submit" className="w-full h-12 text-sm font-bold gap-2 group" disabled={isPending || isRedirecting}>
+              {isPending ? <Loader2 size={18} className="animate-spin" /> : 
+               isRedirecting ? <Loader2 size={18} className="animate-spin" /> : (
                 <>
                   Crear mi cuenta 
                   <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </Button>
+            {isRedirecting && (
+              <p className="text-[10px] text-center text-accent animate-pulse font-bold uppercase tracking-widest">
+                Sincronizando sesión... entrando al dashboard
+              </p>
+            )}
           </form>
         </Card>
 

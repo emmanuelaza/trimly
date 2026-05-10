@@ -33,8 +33,16 @@ export default function LoginPage() {
       return;
     }
 
+    const { data: { user } } = await supabase.auth.getUser();
+    const role = user?.user_metadata?.role;
+
     toast.success("Bienvenido de nuevo");
-    router.push("/dashboard");
+    
+    if (role === 'barber') {
+      router.push("/barber/dashboard");
+    } else {
+      router.push("/dashboard");
+    }
     router.refresh();
   };
 
