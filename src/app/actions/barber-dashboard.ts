@@ -18,8 +18,8 @@ export async function getBarberDashboardData() {
 
   if (!user) return null;
 
-  // Get barber record
-  const { data: barber, error: bError } = await supabase
+  // Get barber record - Try by user_id first
+  let { data: barber, error: bError } = await supabase
     .from("barbers")
     .select(`
       *,
@@ -28,9 +28,38 @@ export async function getBarberDashboardData() {
       barber_service_rates(service_id, fixed_amount)
     `)
     .eq("user_id", user.id)
-    .single();
+    .maybeSingle();
 
-  if (bError || !barber) return null;
+  // FALLBACK: If not found by user_id, try by email (self-healing)
+  if (!barber && !bError) {
+    console.log("Barber not found by user_id, trying email fallback for:", user.email);
+    const { data: barberByEmail } = await supabase
+      .from("barbers")
+      .select(`
+        *,
+        barbershops(name),
+        barber_payment_schemes(type, percentage, fixed_amount),
+        barber_service_rates(service_id, fixed_amount)
+      `)
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (barberByEmail) {
+      console.log("Found barber by email, linking user_id...");
+      // Auto-link for future visits
+      await supabase
+        .from("barbers")
+        .update({ user_id: user.id, invitation_status: 'accepted' })
+        .eq("id", barberByEmail.id);
+      
+      barber = barberByEmail;
+    }
+  }
+
+  if (bError || !barber) {
+    console.error("Barber record still not found after fallback. User ID:", user.id, "Email:", user.email);
+    return null;
+  }
 
   const today = startOfDay(new Date()).toISOString();
   const todayEnd = endOfDay(new Date()).toISOString();

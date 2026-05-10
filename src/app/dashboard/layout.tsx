@@ -23,6 +23,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // TAREA: Verificar si el usuario tiene barbershop, si no, crearlo automáticamente
   const barbershopId = await getBarbershopId();
 
+  if (!barbershopId) {
+    if (user.user_metadata?.role === 'barber') {
+      redirect('/barber/dashboard');
+    }
+    // Si no es barbero y no tiene barbershop, el getBarbershopId falló o algo raro pasó
+    redirect('/onboarding');
+  }
+
   const negocio = user.user_metadata?.negocio || "Barbería";
 
   // Fetch data needed for the global new-appointment modal

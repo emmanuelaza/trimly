@@ -44,8 +44,19 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // 2. Control de Acceso por Suscripción y Onboarding
-    if (user && (path.startsWith('/dashboard') || path === '/onboarding')) {
+    // 2. Control de Acceso por Rol, Suscripción y Onboarding
+    if (user && (path.startsWith('/dashboard') || path.startsWith('/barber') || path === '/onboarding')) {
+      const role = user.user_metadata?.role;
+
+      // Si es Barbero, no debe estar en /dashboard ni en /onboarding
+      if (role === 'barber') {
+        if (path.startsWith('/dashboard') || path === '/onboarding') {
+          return NextResponse.redirect(new URL('/barber/dashboard', request.url))
+        }
+        return response; // Permitir acceso a /barber/*
+      }
+
+      // Lógica para Dueños (propietarios de barbershops)
       const { data: barbershop } = await supabase
         .from('barbershops')
         .select('subscription_status, trial_ends_at, onboarding_completed')
@@ -71,7 +82,7 @@ export async function middleware(request: NextRequest) {
           }
         }
       } else {
-        // Si no hay barbería y está en dashboard, forzar onboarding
+        // Si no hay barbería y no es barbero, forzar onboarding si intenta entrar al dashboard
         if (path.startsWith('/dashboard')) {
           return NextResponse.redirect(new URL('/onboarding', request.url))
         }

@@ -14,7 +14,12 @@ export async function getBarbershopId() {
     .single();
 
   if (error || !barbershop) {
-    // Si no existe, lo creamos automáticamente
+    // Solo creamos automáticamente si el usuario es un dueño (owner)
+    // Los barberos no deben crear barbershops automáticamente
+    if (user.user_metadata?.role === 'barber') {
+      return null;
+    }
+
     const defaultName = 'Mi Barbería';
     const randomSuffix = Math.random().toString(36).substring(2, 7);
     const { data: newBarbershop, error: createError } = await supabase
@@ -30,7 +35,7 @@ export async function getBarbershopId() {
 
     if (createError) {
       console.error("Error creating barbershop fallback:", createError);
-      throw new Error("No se pudo crear la barbería automáticamente");
+      return null;
     }
 
     return newBarbershop.id;
