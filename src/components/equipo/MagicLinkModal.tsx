@@ -95,7 +95,7 @@ export function MagicLinkModal({ isOpen, onClose, barberName, accessLink }: Magi
               Enviar por WhatsApp
             </Button>
             <Button 
-              variant="outline" 
+              variant="secondary" 
               className="h-12 rounded-2xl font-bold gap-2 w-full border-border-strong"
               onClick={handleCopy}
             >

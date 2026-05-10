@@ -61,7 +61,7 @@ export default function BarberDashboardPage() {
           </p>
         </div>
         <Button 
-          variant="outline" 
+          variant="ghost" 
           size="sm" 
           className="gap-2 border-border-strong text-text-secondary hover:text-danger"
           onClick={logout}

@@ -1,11 +1,38 @@
-import { getBarberDashboardData } from '@/app/actions/barber-dashboard';
-import { redirect } from 'next/navigation';
-import { Card, StatCard, Badge, Avatar } from '@/components/ui/RedesignComponents';
-import { Wallet, CheckCircle2, Clock, Calendar } from 'lucide-react';
+'use client'
 
-export default async function BarberGananciasPage() {
-  const data = await getBarberDashboardData();
-  if (!data) redirect('/login');
+import React, { useEffect, useState } from 'react';
+import { getBarberDashboardDataByToken } from '@/app/actions/barber-dashboard';
+import { useBarberSession } from '@/hooks/useBarberSession';
+import { Card, StatCard, Badge } from '@/components/ui/RedesignComponents';
+import { Wallet, Clock } from 'lucide-react';
+
+export default function BarberGananciasPage() {
+  const { session, loading } = useBarberSession();
+  const [data, setData] = useState<any>(null);
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    if (session) {
+      setIsFetching(true);
+      getBarberDashboardDataByToken(session.barberId, session.token).then(result => {
+        setData(result);
+        setIsFetching(false);
+      });
+    }
+  }, [session]);
+
+  if (loading || (session && !data && isFetching)) return (
+    <div className="min-h-screen flex items-center justify-center bg-background-primary">
+      <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!session || !data) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-background-primary">
+      <h1 className="text-xl font-bold">Acceso requerido</h1>
+      <p className="text-text-secondary text-sm mt-2">Usa tu link de acceso para entrar.</p>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
@@ -50,7 +77,6 @@ export default async function BarberGananciasPage() {
                   <td className="px-6 py-4 text-sm font-medium text-text-primary">{app.client_name || 'Cliente'}</td>
                   <td className="px-6 py-4 text-xs text-text-tertiary">{app.service_name}</td>
                   <td className="px-6 py-4 text-sm font-bold text-accent text-right">
-                    {/* Simplified calculation for display */}
                     ${(Number(app.price) * (Number(data.barber.barber_payment_schemes?.[0]?.percentage) || 0) / 100).toLocaleString()}
                   </td>
                 </tr>

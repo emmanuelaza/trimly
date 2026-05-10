@@ -151,7 +151,7 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
                           {!activeToken ? (
                             <Badge variant="outline" className="text-[10px] py-0 opacity-50">Sin acceso</Badge>
                           ) : isExpired ? (
-                            <Badge variant="destructive" className="text-[10px] py-0">Expirado</Badge>
+                            <Badge variant="danger" className="text-[10px] py-0">Expirado</Badge>
                           ) : !hasUsed ? (
                             <Badge variant="warning" className="text-[10px] py-0">Pendiente</Badge>
                           ) : (

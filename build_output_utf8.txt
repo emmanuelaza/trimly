@@ -1,0 +1,23 @@
+﻿
+> trimly@0.1.0 build
+> next build
+
+node.exe : ÔÜá Invalid next.config.ts options detected: 
+En línea: 1 Carácter: 1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\emman\AppData\Roaming\ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (ÔÜá Invalid nex...ions detected: :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+ÔÜá     Unrecognized key(s) in object: 'serverComponentsExternalPackages' at "experimental"
+ÔÜá See more info here: https://nextjs.org/docs/messages/invalid-next-config
+ÔÜá `experimental.serverComponentsExternalPackages` has been moved to `serverExternalPackages`. Please update your 
+next.config.ts file accordingly.
+Ô¿» Another next build process is already running.
+
+  This could be:
+  - A next build still in progress
+  - A previous build that didn't exit cleanly
+
+  Suggestion: Wait for the build to complete.
+

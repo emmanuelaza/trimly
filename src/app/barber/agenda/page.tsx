@@ -1,11 +1,38 @@
-import { getBarberDashboardData } from '@/app/actions/barber-dashboard';
-import { redirect } from 'next/navigation';
+'use client'
+
+import React, { useEffect, useState } from 'react';
+import { getBarberDashboardDataByToken } from '@/app/actions/barber-dashboard';
+import { useBarberSession } from '@/hooks/useBarberSession';
 import { Card } from '@/components/ui/RedesignComponents';
 import { Calendar as CalendarIcon } from 'lucide-react';
 
-export default async function BarberAgendaPage() {
-  const data = await getBarberDashboardData();
-  if (!data) redirect('/login');
+export default function BarberAgendaPage() {
+  const { session, loading } = useBarberSession();
+  const [data, setData] = useState<any>(null);
+  const [isFetching, setIsFetching] = useState(false);
+
+  useEffect(() => {
+    if (session) {
+      setIsFetching(true);
+      getBarberDashboardDataByToken(session.barberId, session.token).then(result => {
+        setData(result);
+        setIsFetching(false);
+      });
+    }
+  }, [session]);
+
+  if (loading || (session && !data && isFetching)) return (
+    <div className="min-h-screen flex items-center justify-center bg-background-primary">
+      <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+
+  if (!session) return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-background-primary">
+      <h1 className="text-xl font-bold">Acceso requerido</h1>
+      <p className="text-text-secondary text-sm mt-2">Usa tu link de acceso para entrar.</p>
+    </div>
+  );
 
   return (
     <div className="space-y-8">
