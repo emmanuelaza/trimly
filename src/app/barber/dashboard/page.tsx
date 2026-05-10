@@ -3,7 +3,12 @@ import BarberDashboardClient from './BarberDashboardClient';
 import { redirect } from 'next/navigation';
 
 export default async function BarberDashboardPage() {
-  const data = await getBarberDashboardData();
+  let data = null;
+  try {
+    data = await getBarberDashboardData();
+  } catch (error) {
+    console.error("Critical error in BarberDashboardPage:", error);
+  }
 
   if (!data) {
     redirect('/login');

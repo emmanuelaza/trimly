@@ -41,7 +41,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: bShop } = await supabase.from('barbershops').select('subscription_status, trial_ends_at').eq('id', barbershopId).maybeSingle();
   const isTrial = bShop?.subscription_status === 'trialing';
-  const trialDaysLeft = isTrial ? Math.ceil((new Date(bShop.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
+  const trialDaysLeft = (isTrial && bShop?.trial_ends_at) 
+    ? Math.ceil((new Date(bShop.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) 
+    : 0;
 
   const { data: sub } = await supabase
     .from('subscriptions')

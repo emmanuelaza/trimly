@@ -7,17 +7,31 @@ export async function getBarbershopId() {
   
   if (!user) throw new Error('No autenticado');
 
+  // Intentamos obtener la barbería. Usamos maybeSingle para evitar que lance error si no hay nada.
+  // Si por alguna razón hay varias (error de duplicación previo), tomamos la primera.
   const { data: barbershop, error } = await supabase
     .from('barbershops')
     .select('id')
     .eq('owner_id', user.id)
-    .single();
+    .limit(1)
+    .maybeSingle();
 
-  if (error || !barbershop) {
+  if (!barbershop) {
     // Solo creamos automáticamente si el usuario es un dueño (owner)
     // Los barberos no deben crear barbershops automáticamente
     if (user.user_metadata?.role === 'barber') {
       return null;
+    }
+
+    // Antes de crear, verificamos si realmente no existe ninguna (doble check)
+    const { data: existing } = await supabase
+      .from('barbershops')
+      .select('id')
+      .eq('owner_id', user.id)
+      .limit(1);
+    
+    if (existing && existing.length > 0) {
+      return existing[0].id;
     }
 
     const defaultName = 'Mi Barbería';

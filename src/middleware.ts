@@ -61,6 +61,7 @@ export async function middleware(request: NextRequest) {
         .from('barbershops')
         .select('subscription_status, trial_ends_at, onboarding_completed')
         .eq('owner_id', user.id)
+        .limit(1)
         .maybeSingle()
 
       if (barbershop) {
