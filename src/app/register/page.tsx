@@ -176,7 +176,7 @@ export default function RegisterPage() {
 
             <div className="pt-4 text-center">
               <p className="text-sm text-text-secondary">
-                ¿Ya tienes cuenta? <Link href="/auth/login" className="text-accent font-bold hover:underline">Inicia sesión aquí</Link>
+                ¿Ya tienes cuenta? <Link href="/login" className="text-accent font-bold hover:underline">Inicia sesión aquí</Link>
               </p>
             </div>
           </form>

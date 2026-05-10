@@ -293,7 +293,7 @@ const StickyCTA = () => {
     )}>
       <div className="flex flex-col gap-3">
         <p className="text-xs font-bold text-text-primary text-center uppercase tracking-widest hidden sm:block">¿Listo para digitalizar tu barbería?</p>
-        <Link href="/auth/register">
+        <Link href="/register">
           <Button className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20">
             Comenzar gratis →
           </Button>
@@ -355,7 +355,7 @@ export default function LandingPage() {
         </div>
 
         <div className="flex items-center gap-4">
-          <Link href="/auth/register" className="hidden sm:block">
+          <Link href="/register" className="hidden sm:block">
             <Button size="sm">Comenzar gratis</Button>
           </Link>
           <button 
@@ -425,13 +425,13 @@ export default function LandingPage() {
           {/* CTA block */}
           <div className="px-4 pb-10 pt-4 border-t border-border/40 space-y-3 relative">
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
-            <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)}>
+            <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
               <Button size="lg" className="w-full h-12 text-base font-black uppercase shadow-lg shadow-accent/20">
                 Comenzar gratis →
               </Button>
             </Link>
             <Link
-              href="/auth/login"
+              href="/login"
               onClick={() => setMobileMenuOpen(false)}
               className="block text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2"
             >
@@ -462,7 +462,7 @@ export default function LandingPage() {
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-4 animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-300">
-                <Link href="/auth/register" className="w-full sm:w-auto">
+                <Link href="/register" className="w-full sm:w-auto">
                   <Button size="lg" className="w-full h-14 md:h-16 px-6 md:px-10 text-lg md:text-xl font-black group shadow-2xl shadow-accent/20">
                     Empieza gratis hoy <ArrowRight size={22} className="transition-transform group-hover:translate-x-1.5" />
                   </Button>
@@ -671,7 +671,7 @@ export default function LandingPage() {
             </div>
 
             <div className="text-center">
-              <Link href="/auth/register" className="w-full sm:w-auto inline-block">
+              <Link href="/register" className="w-full sm:w-auto inline-block">
                 <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base md:text-xl font-black uppercase tracking-widest group">
                   Quiero trabajar con Trimly <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
@@ -759,7 +759,7 @@ export default function LandingPage() {
                 ))}
               </ul>
 
-              <Link href="/auth/register">
+              <Link href="/register">
                 <Button size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-wider group shadow-xl shadow-accent/20">
                   Crear mi página gratis <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
                 </Button>

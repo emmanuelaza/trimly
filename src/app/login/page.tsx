@@ -102,7 +102,7 @@ export default function LoginPage() {
 
             <div className="pt-4 text-center">
               <p className="text-sm text-text-secondary">
-                ¿No tienes cuenta? <Link href="/auth/register" className="text-accent font-bold hover:underline">Crea una gratis</Link>
+                ¿No tienes cuenta? <Link href="/register" className="text-accent font-bold hover:underline">Crea una gratis</Link>
               </p>
             </div>
           </form>
