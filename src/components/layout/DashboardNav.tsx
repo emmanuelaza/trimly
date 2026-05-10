@@ -22,6 +22,11 @@ import {
   X,
   BarChart3,
   Wallet,
+  ShoppingBag,
+  Tag,
+  Star,
+  Building2,
+  Gift
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 
@@ -30,12 +35,19 @@ const mainNavItems = [
   { href: '/dashboard/agenda', label: 'Agenda', icon: Calendar },
   { href: '/dashboard/clientes', label: 'Clientes', icon: Users },
   { href: '/dashboard/servicios', label: 'Servicios', icon: Scissors },
-  { href: '/dashboard/nomina', label: 'Nómina', icon: Wallet, badge: 'Nuevo' },
-  { href: '/dashboard/equipo', label: 'Equipo', icon: UserCircle },
-  { href: '/dashboard/pagina', label: 'Mi página', icon: TrendingUp },
+  { href: '/dashboard/productos', label: 'Productos', icon: ShoppingBag },
+  { href: '/dashboard/nomina', label: 'Nómina', icon: Wallet },
+  { href: '/dashboard/cupones', label: 'Cupones', icon: Tag },
+  { href: '/dashboard/resenas', label: 'Reseñas', icon: Star },
+  { href: '/dashboard/reportes', label: 'Reportes', icon: BarChart3 },
+  { href: '/dashboard/metricas', label: 'Métricas', icon: TrendingUp, filoProOnly: true },
 ];
 
 const secondaryNavItems = [
+  { href: '/dashboard/sedes', label: 'Sedes', icon: Building2 },
+  { href: '/dashboard/referidos', label: 'Referidos', icon: Gift, badge: 'Nuevo' },
+  { href: '/dashboard/equipo', label: 'Equipo', icon: UserCircle },
+  { href: '/dashboard/pagina', label: 'Mi página', icon: TrendingUp },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
 
@@ -45,9 +57,17 @@ const sectionTooltips: Record<string, string> = {
   '/dashboard': 'Aquí ves el resumen de tu día',
   '/dashboard/agenda': 'Todas tus citas organizadas por hora',
   '/dashboard/clientes': 'La base de datos de tu barbería',
-  '/dashboard/nomina': 'Controla los pagos a tus barberos',
   '/dashboard/servicios': 'Los servicios que ofreces',
+  '/dashboard/productos': 'Controla tu inventario y ventas',
+  '/dashboard/nomina': 'Controla los pagos a tus barberos',
+  '/dashboard/cupones': 'Descuentos para tus clientes',
+  '/dashboard/resenas': 'Opiniones de tus clientes',
+  '/dashboard/reportes': 'Exporta tus datos a PDF o Excel',
+  '/dashboard/metricas': 'Estadísticas y alertas inteligentes',
+  '/dashboard/sedes': 'Gestiona tus diferentes locales',
+  '/dashboard/referidos': 'Programa de referidos',
   '/dashboard/equipo': 'Gestiona a tu equipo de trabajo',
+  '/dashboard/pagina': 'Tu página de reservas pública',
   '/dashboard/configuracion': 'Personaliza tu barbería'
 };
 
