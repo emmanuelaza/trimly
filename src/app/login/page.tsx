@@ -34,15 +34,49 @@ export default function LoginPage() {
     }
 
     const { data: { user } } = await supabase.auth.getUser();
-    const role = user?.user_metadata?.role;
-
-    toast.success("Bienvenido de nuevo");
-    
-    if (role === 'barber') {
-      router.push("/barber/dashboard");
-    } else {
-      router.push("/dashboard");
+    if (!user) {
+      toast.error("Error al obtener datos del usuario");
+      setIsLoading(false);
+      return;
     }
+
+    const userId = user.id;
+
+    // 1. ¿Es Dueño?
+    const { data: barbershop } = await supabase
+      .from('barbershops')
+      .select('id, onboarding_completed')
+      .eq('owner_id', userId)
+      .maybeSingle();
+
+    if (barbershop) {
+      toast.success("Bienvenido de nuevo");
+      if (!barbershop.onboarding_completed) {
+        router.push('/onboarding');
+      } else {
+        router.push('/dashboard');
+      }
+      router.refresh();
+      return;
+    }
+
+    // 2. ¿Es Barbero?
+    const { data: barber } = await supabase
+      .from('barbers')
+      .select('id')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (barber) {
+      toast.success("Bienvenido, Barbero");
+      router.push("/barber/dashboard");
+      router.refresh();
+      return;
+    }
+
+    // 3. Sin rol definido (asumimos dueño nuevo)
+    toast.success("Bienvenido");
+    router.push("/onboarding");
     router.refresh();
   };
 
