@@ -71,7 +71,7 @@ export async function updateBarberPaymentScheme(barberId: string, type: string, 
 
     if (error) throw error;
     
-    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/equipo");
     revalidatePath("/dashboard/nomina");
     return { success: true };
   } catch (error: any) {

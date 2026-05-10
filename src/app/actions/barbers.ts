@@ -52,7 +52,7 @@ export async function createBarber(formData: FormData) {
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/equipo");
     revalidatePath("/dashboard/configuracion");
     return { success: true };
   } catch (error: any) {
@@ -77,7 +77,7 @@ export async function updateBarber(id: string, formData: FormData) {
 
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/equipo");
     revalidatePath("/dashboard/configuracion");
     return { success: true };
   } catch (error: any) {
@@ -92,7 +92,7 @@ export async function deleteBarber(id: string) {
     
     if (error) return { success: false, error: error.message };
 
-    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/equipo");
     revalidatePath("/dashboard/configuracion");
     return { success: true };
   } catch (error: any) {
@@ -115,7 +115,7 @@ export async function generateInvitationLink(barberId: string) {
 
     if (error) throw error;
 
-    revalidatePath("/dashboard/barberos");
+    revalidatePath("/dashboard/equipo");
     return { success: true, code };
   } catch (error: any) {
     return { success: false, error: error.message };
