@@ -1,19 +1,38 @@
 "use client";
 
 import React, { useTransition, useState } from 'react';
-import { Plus, Trash2, UserCheck, Wallet, Share2, MessageCircle, Copy, Check } from 'lucide-react';
+import { 
+  Plus, 
+  Trash2, 
+  UserCheck, 
+  Wallet, 
+  Link2, 
+  ShieldAlert, 
+  MessageCircle, 
+  Copy, 
+  Check, 
+  ShieldOff 
+} from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
-import { createBarber, deleteBarber, generateInvitationLink } from '@/app/actions/barbers';
+import { 
+  createBarber, 
+  deleteBarber, 
+  generateBarberTokenAction, 
+  revokeBarberTokenAction 
+} from '@/app/actions/barbers';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { BarberPaymentSchemeModal } from '@/components/nomina/BarberPaymentSchemeModal';
+import { MagicLinkModal } from '@/components/equipo/MagicLinkModal';
 
 export default function BarberosClient({ initialBarberos, services }: { initialBarberos: any[], services: any[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [selectedBarber, setSelectedBarber] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isMagicModalOpen, setIsMagicModalOpen] = useState(false);
+  const [generatedLink, setGeneratedLink] = useState('');
+  const [magicBarberName, setMagicBarberName] = useState('');
 
   const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
 
@@ -48,28 +67,33 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
     });
   };
 
-  const handleInvite = async (id: string) => {
-    const result = await generateInvitationLink(id);
-    if (result.success) {
-      toast.success('Link de invitación generado');
-      router.refresh();
-    } else {
-      toast.error(result.error || 'Error al generar invitación');
-    }
+  const handleGenerateToken = async (barber: any) => {
+    startTransition(async () => {
+      const result = await generateBarberTokenAction(barber.id);
+      if (result.success && result.token) {
+        const link = `${window.location.origin}/barber/access/${result.token}`;
+        setGeneratedLink(link);
+        setMagicBarberName(barber.name);
+        setIsMagicModalOpen(true);
+        toast.success('Acceso generado con éxito');
+      } else {
+        toast.error('Error al generar el acceso');
+      }
+    });
   };
 
-  const copyToClipboard = (code: string, id: string) => {
-    const link = `https://trimlyapp-phi.vercel.app/invite/${code}`;
-    navigator.clipboard.writeText(link);
-    setCopiedId(id);
-    toast.success('Link copiado al portapapeles');
-    setTimeout(() => setCopiedId(null), 2000);
-  };
+  const handleRevoke = async (barber: any) => {
+    if (!confirm(`¿Revocar el acceso de ${barber.name}? El link actual dejará de funcionar inmediatamente.`)) return;
 
-  const sendWhatsApp = (barber: any) => {
-    const link = `https://trimlyapp-phi.vercel.app/invite/${barber.invitation_code}`;
-    const message = encodeURIComponent(`Hola ${barber.name}, te invito a Trimly para que puedas ver tus citas y ganancias desde tu celular. Regístrate aquí: ${link}`);
-    window.open(`https://wa.me/${barber.phone?.replace(/\+/g, '')}?text=${message}`, '_blank');
+    startTransition(async () => {
+      const result = await revokeBarberTokenAction(barber.id);
+      if (result.success) {
+        toast.success('Acceso revocado');
+        router.refresh();
+      } else {
+        toast.error('Error al revocar acceso');
+      }
+    });
   };
 
   return (
@@ -110,93 +134,110 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
                <p className="text-sm text-text-secondary">No hay miembros registrados aún.</p>
             </div>
           )}
-          {initialBarberos.map((b: any) => (
-            <Card key={b.id} className="group hover:border-border-strong transition-all overflow-hidden relative">
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <Avatar initials={getInitials(b.name)} className="w-12 h-12 bg-accent-muted text-accent" />
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <p className="text-base font-semibold text-text-primary">{b.name}</p>
-                        {b.invitation_status === 'accepted' ? (
-                          <Badge variant="success" className="text-[10px] py-0">Activo</Badge>
-                        ) : (
-                          <Badge variant="outline" className="text-[10px] py-0 opacity-50">Sin registrar</Badge>
-                        )}
+          {initialBarberos.map((b: any) => {
+            const activeToken = b.barber_tokens?.[0];
+            const isExpired = activeToken && new Date(activeToken.expires_at) < new Date();
+            const hasUsed = activeToken?.last_used_at;
+
+            return (
+              <Card key={b.id} className="group hover:border-border-strong transition-all overflow-hidden relative">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar initials={getInitials(b.name)} className="w-12 h-12 bg-accent-muted text-accent" />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-base font-semibold text-text-primary">{b.name}</p>
+                          {!activeToken ? (
+                            <Badge variant="outline" className="text-[10px] py-0 opacity-50">Sin acceso</Badge>
+                          ) : isExpired ? (
+                            <Badge variant="destructive" className="text-[10px] py-0">Expirado</Badge>
+                          ) : !hasUsed ? (
+                            <Badge variant="warning" className="text-[10px] py-0">Pendiente</Badge>
+                          ) : (
+                            <Badge variant="success" className="text-[10px] py-0">Activo</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-text-tertiary">
+                          {activeToken && hasUsed ? `Última entrada: ${new Date(activeToken.last_used_at).toLocaleDateString()}` : 'Barbero Profesional'}
+                        </p>
                       </div>
-                      <p className="text-xs text-text-tertiary">Barbero Profesional</p>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <button 
+                        onClick={() => {
+                          setSelectedBarber(b);
+                          setIsModalOpen(true);
+                        }}
+                        className="p-2 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-xl transition-colors"
+                        title="Configurar Esquema de Pago"
+                      >
+                        <Wallet size={18} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(b.id)}
+                        className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors"
+                      >
+                        <Trash2 size={18} />
+                      </button>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => {
-                        setSelectedBarber(b);
-                        setIsModalOpen(true);
-                      }}
-                      className="p-2 text-text-tertiary hover:text-accent hover:bg-accent/10 rounded-xl transition-colors"
-                      title="Configurar Esquema de Pago"
-                    >
-                      <Wallet size={18} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(b.id)}
-                      className="p-2 text-text-tertiary hover:text-danger hover:bg-danger-bg rounded-xl transition-colors"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                  <div className="flex items-center gap-2">
-                    {b.invitation_code ? (
-                      <div className="flex items-center gap-1">
+                  <div className="flex items-center justify-between pt-4 border-t border-border/50">
+                    <div className="flex items-center gap-2">
+                      {activeToken && !isExpired ? (
+                        <div className="flex items-center gap-2">
+                          <Button 
+                            variant="secondary" 
+                            size="sm" 
+                            className="h-8 text-[11px] gap-1.5"
+                            onClick={() => {
+                              setGeneratedLink(`${window.location.origin}/barber/access/${activeToken.token}`);
+                              setMagicBarberName(b.name);
+                              setIsMagicModalOpen(true);
+                            }}
+                          >
+                            <Link2 size={12} />
+                            Reenviar Acceso
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-8 text-[11px] text-danger hover:text-danger hover:bg-danger-bg"
+                            onClick={() => handleRevoke(b)}
+                          >
+                            <ShieldOff size={12} />
+                            Revocar
+                          </Button>
+                        </div>
+                      ) : (
                         <Button 
                           variant="secondary" 
                           size="sm" 
                           className="h-8 text-[11px] gap-1.5"
-                          onClick={() => copyToClipboard(b.invitation_code, b.id)}
+                          onClick={() => handleGenerateToken(b)}
+                          disabled={isPending}
                         >
-                          {copiedId === b.id ? <Check size={12} /> : <Copy size={12} />}
-                          Copiar Link
+                          <Link2 size={12} />
+                          {isExpired ? 'Renovar acceso' : 'Generar acceso'}
                         </Button>
-                        <Button 
-                          variant="secondary" 
-                          size="sm" 
-                          className="h-8 text-[11px] gap-1.5 text-success hover:text-success"
-                          onClick={() => sendWhatsApp(b)}
-                        >
-                          <MessageCircle size={12} />
-                          WhatsApp
-                        </Button>
+                      )}
+                    </div>
+
+                    {b.payment_scheme && (
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">Pago:</span>
+                        <Badge variant="outline" className="text-[10px] capitalize">
+                          {b.payment_scheme.type.replace('_', ' ')}
+                        </Badge>
                       </div>
-                    ) : (
-                      <Button 
-                        variant="secondary" 
-                        size="sm" 
-                        className="h-8 text-[11px] gap-1.5"
-                        onClick={() => handleInvite(b.id)}
-                      >
-                        <Share2 size={12} />
-                        Invitar a Trimly
-                      </Button>
                     )}
                   </div>
-
-                  {b.payment_scheme && (
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-text-tertiary uppercase font-bold tracking-wider">Pago:</span>
-                      <Badge variant="outline" className="text-[10px] capitalize">
-                        {b.payment_scheme.type.replace('_', ' ')}
-                      </Badge>
-                    </div>
-                  )}
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            );
+          })}
         </div>
       </div>
 
@@ -213,6 +254,13 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
           initialRates={selectedBarber.barber_service_rates}
         />
       )}
+
+      <MagicLinkModal 
+        isOpen={isMagicModalOpen}
+        onClose={() => setIsMagicModalOpen(false)}
+        barberName={magicBarberName}
+        accessLink={generatedLink}
+      />
     </div>
   );
 }

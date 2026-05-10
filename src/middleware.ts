@@ -39,8 +39,9 @@ export async function middleware(request: NextRequest) {
     const url = new URL(request.url)
     const path = url.pathname
 
-    // 1. Proteger Dashboard y Barber (Auth)
-    if (!user && (path.startsWith('/dashboard') || path.startsWith('/barber')) && path !== '/dashboard/billing') {
+    // 1. Proteger Dashboard (Solo Dueños necesitan Auth de Supabase)
+    // El sistema de barberos ahora usa Links Mágicos y localStorage, no Supabase Auth
+    if (!user && path.startsWith('/dashboard') && path !== '/dashboard/billing') {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 

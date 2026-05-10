@@ -12,14 +12,26 @@ interface Appointment {
   [key: string]: any;
 }
 
-export async function getBarberDashboardData() {
+export async function getBarberDashboardDataByToken(barberId: string, token: string) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  // VALIDAR TOKEN ANTES DE ENTREGAR DATA
+  const { data: tokenValid } = await supabase
+    .from('barber_tokens')
+    .select('id')
+    .eq('barber_id', barberId)
+    .eq('token', token)
+    .eq('is_active', true)
+    .gte('expires_at', new Date().toISOString())
+    .maybeSingle();
 
-  // Get barber record - Try by user_id first
-  let { data: barber, error: bError } = await supabase
+  if (!tokenValid) {
+    console.error("Attempted access with invalid or expired token for barber:", barberId);
+    return null;
+  }
+
+  // Get barber record
+  const { data: barber, error: bError } = await supabase
     .from("barbers")
     .select(`
       *,
@@ -27,39 +39,10 @@ export async function getBarberDashboardData() {
       barber_payment_schemes(type, percentage, fixed_amount),
       barber_service_rates(service_id, fixed_amount)
     `)
-    .eq("user_id", user.id)
+    .eq("id", barberId)
     .maybeSingle();
 
-  // FALLBACK: If not found by user_id, try by email (self-healing)
-  if (!barber && !bError) {
-    console.log("Barber not found by user_id, trying email fallback for:", user.email);
-    const { data: barberByEmail } = await supabase
-      .from("barbers")
-      .select(`
-        *,
-        barbershops(name),
-        barber_payment_schemes(type, percentage, fixed_amount),
-        barber_service_rates(service_id, fixed_amount)
-      `)
-      .eq("email", user.email)
-      .maybeSingle();
-
-    if (barberByEmail) {
-      console.log("Found barber by email, linking user_id...");
-      // Auto-link for future visits
-      await supabase
-        .from("barbers")
-        .update({ user_id: user.id, invitation_status: 'accepted' })
-        .eq("id", barberByEmail.id);
-      
-      barber = barberByEmail;
-    }
-  }
-
-  if (bError || !barber) {
-    console.error("Barber record still not found after fallback. User ID:", user.id, "Email:", user.email);
-    return null;
-  }
+  if (bError || !barber) return null;
 
   const today = startOfDay(new Date()).toISOString();
   const todayEnd = endOfDay(new Date()).toISOString();
@@ -97,9 +80,6 @@ export async function getBarberDashboardData() {
         return sum + (Number(rate?.fixed_amount) || 0);
       }, 0);
     } else if (scheme?.type === 'fixed_monthly') {
-      // For dashboard "Today/Month" we probably want to show a portion or the whole thing?
-      // Usually "earnings" in dashboard means variable. But user didn't specify.
-      // I'll return the monthly fixed for the month view.
       return Number(scheme.fixed_amount) || 0;
     }
     return 0;

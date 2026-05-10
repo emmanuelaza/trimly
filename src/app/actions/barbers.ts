@@ -10,10 +10,12 @@ export async function getBarbers() {
     if (!barbershopId) return [];
 
     const supabase = await createClient();
+    // Traemos barberos y sus tokens activos
     const { data, error } = await supabase
       .from("barbers")
-      .select("*")
+      .select("*, barber_tokens(*)")
       .eq("barbershop_id", barbershopId)
+      .eq("barber_tokens.is_active", true)
       .order("created_at", { ascending: true });
 
     if (error) {
@@ -46,9 +48,8 @@ export async function createBarber(formData: FormData) {
       email: email || null
     }).select().single();
 
-    console.log('BARBER INSERT result:', data);
     if (error) {
-      console.error('Supabase barber insert error:', error.message, error.details, error.hint);
+      console.error('Supabase barber insert error:', error.message);
       return { success: false, error: error.message };
     }
 
@@ -100,33 +101,66 @@ export async function deleteBarber(id: string) {
   }
 }
 
-export async function generateInvitationLink(barberId: string) {
+export async function generateBarberTokenAction(barberId: string) {
   try {
+    const barbershopId = await getBarbershopId();
+    if (!barbershopId) return { success: false, error: "No se encontró el ID de la barbería" };
+
     const supabase = await createClient();
-    const code = Math.random().toString(36).substring(2, 10).toUpperCase();
-    
-    const { error, count } = await supabase
-      .from("barbers")
-      .update({ 
-        invitation_code: code,
-        invitation_status: 'pending'
-      }, { count: 'exact' })
-      .eq("id", barberId);
+
+    // 1. Generar token único de 32 caracteres
+    const token = Array.from(
+      crypto.getRandomValues(new Uint8Array(24))
+    ).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7);
+
+    // 2. Desactivar token anterior si existe
+    await supabase
+      .from('barber_tokens')
+      .update({ is_active: false })
+      .eq('barber_id', barberId)
+      .eq('is_active', true);
+
+    // 3. Crear nuevo token
+    const { data, error } = await supabase
+      .from('barber_tokens')
+      .insert({
+        barber_id: barberId,
+        barbershop_id: barbershopId,
+        token,
+        expires_at: expiresAt.toISOString(),
+        is_active: true
+      })
+      .select()
+      .single();
 
     if (error) {
-      console.error("Error generating invitation code:", error);
-      if (error.code === '42703') {
-        return { success: false, error: "Faltan columnas en la base de datos (invitation_code). Ejecuta el SQL de migraciones." };
-      }
+      console.error("Error generating token:", error);
       return { success: false, error: error.message };
     }
 
-    if (count === 0) {
-      return { success: false, error: "No se encontró el barbero o no tienes permisos." };
-    }
+    revalidatePath("/dashboard/equipo");
+    return { success: true, token: data.token };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function revokeBarberTokenAction(barberId: string) {
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from('barber_tokens')
+      .update({ is_active: false })
+      .eq('barber_id', barberId)
+      .eq('is_active', true);
+
+    if (error) return { success: false, error: error.message };
 
     revalidatePath("/dashboard/equipo");
-    return { success: true, code };
+    return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
   }
