@@ -16,7 +16,10 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
     notFound();
   }
 
-  const isFiloPro = barbershop.subscription_status === 'trialing' || barbershop.plan === 'pro';
+  const isFiloPro = !barbershop.subscription_status ||
+    barbershop.subscription_status === 'trialing' ||
+    barbershop.subscription_status === 'active' ||
+    barbershop.plan === 'pro';
 
   if (!isFiloPro) {
     return (
