@@ -183,7 +183,7 @@ export async function getSales(periodo: string = 'hoy') {
       *,
       products(nombre, categoria),
       barbers(name),
-      appointments(client_name)
+      appointments(id, clients(name))
     `)
     .eq('barbershop_id', barbershopId)
     .gte('created_at', dateFilter.toISOString())
@@ -213,19 +213,30 @@ export async function getAppointmentsToday() {
     const supabase = await createClient();
     const barbershopId = await getBarbershopId();
     if (!barbershopId) return [];
-    
+
     const today = new Date();
-    today.setHours(0,0,0,0);
+    today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const { data } = await supabase
       .from('appointments')
-      .select('id, client_name, time')
+      .select('id, scheduled_at, clients(name)')
       .eq('barbershop_id', barbershopId)
-      .gte('date', today.toISOString())
-      .lt('date', tomorrow.toISOString())
-      .order('time', { ascending: true });
-      
-    return data || [];
+      .gte('scheduled_at', today.toISOString())
+      .lt('scheduled_at', tomorrow.toISOString())
+      .in('status', ['confirmed', 'pending'])
+      .order('scheduled_at', { ascending: true });
+
+    if (!data) return [];
+
+    return data.map((a: any) => ({
+      id: a.id,
+      client_name: a.clients?.name || 'Cliente',
+      time: new Date(a.scheduled_at).toLocaleTimeString('es-CO', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      })
+    }));
 }

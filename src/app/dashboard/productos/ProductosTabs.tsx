@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/RedesignComponents';
 import { Button } from '@/components/ui/Button';
 import { CrearProductoModal } from '@/components/productos/CrearProductoModal';
@@ -103,8 +103,8 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
                     </td>
                     <td className="px-6 py-4 text-sm font-medium text-text-primary">
                       {sale.products?.nombre}
-                      {sale.appointments?.client_name && (
-                        <span className="block text-xs text-text-tertiary font-normal mt-0.5">Cita: {sale.appointments.client_name}</span>
+                      {(sale.appointments as any)?.clients?.name && (
+                        <span className="block text-xs text-text-tertiary font-normal mt-0.5">Cita: {(sale.appointments as any).clients.name}</span>
                       )}
                     </td>
                     <td className="px-6 py-4 text-sm text-text-secondary">{sale.cantidad}</td>
