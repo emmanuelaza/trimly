@@ -49,6 +49,17 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
     );
   } catch (error) {
     console.error("Error in BookingPage:", error);
-    notFound();
+    return (
+      <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-8 text-center">
+        <div className="text-5xl mb-6">✂️</div>
+        <h1 className="text-xl font-bold text-text-primary">
+          No pudimos cargar la página
+        </h1>
+        <p className="text-text-secondary text-sm mt-3 max-w-xs leading-relaxed">
+          Ocurrió un error al cargar la información de esta barbería.
+          Por favor intenta de nuevo en unos minutos.
+        </p>
+      </div>
+    );
   }
 }
