@@ -18,7 +18,7 @@ export function MiloButton() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+      <div className="fixed bottom-24 right-4 md:bottom-6 md:right-6 z-50 flex flex-col items-end gap-3">
         <AnimatePresence>
           {showTooltip && !isOpen && (
             <motion.div 
