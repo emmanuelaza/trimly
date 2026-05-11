@@ -8,11 +8,17 @@ const getSupabase = () => createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
+// Server-side reads that must bypass RLS (public booking page)
+const getAdminSupabase = () => createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 /**
  * Fetch barbershop by slug
  */
 export async function getBarbershopBySlug(slug: string) {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getAdminSupabase()
     .from("barbershops")
     .select("*")
     .eq("slug", slug)
@@ -59,7 +65,7 @@ export async function getBarbershopPlan(barbershopId: string) {
  * Fetch services for a barbershop
  */
 export async function getServicesByBarbershop(barbershopId: string) {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getAdminSupabase()
     .from("services")
     .select("*")
     .eq("barbershop_id", barbershopId)
@@ -73,7 +79,7 @@ export async function getServicesByBarbershop(barbershopId: string) {
  * Fetch barbers for a barbershop
  */
 export async function getBarbersByBarbershop(barbershopId: string) {
-  const { data, error } = await getSupabase()
+  const { data, error } = await getAdminSupabase()
     .from("barbers")
     .select("*")
     .eq("barbershop_id", barbershopId)

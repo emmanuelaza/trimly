@@ -6,7 +6,9 @@
       "Bash(find src/pages/barber -type f)",
       "Bash(cat middleware.ts)",
       "Bash(cat src/middleware.ts)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(cat src/app/actions/utils.ts)",
+      "Bash(cat src/lib/getBarbershopId.ts)"
     ]
   }
 }
