@@ -9,10 +9,16 @@ import { MiloPanel } from './MiloPanel';
 export function MiloButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
-  const [hasNewMessage, setHasNewMessage] = useState(true);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setShowTooltip(true), 3000);
+    const alreadySeen = localStorage.getItem('milo_tooltip_seen');
+    if (alreadySeen) return;
+    setHasNewMessage(true);
+    const timer = setTimeout(() => {
+      setShowTooltip(true);
+      localStorage.setItem('milo_tooltip_seen', '1');
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -38,6 +44,7 @@ export function MiloButton() {
             setIsOpen(true);
             setHasNewMessage(false);
             setShowTooltip(false);
+            localStorage.setItem('milo_tooltip_seen', '1');
           }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
