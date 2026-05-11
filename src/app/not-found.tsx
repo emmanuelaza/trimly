@@ -13,10 +13,10 @@ export default function NotFound() {
         La página que buscas no existe o fue movida.
       </p>
       <Link
-        href="/"
+        href="/dashboard"
         className="mt-8 px-5 py-2.5 bg-accent text-background-primary text-sm font-semibold rounded-lg hover:bg-accent-hover transition-colors"
       >
-        Volver al inicio
+        Volver al panel
       </Link>
     </div>
   );
