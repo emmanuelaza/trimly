@@ -1,10 +1,12 @@
 'use client'
 
 import React from 'react';
+import Image from 'next/image';
 import { useBarberSession } from '@/hooks/useBarberSession';
 import BarberDashboardClient from './BarberDashboardClient';
 import { LogOut, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/RedesignComponents';
+import miloImg from '@/assets/milo.png';
 
 export default function BarberDashboardPage() {
   const { session, loading, logout } = useBarberSession();
@@ -32,14 +34,30 @@ export default function BarberDashboardPage() {
   )
 
   if (!session) return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-8 text-center bg-background-primary">
-      <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center mb-6 text-4xl">
-        🔒
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-8 text-center max-w-sm mx-auto">
+      <div className="relative w-20 h-20 mb-4 opacity-80">
+        <Image src={miloImg} alt="Milo" fill className="object-contain" />
       </div>
-      <h1 className="text-2xl font-bold text-text-primary tracking-tight">Acceso requerido</h1>
-      <p className="text-text-secondary text-sm mt-3 max-w-xs leading-relaxed">
-        Necesitas un link de acceso válido para entrar a tu panel. 
-        Pídele al dueño de tu barbería que te envíe uno por WhatsApp.
+
+      <h1 className="text-xl font-bold">
+        Necesitas tu link de acceso
+      </h1>
+
+      <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
+        Para entrar a tu panel necesitas el link que te envió el dueño de la barbería.
+        Búscalo en tus mensajes de WhatsApp.
+      </p>
+
+      <div className="mt-6 p-4 bg-muted/50 rounded-xl text-sm text-muted-foreground text-left w-full">
+        <p className="font-semibold text-foreground mb-1">¿Cómo acceder?</p>
+        <p>1. Busca el mensaje de WhatsApp del dueño de tu barbería</p>
+        <p className="mt-1">2. Toca el link que te enviaron</p>
+        <p className="mt-1">3. Entra directo a tu panel</p>
+      </div>
+
+      <p className="text-xs text-muted-foreground mt-6">
+        ¿No tienes el link? Pídele al dueño de tu barbería que te lo envíe desde
+        Trimly → Equipo → Generar acceso
       </p>
     </div>
   )
