@@ -3,6 +3,7 @@
 import React, { useState, useTransition } from 'react';
 import { Plus, UserPlus, Search, ChevronRight } from 'lucide-react';
 import { Card, Input, Button, Avatar, Badge } from '@/components/ui/RedesignComponents';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { createClient, deleteClient } from '@/app/actions/clients';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -85,9 +86,20 @@ export default function ClientesClient({ initialClientes }: { initialClientes: a
       {/* List */}
       <div className="grid grid-cols-1 gap-3">
         {filteredClientes.length === 0 ? (
-          <div className="py-20 border border-dashed border-border rounded-xl flex flex-col items-center justify-center text-center">
-            <p className="text-sm text-text-tertiary">No hay clientes registrados.</p>
-          </div>
+          <EmptyState
+            icon="👥"
+            title={searchTerm ? 'Sin resultados' : 'Todavía no tienes clientes'}
+            description={
+              searchTerm
+                ? `No encontramos clientes que coincidan con "${searchTerm}".`
+                : 'Cuando alguien reserve desde tu página pública, aparecerán aquí.'
+            }
+            action={
+              searchTerm
+                ? undefined
+                : { label: 'Ver mi página pública', href: '/dashboard/pagina' }
+            }
+          />
         ) : (
           filteredClientes.map((c: any) => (
             <Link key={c.id} href={`/dashboard/clientes/${c.id}`} className="group block">

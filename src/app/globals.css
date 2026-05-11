@@ -3,6 +3,7 @@
 
 @theme {
   /* ─── BACKGROUNDS ────────────────────────────── */
+  --color-background:           #0A0A0F;
   --color-background-primary:   #0A0A0F;
   --color-background-secondary: #111118;
   --color-background-tertiary:  #18181F;

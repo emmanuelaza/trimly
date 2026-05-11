@@ -7,6 +7,7 @@ import { CrearProductoModal } from '@/components/productos/CrearProductoModal';
 import { VentaModal } from '@/components/productos/VentaModal';
 import { ProductoCard } from '@/components/productos/ProductoCard';
 import { Plus } from 'lucide-react';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 export function ProductosTabs({ products, sales, barbers, appointments }: any) {
   const [activeTab, setActiveTab] = useState('catalogo');
@@ -74,8 +75,13 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
             />
           ))}
           {products.length === 0 && (
-            <div className="col-span-full py-12 text-center text-text-tertiary">
-              <p>No tienes productos registrados aún.</p>
+            <div className="col-span-full">
+              <EmptyState
+                icon="🛍️"
+                title="Sin productos en el catálogo"
+                description="Agrega los productos que vendes en tu barbería para gestionarlos aquí."
+                action={{ label: 'Agregar primer producto', onClick: handleOpenCrearModal }}
+              />
             </div>
           )}
         </div>
