@@ -20,10 +20,10 @@ export default async function ProductosPage() {
   ]);
 
   // Calcular métricas
-  const ingresosHoy = sales.reduce((acc, sale) => acc + Number(sale.total), 0);
-  
+  const ingresosHoy = sales.reduce((acc: number, sale: any) => acc + Number(sale.total), 0);
+
   // Producto más vendido
-  const salesByProduct = sales.reduce((acc: any, sale) => {
+  const salesByProduct = sales.reduce((acc: any, sale: any) => {
     acc[sale.product_id] = (acc[sale.product_id] || 0) + sale.cantidad;
     return acc;
   }, {});
@@ -36,11 +36,11 @@ export default async function ProductosPage() {
       mostSoldId = id;
     }
   }
-  const mostSoldProduct = mostSoldId ? products.find(p => p.id === mostSoldId) : null;
-  const mostSoldText = mostSoldProduct ? `${mostSoldProduct.nombre} (${maxSold})` : 'Ninguno hoy';
+  const mostSoldProduct = mostSoldId ? products.find((p: any) => p.id === mostSoldId) : null;
+  const mostSoldText = mostSoldProduct ? `${(mostSoldProduct as any).nombre} (${maxSold})` : 'Ninguno hoy';
 
   // Productos con stock bajo (<= 5)
-  const lowStockCount = products.filter(p => p.activo && p.stock <= 5).length;
+  const lowStockCount = products.filter((p: any) => p.activo && p.stock <= 5).length;
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -69,7 +69,7 @@ export default async function ProductosPage() {
           label="Productos con stock bajo" 
           value={lowStockCount.toString()} 
           icon={AlertCircle} 
-          color={lowStockCount > 0 ? "danger" : "default"} 
+          color={lowStockCount > 0 ? "danger" : "neutral"} 
         />
       </div>
 
