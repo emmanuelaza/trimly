@@ -25,6 +25,11 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
+  // Access/token pages are full-screen — skip the nav shell
+  if (pathname.startsWith('/barber/access')) {
+    return <>{children}</>;
+  }
+
   const NavItem = ({ item, onClick }: { item: any, onClick?: () => void }) => {
     const isActive = pathname === item.href;
     return (

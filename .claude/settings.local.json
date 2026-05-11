@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(find src/app/barber -type f)",
+      "Bash(find src/pages/barber -type f)",
+      "Bash(cat middleware.ts)",
+      "Bash(cat src/middleware.ts)",
+      "Bash(npm run *)"
     ]
   }
 }
