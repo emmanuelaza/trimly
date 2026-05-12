@@ -20,7 +20,7 @@ export function TrimlyLogo({
   const content = (
     <div className={cn('flex items-center gap-2.5', className)}>
       <Image
-        src="/logo-icon.svg"
+        src="/logo_trimly-removebg-preview.png"
         alt="Trimly"
         width={size}
         height={size}

@@ -568,7 +568,7 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="bg-primary rounded-3xl px-8 py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 text-center md:text-left">
-            <img src="/logo-icon.svg" alt="Trimly" width={56} height={56} className="mx-auto md:mx-0 mb-4" />
+            <img src="/logo_trimly-removebg-preview.png" alt="Trimly" width={56} height={56} className="mx-auto md:mx-0 mb-4" />
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
               Tu barbería puede ser<br />la próxima historia de éxito
             </h2>
