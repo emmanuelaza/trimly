@@ -186,8 +186,13 @@ export default function BillingClient({ barbershop, currentPlanId }: BillingClie
     setLoading(planId);
 
     if (planId === 'lifetime') {
-      // El plan lifetime es un link de pago directo
       window.open('https://mpago.li/13xDfff', '_blank');
+      setLoading(null);
+      return;
+    }
+
+    if (planId === 'filo_pro') {
+      window.open('https://www.mercadopago.com.co/subscriptions/checkout?preapproval_plan_id=565289f5973647ec8e2fdd99f34cc2c1', '_blank');
       setLoading(null);
       return;
     }
