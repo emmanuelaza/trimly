@@ -356,7 +356,7 @@ export default function LandingPage() {
         </Link>
 
         <p className="mt-4 text-xs text-text-muted flex items-center justify-center gap-3 flex-wrap">
-          <span>Gratis para siempre</span>
+          <span>Prueba gratis</span>
           <span className="w-1 h-1 rounded-full bg-border-strong inline-block" />
           <span>Sin tarjeta</span>
           <span className="w-1 h-1 rounded-full bg-border-strong inline-block" />
