@@ -1,33 +1,46 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Menu, X, ArrowRight, Check, Star, ChevronDown,
   Calendar, Bell, BarChart3, Users, ShoppingBag,
-  Clock, DollarSign, SmilePlus, TrendingUp, CreditCard, Shield, Ban,
+  Clock, DollarSign, SmilePlus, TrendingUp,
+  CreditCard, Shield, Ban, Rocket,
+  Instagram, Youtube, MessageCircle, Music2,
+  MapPin, Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo';
 import { StickyCTA } from '@/components/landing/StickyCTA';
 
+// ─── Inline assets ─────────────────────────────────────────────────────────────
+
+const ColombiaFlag = () => (
+  <svg width="18" height="13" viewBox="0 0 18 13" className="rounded-sm flex-shrink-0" aria-label="Bandera Colombia">
+    <rect width="18" height="6.5"  fill="#FCD116"/>
+    <rect y="6.5" width="18" height="3.25" fill="#003580"/>
+    <rect y="9.75" width="18" height="3.25" fill="#CE1126"/>
+  </svg>
+);
+
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
 const NAV_LINKS = [
-  { href: '#funciones', label: 'Funciones' },
-  { href: '#beneficios', label: 'Beneficios' },
+  { href: '#funciones',   label: 'Funciones' },
+  { href: '#beneficios',  label: 'Beneficios' },
   { href: '#testimonios', label: 'Testimonios' },
-  { href: '#precios', label: 'Precios' },
-  { href: '#faq', label: 'FAQ' },
+  { href: '#precios',     label: 'Precios' },
+  { href: '#faq',         label: 'FAQ' },
 ];
 
 const FEATURES = [
-  { icon: Calendar,    title: 'Agenda online 24/7',               desc: 'Tus clientes reservan a cualquier hora, desde el link de tu WhatsApp.' },
-  { icon: Bell,        title: 'Recordatorios automáticos',         desc: 'Menos ausencias, más clientes que sí llegan.' },
-  { icon: BarChart3,   title: 'Reportes claros y simples',         desc: 'Entiende tu negocio y toma mejores decisiones.' },
+  { icon: Calendar,    title: 'Agenda online 24/7',                desc: 'Tus clientes reservan a cualquier hora, desde el link de tu WhatsApp.' },
+  { icon: Bell,        title: 'Recordatorios automáticos',          desc: 'Menos ausencias, más clientes que sí llegan.' },
+  { icon: BarChart3,   title: 'Reportes claros y simples',          desc: 'Entiende tu negocio y toma mejores decisiones.' },
   { icon: Users,       title: 'Clientes y equipo en un solo lugar', desc: 'Gestiona barberos, comisiones y permisos sin enredos.' },
-  { icon: ShoppingBag, title: 'Inventario y productos',            desc: 'Controla tu stock y nunca te quedes sin lo esencial.' },
-  { icon: Star,        title: 'Reseñas y fidelización',            desc: 'Convierte cada cliente feliz en tu mejor promotor.' },
+  { icon: ShoppingBag, title: 'Inventario y productos',             desc: 'Controla tu stock y nunca te quedes sin lo esencial.' },
+  { icon: Star,        title: 'Reseñas y fidelización',             desc: 'Convierte cada cliente feliz en tu mejor promotor.' },
 ];
 
 const BENEFITS = [
@@ -50,8 +63,33 @@ const TESTIMONIALS = [
     quote: 'Desde que uso Trimly, mis ausencias bajaron un 70% y mis citas aumentaron cada semana. Es como tener un asistente que trabaja 24/7 por mi barbería.',
     name: 'Carlos M.',
     shop: 'Dueño de La Esquina Barbería',
+    location: 'Bogotá',
     stars: 5,
     initials: 'CM',
+  },
+  {
+    quote: 'Antes perdía tiempo tomando citas por WhatsApp. Con Trimly todo es automático. Mis clientes reservan solos y yo me concentro en lo que sé hacer: cortar.',
+    name: 'Andrés R.',
+    shop: 'Filo & Estilo',
+    location: 'Bogotá',
+    stars: 5,
+    initials: 'AR',
+  },
+  {
+    quote: 'Configuré Trimly en 4 minutos y ese mismo día recibí mi primera reserva online. El sistema de recordatorios redujo mis no-shows en un 80%.',
+    name: 'Diego V.',
+    shop: 'Prime Cuts',
+    location: 'Medellín',
+    stars: 5,
+    initials: 'DV',
+  },
+  {
+    quote: 'Los reportes me ayudan a entender qué servicios son más rentables. Ahora tomo mejores decisiones para mi negocio y mis ingresos aumentaron 35%.',
+    name: 'Juan P.',
+    shop: 'Black Fade',
+    location: 'Cali',
+    stars: 5,
+    initials: 'JP',
   },
 ];
 
@@ -87,11 +125,18 @@ const PLANS = [
 ];
 
 const FAQ_ITEMS = [
-  { q: '¿Necesito saber de tecnología para usar Trimly?', a: 'Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí.' },
-  { q: '¿Funciona con WhatsApp Business?', a: 'Sí. El link de reservas de Trimly funciona desde cualquier dispositivo. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras.' },
-  { q: '¿Qué pasa si mi cliente no tiene internet?', a: 'Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos.' },
-  { q: '¿Puedo cancelar cuando quiera?', a: 'Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento. Tus datos quedan disponibles para descargar por 30 días.' },
-  { q: '¿Mis datos y los de mis clientes están seguros?', a: 'Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás.' },
+  { q: '¿Necesito saber de tecnología para usar Trimly?',   a: 'Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí.' },
+  { q: '¿Funciona con WhatsApp Business?',                   a: 'Sí. El link de reservas de Trimly funciona desde cualquier dispositivo. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras.' },
+  { q: '¿Qué pasa si mi cliente no tiene internet?',         a: 'Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos.' },
+  { q: '¿Puedo cancelar cuando quiera?',                     a: 'Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento. Tus datos quedan disponibles para descargar por 30 días.' },
+  { q: '¿Mis datos y los de mis clientes están seguros?',    a: 'Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás.' },
+];
+
+const SOCIAL_LINKS = [
+  { href: '#', label: 'Instagram', Icon: Instagram },
+  { href: '#', label: 'TikTok',    Icon: Music2 },
+  { href: '#', label: 'WhatsApp',  Icon: MessageCircle },
+  { href: '#', label: 'YouTube',   Icon: Youtube },
 ];
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -130,75 +175,69 @@ function FeatureCard({ icon: Icon, title, desc }: { icon: React.ElementType; tit
 
 function DashboardMockup() {
   const appointments = [
-    { name: 'Carlos M.', time: '10:00', service: 'Corte clásico', status: 'Confirmada', color: 'bg-success text-success' },
-    { name: 'Mario G.', time: '11:30', service: 'Barba', status: 'Pendiente', color: 'bg-warning text-warning' },
-    { name: 'Juan P.', time: '13:00', service: 'Corte + Barba', status: 'Completada', color: 'bg-text-muted text-text-muted' },
+    { name: 'Carlos M.', time: '10:00', service: 'Corte clásico', status: 'Confirmada' },
+    { name: 'Mario G.',  time: '11:30', service: 'Barba',         status: 'Pendiente' },
+    { name: 'Juan P.',   time: '13:00', service: 'Corte + Barba', status: 'Completada' },
   ];
 
-  const calendarDays = ['Lun\n10', 'Mar\n11', 'Mié\n12', 'Jue\n13', 'Vie\n14', 'Sáb\n15', 'Dom\n16'];
-
-  const calendarBlocks: Record<number, { col: number; row: number; span: number; color: string }[]> = {
-    0: [{ col: 0, row: 2, span: 1, color: 'bg-primary/20' }],
-    1: [{ col: 1, row: 1, span: 2, color: 'bg-success/20' }],
-    2: [{ col: 2, row: 2, span: 1, color: 'bg-warning/20' }],
-    3: [{ col: 3, row: 3, span: 1, color: 'bg-primary/15' }],
-    4: [{ col: 4, row: 1, span: 1, color: 'bg-success/20' }, { col: 4, row: 3, span: 1, color: 'bg-primary/20' }],
-    5: [{ col: 5, row: 4, span: 1, color: 'bg-warning/15' }],
-  };
-
   const hours = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
+  const days  = ['Lun\n10', 'Mar\n11', 'Mié\n12', 'Jue\n13', 'Vie\n14', 'Sáb\n15', 'Dom\n16'];
+
+  const blocks: { col: number; row: number; color: string }[] = [
+    { col: 0, row: 1, color: 'bg-primary/20' },
+    { col: 1, row: 1, color: 'bg-success/20' },
+    { col: 1, row: 2, color: 'bg-success/15' },
+    { col: 2, row: 2, color: 'bg-warning/20' },
+    { col: 3, row: 3, color: 'bg-primary/15' },
+    { col: 4, row: 1, color: 'bg-success/20' },
+    { col: 4, row: 3, color: 'bg-primary/20' },
+    { col: 5, row: 4, color: 'bg-warning/15' },
+  ];
 
   return (
     <div className="w-full max-w-3xl mx-auto bg-white border border-border rounded-2xl shadow-lg shadow-black/8 overflow-hidden">
-      {/* Card header */}
+      {/* Header */}
       <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
         <TrimlyLogo size={24} textClassName="text-sm" />
-        <span className="ml-auto text-sm font-semibold text-text-primary">Hola, Don Pedro 👋</span>
+        <span className="ml-auto text-sm font-semibold text-text-primary">Hola, Don Pedro</span>
+        <div className="w-8 h-8 rounded-full bg-primary-bg flex items-center justify-center text-xs font-bold text-primary">DP</div>
       </div>
 
-      {/* Stats row */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-px bg-border">
         {[
-          { label: 'Ingresos hoy', value: '$187.000', sub: '↑ 12% vs ayer', subColor: 'text-success' },
-          { label: 'Citas hoy', value: '8', sub: '5 completadas', subColor: 'text-text-muted' },
-          { label: 'Clientes nuevos', value: '5', sub: '↑ 8% vs ayer', subColor: 'text-success' },
+          { label: 'Ingresos hoy', value: '$187.000', sub: '+12% vs ayer', pos: true },
+          { label: 'Citas hoy',    value: '8',        sub: '5 completadas', pos: null },
+          { label: 'Clientes nuevos', value: '5',     sub: '+8% vs ayer',  pos: true },
         ].map((s) => (
           <div key={s.label} className="bg-white px-4 py-3">
             <p className="text-[10px] text-text-muted font-medium mb-0.5">{s.label}</p>
             <p className="text-lg font-bold text-text-primary leading-none">{s.value}</p>
-            <p className={cn('text-[10px] font-medium mt-0.5', s.subColor)}>{s.sub}</p>
+            <p className={cn('text-[10px] font-medium mt-0.5', s.pos === true ? 'text-success' : 'text-text-muted')}>{s.sub}</p>
           </div>
         ))}
       </div>
 
       {/* Calendar + appointments */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] gap-0 divide-y md:divide-y-0 md:divide-x divide-border">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] divide-y md:divide-y-0 md:divide-x divide-border">
         {/* Calendar */}
         <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-text-primary">Mayo 10 - 16</span>
-          </div>
-          {/* Day headers */}
-          <div className="grid grid-cols-[44px_repeat(7,1fr)] gap-1 mb-1">
+          <p className="text-xs font-bold text-text-primary mb-3">Mayo 10 - 16</p>
+          <div className="grid grid-cols-[40px_repeat(7,1fr)] gap-0.5 mb-1">
             <div />
-            {calendarDays.map((d) => (
+            {days.map((d) => (
               <div key={d} className="text-center">
                 <p className="text-[9px] text-text-muted font-medium leading-tight whitespace-pre-line">{d}</p>
               </div>
             ))}
           </div>
-          {/* Time rows */}
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {hours.map((h, rowIdx) => (
-              <div key={h} className="grid grid-cols-[44px_repeat(7,1fr)] gap-1 items-center h-7">
-                <span className="text-[9px] text-text-muted font-mono text-right pr-2">{h}</span>
-                {calendarDays.map((_, colIdx) => {
-                  const block = Object.values(calendarBlocks).flat().find(
-                    (b) => b.col === colIdx && b.row === rowIdx
-                  );
-                  return (
-                    <div key={colIdx} className={cn('h-6 rounded', block ? block.color : '')} />
-                  );
+              <div key={h} className="grid grid-cols-[40px_repeat(7,1fr)] gap-0.5 items-center h-6">
+                <span className="text-[9px] text-text-muted font-mono text-right pr-1.5">{h}</span>
+                {days.map((_, colIdx) => {
+                  const block = blocks.find((b) => b.col === colIdx && b.row === rowIdx);
+                  return <div key={colIdx} className={cn('h-5 rounded', block ? block.color : '')} />;
                 })}
               </div>
             ))}
@@ -209,11 +248,11 @@ function DashboardMockup() {
         <div className="p-4">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-bold text-text-primary">Próximas citas</span>
-            <span className="text-[10px] text-primary cursor-pointer">Ver todas</span>
+            <span className="text-[10px] text-primary">Ver todas</span>
           </div>
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {appointments.map((apt) => (
-              <div key={apt.name} className="flex items-start gap-2.5">
+              <div key={apt.name} className="flex items-start gap-2">
                 <div className="w-7 h-7 rounded-full bg-primary-bg flex items-center justify-center text-[9px] font-bold text-primary flex-shrink-0">
                   {apt.name.split(' ').map((n) => n[0]).join('')}
                 </div>
@@ -238,11 +277,27 @@ function DashboardMockup() {
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────────────────
+// ─── Main ──────────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeTestimonial] = useState(0);
+
+  // Auto-scrolling testimonials
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+  const [fading, setFading] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFading(true);
+      setTimeout(() => {
+        setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
+        setFading(false);
+      }, 350);
+    }, 4500);
+    return () => clearInterval(interval);
+  }, []);
+
+  const t = TESTIMONIALS[activeTestimonial];
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -252,14 +307,9 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
           <TrimlyLogo href="/" size={32} textClassName="text-base" />
 
-          {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden md:flex items-center gap-0.5">
             {NAV_LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-lg transition-all"
-              >
+              <a key={l.href} href={l.href} className="px-3 py-2 text-sm text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-lg transition-all">
                 {l.label}
               </a>
             ))}
@@ -269,33 +319,20 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               Iniciar sesión
             </Link>
-            <Link
-              href="/registro"
-              className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-all shadow-sm hover:shadow-glow"
-            >
+            <Link href="/registro" className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-all shadow-sm hover:shadow-glow">
               Regístrate gratis
             </Link>
           </div>
 
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-background-tertiary text-text-secondary"
-          >
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 rounded-lg hover:bg-background-tertiary text-text-secondary">
             {mobileOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
 
-        {/* Mobile menu */}
         {mobileOpen && (
           <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-1">
             {NAV_LINKS.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-lg transition-all"
-              >
+              <a key={l.href} href={l.href} onClick={() => setMobileOpen(false)} className="block px-3 py-2.5 text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-background-tertiary rounded-lg transition-all">
                 {l.label}
               </a>
             ))}
@@ -303,11 +340,7 @@ export default function LandingPage() {
               <Link href="/login" className="block text-center py-2.5 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
                 Iniciar sesión
               </Link>
-              <Link
-                href="/registro"
-                className="flex items-center justify-center gap-2 bg-primary text-white text-sm font-bold py-3 rounded-xl hover:bg-primary-dark transition-all"
-                onClick={() => setMobileOpen(false)}
-              >
+              <Link href="/registro" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 bg-primary text-white text-sm font-bold py-3 rounded-xl hover:bg-primary-dark transition-all">
                 Regístrate gratis <ArrowRight size={16} />
               </Link>
             </div>
@@ -319,41 +352,33 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pt-16 pb-8 text-center">
         {/* Badge */}
         <div className="inline-flex items-center gap-2 bg-primary-bg text-primary text-xs font-semibold px-4 py-2 rounded-full mb-8 border border-primary/20">
-          <span>🇨🇴</span>
+          <ColombiaFlag />
           Hecho para barberos que quieren más
         </div>
 
-        {/* Headline */}
         <h1 className="text-4xl md:text-6xl font-display font-bold text-text-primary leading-[1.1] tracking-tight mb-6">
           Más reservas.<br />
           Menos ausencias.<br />
           <span className="text-primary">Más ingresos.</span>
         </h1>
 
-        {/* Subtitle */}
         <p className="max-w-xl mx-auto text-base md:text-lg text-text-secondary leading-relaxed mb-8">
           Trimly digitaliza tu barbería en minutos.<br className="hidden md:block" />
           Tus clientes reservan solos, reciben recordatorios automáticos y tú solo llegas a cortar.
         </p>
 
-        {/* CTA */}
-        <Link
-          href="/registro"
-          className="inline-flex items-center gap-2 bg-primary text-white text-base font-bold px-8 py-4 rounded-xl hover:bg-primary-dark transition-all shadow-md hover:shadow-glow"
-        >
-          Regístrate gratis <span>🚀</span>
+        <Link href="/registro" className="inline-flex items-center gap-2.5 bg-primary text-white text-base font-bold px-8 py-4 rounded-xl hover:bg-primary-dark transition-all shadow-md hover:shadow-glow">
+          Regístrate gratis <Rocket size={18} />
         </Link>
 
-        {/* Trust line */}
         <p className="mt-4 text-xs text-text-muted flex items-center justify-center gap-3 flex-wrap">
           <span>Gratis para siempre</span>
-          <span className="text-border-strong">•</span>
+          <span className="w-1 h-1 rounded-full bg-border-strong inline-block" />
           <span>Sin tarjeta</span>
-          <span className="text-border-strong">•</span>
+          <span className="w-1 h-1 rounded-full bg-border-strong inline-block" />
           <span>En 2 minutos estás listo</span>
         </p>
 
-        {/* Dashboard mockup */}
         <div className="mt-12 px-0 md:px-4">
           <DashboardMockup />
         </div>
@@ -379,18 +404,13 @@ export default function LandingPage() {
       {/* ── FEATURES ── */}
       <section id="funciones" className="max-w-6xl mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
-            Todo lo que necesitas
-          </p>
+          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Todo lo que necesitas</p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
             Un sistema. Todo bajo control.
           </h2>
         </div>
-
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {FEATURES.map((f) => (
-            <FeatureCard key={f.title} {...f} />
-          ))}
+          {FEATURES.map((f) => <FeatureCard key={f.title} {...f} />)}
         </div>
       </section>
 
@@ -398,67 +418,74 @@ export default function LandingPage() {
       <section id="beneficios" className="bg-background-secondary border-y border-border py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
-              Por qué Trimly
-            </p>
+            <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Por qué Trimly</p>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
               ¿Qué ganas al usar Trimly?
             </h2>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
             {BENEFITS.map(({ icon: Icon, title }) => (
               <div key={title} className="flex flex-col items-center text-center gap-4 p-6 rounded-2xl bg-background hover:bg-primary-bg transition-colors group">
                 <div className="w-12 h-12 rounded-xl bg-primary-bg flex items-center justify-center group-hover:bg-primary/20 transition-colors">
                   <Icon size={22} className="text-primary" />
                 </div>
-                <p className="text-sm font-semibold text-text-primary leading-snug whitespace-pre-line">{title}</p>
+                <p className="text-sm font-semibold text-text-primary leading-snug">{title}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── TESTIMONIALS ── */}
+      {/* ── TESTIMONIALS (auto-carousel) ── */}
       <section id="testimonios" className="max-w-4xl mx-auto px-4 py-16">
         <div className="text-center mb-10">
-          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">
-            Barberos que ya crecen con Trimly
-          </p>
+          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Barberos que ya crecen con Trimly</p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
             Ellos ya están viendo resultados
           </h2>
         </div>
 
-        <div className="bg-background-secondary border border-border rounded-2xl p-8 md:p-12 shadow-sm">
-          {TESTIMONIALS.map((t, i) => (
-            <div key={i} className={cn(i !== activeTestimonial && 'hidden', 'flex flex-col md:flex-row items-center gap-8')}>
-              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary-bg flex items-center justify-center text-2xl font-bold text-primary flex-shrink-0">
+        <div className="bg-background-secondary border border-border rounded-2xl p-8 md:p-12 shadow-sm overflow-hidden">
+          {/* Slide */}
+          <div className={cn('flex flex-col md:flex-row items-center gap-8 transition-opacity duration-350', fading ? 'opacity-0' : 'opacity-100')}>
+            {/* Avatar */}
+            <div className="flex-shrink-0 flex flex-col items-center gap-3">
+              <div className="w-20 h-20 rounded-full bg-primary-bg flex items-center justify-center text-2xl font-bold text-primary border-2 border-primary/20">
                 {t.initials}
               </div>
-              <div>
-                <p className="text-lg md:text-xl text-text-primary leading-relaxed mb-4">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-                <p className="font-bold text-text-primary">{t.name}</p>
-                <p className="text-sm text-primary font-medium">{t.shop}</p>
-                <div className="flex items-center gap-1 mt-2">
+              <div className="text-center">
+                <p className="font-bold text-sm text-text-primary">{t.name}</p>
+                <p className="text-xs text-primary font-medium">{t.shop}</p>
+                <div className="flex items-center justify-center gap-0.5 mt-1.5">
                   {Array.from({ length: t.stars }).map((_, j) => (
-                    <Star key={j} size={14} className="fill-warning text-warning" />
+                    <Star key={j} size={12} className="fill-warning text-warning" />
                   ))}
                 </div>
               </div>
             </div>
-          ))}
-          {/* Dots */}
+
+            {/* Quote */}
+            <div className="relative flex-1">
+              {/* Big decorative quote mark */}
+              <div className="absolute -top-4 -left-2 text-6xl font-serif text-primary/10 leading-none select-none">&ldquo;</div>
+              <p className="text-base md:text-lg text-text-primary leading-relaxed relative z-10 pt-4">
+                {t.quote}
+              </p>
+              <div className="flex items-center gap-1.5 mt-3">
+                <MapPin size={12} className="text-text-muted flex-shrink-0" />
+                <span className="text-xs text-text-muted">{t.location}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress dots */}
           <div className="flex justify-center gap-2 mt-8">
             {TESTIMONIALS.map((_, i) => (
-              <div
+              <button
                 key={i}
-                className={cn(
-                  'h-2 rounded-full transition-all',
-                  i === activeTestimonial ? 'w-6 bg-primary' : 'w-2 bg-border-strong'
-                )}
+                onClick={() => { setFading(true); setTimeout(() => { setActiveTestimonial(i); setFading(false); }, 200); }}
+                className={cn('h-2 rounded-full transition-all duration-300', i === activeTestimonial ? 'w-6 bg-primary' : 'w-2 bg-border-strong hover:bg-text-muted')}
+                aria-label={`Ver testimonio ${i + 1}`}
               />
             ))}
           </div>
@@ -476,21 +503,11 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
             {PLANS.map((plan) => (
-              <div
-                key={plan.id}
-                className={cn(
-                  'rounded-2xl p-7 flex flex-col gap-5',
-                  plan.popular
-                    ? 'bg-white border-2 border-primary shadow-lg shadow-primary/10'
-                    : 'bg-white border border-border'
-                )}
-              >
+              <div key={plan.id} className={cn('rounded-2xl p-7 flex flex-col gap-5', plan.popular ? 'bg-white border-2 border-primary shadow-lg shadow-primary/10' : 'bg-white border border-border')}>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-black text-text-muted uppercase tracking-widest">{plan.name}</span>
-                    {plan.badge && (
-                      <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>
-                    )}
+                    {plan.badge && <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>}
                   </div>
                   <p className="text-xs text-text-muted">{plan.tagline}</p>
                 </div>
@@ -509,15 +526,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                <Link
-                  href="/registro"
-                  className={cn(
-                    'flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all',
-                    plan.popular
-                      ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-glow'
-                      : 'bg-background-tertiary text-text-primary hover:bg-background-4 border border-border'
-                  )}
-                >
+                <Link href="/registro" className={cn('flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all', plan.popular ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-glow' : 'bg-background-tertiary text-text-primary hover:bg-background-4 border border-border')}>
                   Regístrate gratis
                 </Link>
               </div>
@@ -525,12 +534,12 @@ export default function LandingPage() {
           </div>
 
           {/* Trust badges */}
-          <div className="flex flex-wrap justify-center gap-6 mt-10">
+          <div className="flex flex-wrap justify-center gap-8 mt-10">
             {[
-              { icon: CreditCard, text: 'Sin tarjeta de crédito', sub: 'No te pediremos tarjeta' },
-              { icon: Shield,     text: 'Gratis para siempre',    sub: 'En el plan Básico' },
-              { icon: Ban,        text: 'Cancela cuando quieras', sub: 'Sin permanencias' },
-            ].map(({ icon: Icon, text, sub }) => (
+              { Icon: CreditCard, text: 'Sin tarjeta de crédito',       sub: 'No te pediremos tarjeta' },
+              { Icon: Shield,     text: 'Prueba gratis',                 sub: 'Con el plan Básico' },
+              { Icon: Ban,        text: 'Cancela cuando quieras',        sub: 'Sin permanencias' },
+            ].map(({ Icon, text, sub }) => (
               <div key={text} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary-bg flex items-center justify-center flex-shrink-0">
                   <Icon size={16} className="text-primary" />
@@ -551,9 +560,7 @@ export default function LandingPage() {
           <h2 className="text-3xl font-display font-bold text-text-primary">Preguntas frecuentes</h2>
         </div>
         <div className="space-y-3">
-          {FAQ_ITEMS.map((item) => (
-            <FaqItem key={item.q} {...item} />
-          ))}
+          {FAQ_ITEMS.map((item) => <FaqItem key={item.q} {...item} />)}
         </div>
       </section>
 
@@ -561,7 +568,6 @@ export default function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="bg-primary rounded-3xl px-8 py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 text-center md:text-left">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo-icon.svg" alt="Trimly" width={56} height={56} className="mx-auto md:mx-0 mb-4" />
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
               Tu barbería puede ser<br />la próxima historia de éxito
@@ -569,10 +575,7 @@ export default function LandingPage() {
             <p className="text-primary-light text-sm">Empieza hoy gratis. Sin riesgos. Sin tarjeta.</p>
           </div>
           <div className="flex flex-col items-center gap-2 flex-shrink-0">
-            <Link
-              href="/registro"
-              className="inline-flex items-center gap-2 bg-white text-primary text-sm font-bold px-8 py-4 rounded-xl hover:bg-primary-bg transition-all shadow-md"
-            >
+            <Link href="/registro" className="inline-flex items-center gap-2 bg-white text-primary text-sm font-bold px-8 py-4 rounded-xl hover:bg-primary-bg transition-all shadow-md">
               Regístrate gratis <ArrowRight size={16} />
             </Link>
             <p className="text-primary-light text-xs">En 2 minutos estás listo</p>
@@ -590,60 +593,27 @@ export default function LandingPage() {
               <p className="text-sm text-text-muted leading-relaxed max-w-xs">
                 El sistema #1 para barberías que quieren crecer.
               </p>
-              <div className="flex items-center gap-3 mt-5">
-                {[
-                  { href: '#', label: 'Instagram', icon: '📸' },
-                  { href: '#', label: 'TikTok',    icon: '🎵' },
-                  { href: '#', label: 'WhatsApp',  icon: '💬' },
-                  { href: '#', label: 'YouTube',   icon: '▶️' },
-                ].map(({ href, label, icon }) => (
-                  <a
-                    key={label}
-                    href={href}
-                    aria-label={label}
-                    className="w-9 h-9 rounded-xl bg-background-tertiary border border-border flex items-center justify-center text-base hover:bg-primary-bg hover:border-primary/30 transition-all"
-                  >
-                    {icon}
+              <div className="flex items-center gap-2.5 mt-5">
+                {SOCIAL_LINKS.map(({ href, label, Icon }) => (
+                  <a key={label} href={href} aria-label={label} className="w-9 h-9 rounded-xl bg-background-tertiary border border-border flex items-center justify-center hover:bg-primary-bg hover:border-primary/30 hover:text-primary text-text-muted transition-all">
+                    <Icon size={16} />
                   </a>
                 ))}
               </div>
             </div>
 
-            {/* Links */}
+            {/* Link columns */}
             {[
-              {
-                title: 'Producto',
-                links: [
-                  { label: 'Funciones', href: '#funciones' },
-                  { label: 'Precios', href: '#precios' },
-                  { label: 'Actualizaciones', href: '#' },
-                ],
-              },
-              {
-                title: 'Recursos',
-                links: [
-                  { label: 'Blog', href: '#' },
-                  { label: 'Guías', href: '#' },
-                  { label: 'Centro de ayuda', href: '#' },
-                ],
-              },
-              {
-                title: 'Legal',
-                links: [
-                  { label: 'Términos', href: '#' },
-                  { label: 'Privacidad', href: '#' },
-                  { label: 'Cookies', href: '#' },
-                ],
-              },
+              { title: 'Producto',  links: [{ label: 'Funciones', href: '#funciones' }, { label: 'Precios', href: '#precios' }, { label: 'Actualizaciones', href: '#' }] },
+              { title: 'Recursos',  links: [{ label: 'Blog', href: '#' }, { label: 'Guías', href: '#' }, { label: 'Centro de ayuda', href: '#' }] },
+              { title: 'Legal',     links: [{ label: 'Términos', href: '#' }, { label: 'Privacidad', href: '#' }, { label: 'Cookies', href: '#' }] },
             ].map((col) => (
               <div key={col.title}>
                 <p className="text-xs font-bold text-text-primary uppercase tracking-wider mb-4">{col.title}</p>
                 <ul className="space-y-3">
                   {col.links.map((l) => (
                     <li key={l.label}>
-                      <a href={l.href} className="text-sm text-text-muted hover:text-text-primary transition-colors">
-                        {l.label}
-                      </a>
+                      <a href={l.href} className="text-sm text-text-muted hover:text-text-primary transition-colors">{l.label}</a>
                     </li>
                   ))}
                 </ul>
@@ -654,8 +624,10 @@ export default function LandingPage() {
           {/* Bottom bar */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-3 pt-8 border-t border-border">
             <p className="text-xs text-text-muted">© 2024 Trimly. Todos los derechos reservados.</p>
-            <p className="text-xs text-text-muted">
-              Hecho en Colombia 🇨🇴 ❤️
+            <p className="flex items-center gap-1.5 text-xs text-text-muted">
+              Hecho en Colombia
+              <ColombiaFlag />
+              <Heart size={12} className="fill-red-500 text-red-500" />
             </p>
           </div>
         </div>
