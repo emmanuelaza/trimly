@@ -3,8 +3,8 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Wallet, Calendar, FileText, CheckCircle2, Clock, Download,
-  ChevronDown, ChevronUp, Banknote, Smartphone, ArrowRightLeft, CreditCard, MoreHorizontal,
+  Wallet, FileText, CheckCircle2, Clock, Download,
+  ChevronDown, ChevronUp, Banknote, Smartphone, ArrowRightLeft, CreditCard,
 } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
@@ -103,7 +103,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
   }
 
   const schemeLabel = (s: string) =>
-    s === 'porcentaje' ? 'Porcentaje' : s === 'fijo_mensual' ? 'Fijo mensual' : s === 'fijo_por_servicio' ? 'Por servicio' : 'Sin configurar'
+    s === 'percentage' ? 'Porcentaje' : s === 'fixed_monthly' ? 'Fijo mensual' : s === 'per_service' ? 'Por servicio' : 'Sin configurar'
 
   return (
     <div className="space-y-6">

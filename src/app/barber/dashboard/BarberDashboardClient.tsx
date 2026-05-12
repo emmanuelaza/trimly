@@ -186,13 +186,13 @@ export default function BarberDashboardClient({ data }: { data: BarberDashData }
               <p className="text-sm text-text-secondary">Total generado (mes)</p>
               <p className="text-sm font-bold text-text-primary">{cop(data.stats.totalGeneradoMes)}</p>
             </div>
-            {data.esquema?.tipo === 'porcentaje' && (
+            {data.esquema?.type === 'percentage' && (
               <div className="flex justify-between items-center py-4">
-                <p className="text-sm text-text-secondary">Tu parte ({data.esquema.porcentaje}%)</p>
+                <p className="text-sm text-text-secondary">Tu parte ({data.esquema.percentage}%)</p>
                 <p className="text-base font-black text-accent">{cop(data.stats.misGananciasMes)}</p>
               </div>
             )}
-            {data.esquema?.tipo === 'fijo_mensual' && (
+            {data.esquema?.type === 'fixed_monthly' && (
               <div className="flex justify-between items-center py-4">
                 <p className="text-sm text-text-secondary">Tu salario fijo mensual</p>
                 <p className="text-base font-black text-accent">{cop(data.stats.misGananciasMes)}</p>

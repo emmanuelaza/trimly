@@ -17,7 +17,7 @@ export interface BarberAppt {
 
 export interface BarberDashData {
   barber: { id: string; name: string; barbershopName: string };
-  esquema: { tipo: string; porcentaje: number | null; monto_fijo: number | null } | null;
+  esquema: { type: string; percentage: number | null; fixed_amount: number | null } | null;
   stats: {
     citasHoy: number;
     proximasCitas: number;
@@ -55,11 +55,11 @@ export async function getBarberDashboardDataByToken(
 
   if (!barber) return null;
 
-  // Payment scheme (Spanish column names)
+  // Payment scheme
   const { data: esquema } = await supabase
     .from("barber_payment_schemes")
-    .select("tipo, porcentaje, monto_fijo")
-    .eq("barbero_id", barberId)
+    .select("barber_id, type, percentage, fixed_amount")
+    .eq("barber_id", barberId)
     .maybeSingle();
 
   const now = new Date();
@@ -114,10 +114,10 @@ export async function getBarberDashboardDataByToken(
   }, 0);
 
   let misGananciasMes = 0;
-  if (esquema?.tipo === "porcentaje") {
-    misGananciasMes = totalGeneradoMes * (Number(esquema.porcentaje) || 0) / 100;
-  } else if (esquema?.tipo === "fijo_mensual") {
-    misGananciasMes = Number(esquema.monto_fijo) || 0;
+  if (esquema?.type === "percentage") {
+    misGananciasMes = totalGeneradoMes * (Number(esquema.percentage) || 0) / 100;
+  } else if (esquema?.type === "fixed_monthly") {
+    misGananciasMes = Number(esquema.fixed_amount) || 0;
   } else {
     misGananciasMes = totalGeneradoMes;
   }
@@ -134,9 +134,9 @@ export async function getBarberDashboardDataByToken(
     },
     esquema: esquema
       ? {
-          tipo: esquema.tipo,
-          porcentaje: esquema.porcentaje ? Number(esquema.porcentaje) : null,
-          monto_fijo: esquema.monto_fijo ? Number(esquema.monto_fijo) : null,
+          type: esquema.type,
+          percentage: esquema.percentage ? Number(esquema.percentage) : null,
+          fixed_amount: esquema.fixed_amount ? Number(esquema.fixed_amount) : null,
         }
       : null,
     stats: {

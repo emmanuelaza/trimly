@@ -23,8 +23,8 @@ export async function getBarberPaymentScheme(barberId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("barber_payment_schemes")
-    .select("barbero_id, tipo, porcentaje, monto_fijo")
-    .eq("barbero_id", barberId)
+    .select("barber_id, type, percentage, fixed_amount")
+    .eq("barber_id", barberId)
     .maybeSingle();
 
   if (error) {
@@ -34,13 +34,13 @@ export async function getBarberPaymentScheme(barberId: string) {
   return data;
 }
 
-export async function updateBarberPaymentScheme(barberId: string, tipo: string, porcentaje?: number, montoFijo?: number) {
+export async function updateBarberPaymentScheme(barberId: string, type: string, percentage?: number, fixedAmount?: number) {
   try {
     const supabase = await createClient();
     const { data: existing } = await supabase
       .from("barber_payment_schemes")
       .select("id")
-      .eq("barbero_id", barberId)
+      .eq("barber_id", barberId)
       .maybeSingle();
 
     let error;
@@ -48,20 +48,20 @@ export async function updateBarberPaymentScheme(barberId: string, tipo: string, 
       const { error: updateError } = await supabase
         .from("barber_payment_schemes")
         .update({
-          tipo,
-          porcentaje: tipo === 'porcentaje' ? porcentaje : null,
-          monto_fijo: tipo === 'fijo_mensual' ? montoFijo : null,
+          type,
+          percentage: type === 'percentage' ? percentage : null,
+          fixed_amount: type === 'fixed_monthly' ? fixedAmount : null,
         })
-        .eq("barbero_id", barberId);
+        .eq("barber_id", barberId);
       error = updateError;
     } else {
       const { error: insertError } = await supabase
         .from("barber_payment_schemes")
         .insert({
-          barbero_id: barberId,
-          tipo,
-          porcentaje: tipo === 'porcentaje' ? porcentaje : null,
-          monto_fijo: tipo === 'fijo_mensual' ? montoFijo : null,
+          barber_id: barberId,
+          type,
+          percentage: type === 'percentage' ? percentage : null,
+          fixed_amount: type === 'fixed_monthly' ? fixedAmount : null,
         });
       error = insertError;
     }
@@ -126,11 +126,11 @@ export async function getPayrollData(period: { start: string, end: string }) {
 
     const barberIds = (barbers ?? []).map((b: Barber) => b.id);
 
-    // Get payment schemes (separate query — FK column is barbero_id)
+    // Get payment schemes (separate query — avoids PostgREST join ambiguity)
     const { data: schemes } = await supabase
       .from("barber_payment_schemes")
-      .select("barbero_id, tipo, porcentaje, monto_fijo")
-      .in("barbero_id", barberIds);
+      .select("barber_id, type, percentage, fixed_amount")
+      .in("barber_id", barberIds);
 
     // Get per-service rates
     const { data: allServiceRates } = await supabase
@@ -162,7 +162,7 @@ export async function getPayrollData(period: { start: string, end: string }) {
     // Calculate liquidation for each barber
     const liquidation = (barbers as Barber[]).map((barber: Barber) => {
       const barberAppointments = (appointments as NominaAppointment[])?.filter((a: NominaAppointment) => a.barber_id === barber.id) || [];
-      const scheme = (schemes ?? []).find((s: any) => s.barbero_id === barber.id);
+      const scheme = (schemes ?? []).find((s: any) => s.barber_id === barber.id);
       const serviceRates = (allServiceRates ?? []).filter((r: any) => r.barber_id === barber.id);
 
       let amountGenerated = 0;
@@ -170,11 +170,11 @@ export async function getPayrollData(period: { start: string, end: string }) {
 
       amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price_charged) || 0), 0);
 
-      if (scheme?.tipo === 'porcentaje') {
-        amountBarber = (amountGenerated * (Number(scheme.porcentaje) || 0)) / 100;
-      } else if (scheme?.tipo === 'fijo_mensual') {
-        amountBarber = Number(scheme.monto_fijo) || 0;
-      } else if (scheme?.tipo === 'fijo_por_servicio') {
+      if (scheme?.type === 'percentage') {
+        amountBarber = (amountGenerated * (Number(scheme.percentage) || 0)) / 100;
+      } else if (scheme?.type === 'fixed_monthly') {
+        amountBarber = Number(scheme.fixed_amount) || 0;
+      } else if (scheme?.type === 'per_service') {
         amountBarber = barberAppointments.reduce((sum: number, a: NominaAppointment) => {
           const rate = serviceRates.find((r: any) => r.service_id === a.service_id);
           return sum + (Number(rate?.fixed_amount) || 0);
@@ -188,8 +188,8 @@ export async function getPayrollData(period: { start: string, end: string }) {
         appointmentsCount: barberAppointments.length,
         amountGenerated,
         amountBarber,
-        scheme: scheme?.tipo || 'not_configured',
-        percentage: scheme?.porcentaje,
+        scheme: scheme?.type || 'not_configured',
+        percentage: scheme?.percentage,
         status: payment?.status || 'pending',
         paymentId: payment?.id
       };

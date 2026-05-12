@@ -41,7 +41,7 @@ export default function BarberGananciasPage() {
 
   const gananciaByAppt = (price: number) => {
     if (!data.esquema) return price;
-    if (data.esquema.tipo === 'porcentaje') return price * (data.esquema.porcentaje ?? 0) / 100;
+    if (data.esquema.type === 'percentage') return price * (data.esquema.percentage ?? 0) / 100;
     return price;
   };
 
@@ -71,11 +71,11 @@ export default function BarberGananciasPage() {
         <Card>
           <div className="space-y-1">
             <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest">Tu esquema de pago</p>
-            {data.esquema.tipo === 'porcentaje' && (
-              <p className="text-sm text-text-primary">Porcentaje — <span className="font-bold text-accent">{data.esquema.porcentaje}%</span> de cada servicio</p>
+            {data.esquema.type === 'percentage' && (
+              <p className="text-sm text-text-primary">Porcentaje — <span className="font-bold text-accent">{data.esquema.percentage}%</span> de cada servicio</p>
             )}
-            {data.esquema.tipo === 'fijo_mensual' && (
-              <p className="text-sm text-text-primary">Salario fijo — <span className="font-bold text-accent">{cop(data.esquema.monto_fijo ?? 0)}</span> por mes</p>
+            {data.esquema.type === 'fixed_monthly' && (
+              <p className="text-sm text-text-primary">Salario fijo — <span className="font-bold text-accent">{cop(data.esquema.fixed_amount ?? 0)}</span> por mes</p>
             )}
           </div>
         </Card>
@@ -113,7 +113,7 @@ export default function BarberGananciasPage() {
                       {cop(appt.price_charged ?? appt.servicePrice)}
                     </td>
                     <td className="px-6 py-4 text-sm font-bold text-accent text-right tabular-nums">
-                      {data.esquema?.tipo === 'fijo_mensual'
+                      {data.esquema?.type === 'fixed_monthly'
                         ? '—'
                         : cop(gananciaByAppt(appt.price_charged ?? appt.servicePrice))}
                     </td>

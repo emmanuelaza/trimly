@@ -17,9 +17,9 @@ interface Props {
 }
 
 export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialScheme, services, initialRates }: Props) {
-  const [type, setType] = useState(initialScheme?.tipo || 'porcentaje');
-  const [percentage, setPercentage] = useState(initialScheme?.porcentaje || 50);
-  const [fixedAmount, setFixedAmount] = useState(initialScheme?.monto_fijo || 0);
+  const [type, setType] = useState(initialScheme?.type || 'percentage');
+  const [percentage, setPercentage] = useState(initialScheme?.percentage || 50);
+  const [fixedAmount, setFixedAmount] = useState(initialScheme?.fixed_amount || 0);
   const [serviceRates, setServiceRates] = useState<Record<string, number>>({});
   const [isSaving, setIsSaving] = useState(false);
 
@@ -38,7 +38,7 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
     try {
       const result = await updateBarberPaymentScheme(barber.id, type, percentage, fixedAmount);
       
-      if (type === 'fijo_por_servicio') {
+      if (type === 'per_service') {
         const ratePromises = Object.entries(serviceRates).map(([serviceId, amount]) => 
           updateBarberServiceRate(barber.id, serviceId, amount)
         );
@@ -67,62 +67,62 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
 
         <div className="grid grid-cols-1 gap-3">
           <button
-            onClick={() => setType('porcentaje')}
+            onClick={() => setType('percentage')}
             className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
-              type === 'porcentaje' 
+              type === 'percentage' 
               ? 'border-accent bg-accent/5 ring-1 ring-accent' 
               : 'border-border hover:border-border-strong bg-background-secondary/50'
             }`}
           >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'porcentaje' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'percentage' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
               <Percent size={20} />
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-bold ${type === 'porcentaje' ? 'text-text-primary' : 'text-text-secondary'}`}>Porcentaje por Servicio</p>
+              <p className={`text-sm font-bold ${type === 'percentage' ? 'text-text-primary' : 'text-text-secondary'}`}>Porcentaje por Servicio</p>
               <p className="text-xs text-text-tertiary">El barbero gana un % de cada corte que realiza.</p>
             </div>
-            {type === 'porcentaje' && <Badge variant="success">Seleccionado</Badge>}
+            {type === 'percentage' && <Badge variant="success">Seleccionado</Badge>}
           </button>
 
           <button
-            onClick={() => setType('fijo_mensual')}
+            onClick={() => setType('fixed_monthly')}
             className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
-              type === 'fijo_mensual' 
+              type === 'fixed_monthly' 
               ? 'border-accent bg-accent/5 ring-1 ring-accent' 
               : 'border-border hover:border-border-strong bg-background-secondary/50'
             }`}
           >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'fijo_mensual' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'fixed_monthly' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
               <Calendar size={20} />
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-bold ${type === 'fijo_mensual' ? 'text-text-primary' : 'text-text-secondary'}`}>Nómina Fija Mensual</p>
+              <p className={`text-sm font-bold ${type === 'fixed_monthly' ? 'text-text-primary' : 'text-text-secondary'}`}>Nómina Fija Mensual</p>
               <p className="text-xs text-text-tertiary">Un monto fijo mensual sin importar los cortes.</p>
             </div>
-            {type === 'fijo_mensual' && <Badge variant="success">Seleccionado</Badge>}
+            {type === 'fixed_monthly' && <Badge variant="success">Seleccionado</Badge>}
           </button>
 
           <button
-            onClick={() => setType('fijo_por_servicio')}
+            onClick={() => setType('per_service')}
             className={`flex items-center gap-4 p-4 rounded-xl border transition-all text-left ${
-              type === 'fijo_por_servicio' 
+              type === 'per_service' 
               ? 'border-accent bg-accent/5 ring-1 ring-accent' 
               : 'border-border hover:border-border-strong bg-background-secondary/50'
             }`}
           >
-            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'fijo_por_servicio' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${type === 'per_service' ? 'bg-accent text-background-primary' : 'bg-background-tertiary text-text-tertiary'}`}>
               <Briefcase size={20} />
             </div>
             <div className="flex-1">
-              <p className={`text-sm font-bold ${type === 'fijo_por_servicio' ? 'text-text-primary' : 'text-text-secondary'}`}>Pago Fijo por Servicio</p>
+              <p className={`text-sm font-bold ${type === 'per_service' ? 'text-text-primary' : 'text-text-secondary'}`}>Pago Fijo por Servicio</p>
               <p className="text-xs text-text-tertiary">Valor fijo para el barbero según el servicio.</p>
             </div>
-            {type === 'fijo_por_servicio' && <Badge variant="success">Seleccionado</Badge>}
+            {type === 'per_service' && <Badge variant="success">Seleccionado</Badge>}
           </button>
         </div>
 
         <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {type === 'porcentaje' && (
+          {type === 'percentage' && (
             <div className="space-y-4">
               <label className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Porcentaje de Comisión</label>
               <div className="flex items-center gap-4">
@@ -142,7 +142,7 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
             </div>
           )}
 
-          {type === 'fijo_mensual' && (
+          {type === 'fixed_monthly' && (
             <div className="space-y-4">
               <label className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Monto Fijo Mensual (COP)</label>
               <div className="relative">
@@ -158,7 +158,7 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
             </div>
           )}
 
-          {type === 'fijo_por_servicio' && (
+          {type === 'per_service' && (
             <div className="space-y-4">
               <label className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Tarifas por Servicio</label>
               <div className="border border-border rounded-xl overflow-hidden">
