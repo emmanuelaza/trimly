@@ -1,43 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { 
-  Menu, 
-  X, 
-  ArrowRight, 
-  Play, 
-  Calendar, 
-  Zap, 
-  Bot, 
-  BarChart3, 
-  UserCheck, 
-  Link2, 
-  UserPlus, 
-  Share2, 
-  Sparkles, 
-  Check, 
-  Star, 
-  Scissors, 
-  ChevronRight,
-  ChevronDown,
-  Smartphone,
-  Clock,
-  CreditCard,
-  MessageCircle,
-  TrendingUp,
-  Users
+import {
+  Menu, X, ArrowRight, Play, Calendar, Zap, Bot, BarChart3,
+  UserCheck, Link2, UserPlus, Share2, Sparkles, Check, Star,
+  Scissors, ChevronRight, ChevronDown, Smartphone, Clock,
+  CreditCard, MessageCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Avatar } from '@/components/ui/Avatar';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import { StickyCTA } from '@/components/landing/StickyCTA';
 import { cn } from '@/lib/utils';
 
-// --- Subcomponents ---
+// ─── Subcomponents ────────────────────────────────────────────────────────────
 
 const DashboardMockup = () => {
-  const { elementRef, isVisible } = useScrollReveal();
+  const { elementRef, isVisible } = useScrollReveal<HTMLDivElement>();
   const [counts, setCounts] = useState({ revenue: 0, appointments: 0, clients: 0 });
 
   useEffect(() => {
@@ -45,7 +26,6 @@ const DashboardMockup = () => {
       const duration = 2000;
       const steps = 60;
       const interval = duration / steps;
-      
       let currentStep = 0;
       const timer = setInterval(() => {
         currentStep++;
@@ -53,7 +33,7 @@ const DashboardMockup = () => {
         setCounts({
           revenue: Math.floor(progress * 187000),
           appointments: Math.floor(progress * 8),
-          clients: Math.floor(progress * 134)
+          clients: Math.floor(progress * 134),
         });
         if (currentStep === steps) clearInterval(timer);
       }, interval);
@@ -62,13 +42,12 @@ const DashboardMockup = () => {
   }, [isVisible]);
 
   return (
-    <div 
+    <div
       ref={elementRef}
       className={cn(
-        "relative w-full max-w-2xl mx-auto transition-all duration-1000 delay-400 perspective-1000 hidden md:block",
+        "relative w-full max-w-2xl mx-auto transition-all duration-1000 delay-400 hidden md:block",
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-12"
       )}
-      style={{ transform: isVisible ? "rotateY(-5deg) rotateX(2deg)" : "" }}
     >
       <div className="bg-background-secondary border border-border rounded-xl shadow-2xl shadow-accent/5 overflow-hidden">
         <div className="bg-background-tertiary border-b border-border px-4 py-3 flex items-center gap-4">
@@ -102,7 +81,7 @@ const DashboardMockup = () => {
               {[
                 { l: 'Ingresos hoy', v: `$${counts.revenue.toLocaleString()}` },
                 { l: 'Citas hoy', v: counts.appointments },
-                { l: 'Clientes activos', v: counts.clients }
+                { l: 'Clientes activos', v: counts.clients },
               ].map((stat, i) => (
                 <div key={i} className="bg-background-tertiary border border-border p-3 rounded-lg space-y-1">
                   <div className="text-[8px] uppercase tracking-wider text-text-tertiary font-bold">{stat.l}</div>
@@ -113,20 +92,20 @@ const DashboardMockup = () => {
 
             <div className="bg-background-tertiary border border-border rounded-lg p-4 h-full">
               <div className="flex justify-between mb-4 border-b border-border pb-2">
-                {['L', 'M', 'M', 'J', 'V'].map(d => (
-                  <div key={d} className="text-[10px] font-bold text-text-tertiary">{d}</div>
+                {['L', 'M', 'M', 'J', 'V'].map((d, i) => (
+                  <div key={i} className="text-[10px] font-bold text-text-tertiary">{d}</div>
                 ))}
               </div>
               <div className="grid grid-cols-5 gap-2 h-full">
                 {[1, 2, 3, 4, 5].map(col => (
                   <div key={col} className="space-y-2">
                     {[1, 2, 3].map(row => (
-                      <div 
-                        key={row} 
+                      <div
+                        key={row}
                         className={cn(
                           "h-10 rounded-md border",
-                          Math.random() > 0.5 
-                            ? "bg-accent/10 border-accent/20" 
+                          (col + row) % 2 === 0
+                            ? "bg-accent/10 border-accent/20"
                             : "bg-background-elevated/30 border-transparent"
                         )}
                       />
@@ -142,83 +121,71 @@ const DashboardMockup = () => {
   );
 };
 
-const BookingPageMockup = () => {
-  return (
-    <div className="relative w-64 mx-auto animate-float">
-      <div className="bg-background-secondary border-[8px] border-border-strong rounded-[3rem] overflow-hidden shadow-2xl relative aspect-[9/19]">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-border-strong rounded-b-2xl z-20" />
-        
-        <div className="p-4 pt-10 space-y-6">
-          <div className="text-center space-y-2">
-            <Avatar initials="BP" className="mx-auto" />
-            <div className="text-sm font-bold text-text-primary">Barbería Don Pedro</div>
-          </div>
+const BookingPageMockup = () => (
+  <div className="relative w-64 mx-auto animate-float">
+    <div className="bg-background-secondary border-[8px] border-border-strong rounded-[3rem] overflow-hidden shadow-2xl relative aspect-[9/19]">
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-7 bg-border-strong rounded-b-2xl z-20" />
 
-          <div className="space-y-2">
-            <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Servicios</div>
-            {[
-              { n: 'Corte', p: '25.000' },
-              { n: 'Barba', p: '15.000' },
-              { n: 'Corte + Barba', p: '35.000' }
-            ].map((s, i) => (
-              <div key={i} className="flex items-center justify-between p-2.5 bg-background-tertiary rounded-xl border border-border">
-                <div className="flex items-center gap-2">
-                  <div className={cn("w-3.5 h-3.5 rounded-full border border-border-strong flex items-center justify-center", i === 2 && "bg-accent border-accent")}>
-                    {i === 2 && <div className="w-1.5 h-1.5 bg-background-primary rounded-full" />}
-                  </div>
-                  <span className="text-[11px] font-medium text-text-secondary">{s.n}</span>
+      <div className="p-4 pt-10 space-y-6">
+        <div className="text-center space-y-2">
+          <Avatar initials="BP" className="mx-auto" />
+          <div className="text-sm font-bold text-text-primary">Barbería Don Pedro</div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Servicios</div>
+          {[
+            { n: 'Corte', p: '25.000' },
+            { n: 'Barba', p: '15.000' },
+            { n: 'Corte + Barba', p: '35.000' },
+          ].map((s, i) => (
+            <div key={i} className="flex items-center justify-between p-2.5 bg-background-tertiary rounded-xl border border-border">
+              <div className="flex items-center gap-2">
+                <div className={cn("w-3.5 h-3.5 rounded-full border border-border-strong flex items-center justify-center", i === 2 && "bg-accent border-accent")}>
+                  {i === 2 && <div className="w-1.5 h-1.5 bg-background-primary rounded-full" />}
                 </div>
-                <span className="text-[11px] font-mono text-text-primary">${s.p}</span>
+                <span className="text-[11px] font-medium text-text-secondary">{s.n}</span>
+              </div>
+              <span className="text-[11px] font-mono text-text-primary">${s.p}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="space-y-2">
+          <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Barbero</div>
+          <div className="flex gap-2">
+            {['Carlos', 'Andrés'].map((name, i) => (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <Avatar initials={name[0]} size="sm" className={i === 0 ? "border-accent ring-2 ring-accent/20" : ""} />
+                <span className="text-[8px] text-text-tertiary font-bold">{name}</span>
               </div>
             ))}
           </div>
-
-          <div className="space-y-2">
-            <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Barbero</div>
-            <div className="flex gap-2">
-              {['Carlos', 'Andrés'].map((name, i) => (
-                <div key={i} className="flex flex-col items-center gap-1">
-                  <Avatar initials={name[0]} size="sm" className={i === 0 ? "border-accent ring-2 ring-accent/20" : ""} />
-                  <span className="text-[8px] text-text-tertiary font-bold">{name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Día</div>
-            <div className="flex gap-1">
-              {[15, 16, 17, 18, 19].map(d => (
-                <div key={d} className={cn("flex-1 h-10 rounded-lg flex flex-col items-center justify-center text-[10px] border", d === 17 ? "bg-accent/20 border-accent/40 text-accent" : "bg-background-tertiary border-border text-text-tertiary")}>
-                  <span className="text-[7px] uppercase font-bold">May</span>
-                  <span className="font-bold">{d}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <Button className="w-full h-11 text-xs font-black uppercase tracking-widest">Confirmar reserva</Button>
         </div>
 
-        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-border-strong rounded-full" />
+        <div className="space-y-2">
+          <div className="text-[9px] font-black text-text-tertiary uppercase tracking-widest">Día</div>
+          <div className="flex gap-1">
+            {[15, 16, 17, 18, 19].map(d => (
+              <div key={d} className={cn("flex-1 h-10 rounded-lg flex flex-col items-center justify-center text-[10px] border", d === 17 ? "bg-accent/20 border-accent/40 text-accent" : "bg-background-tertiary border-border text-text-tertiary")}>
+                <span className="text-[7px] uppercase font-bold">May</span>
+                <span className="font-bold">{d}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <Button className="w-full h-11 text-xs font-black uppercase tracking-widest">Confirmar reserva</Button>
       </div>
 
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(-8px); }
-          50% { transform: translateY(0); }
-        }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
-        }
-      `}</style>
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-20 h-1 bg-border-strong rounded-full" />
     </div>
-  );
-};
+  </div>
+);
 
-const StatItem = ({ target, label, suffix = "" }: { target: string, label: string, suffix?: string }) => {
+const StatItem = ({ target, label }: { target: string; label: string }) => {
   const [count, setCount] = useState(0);
-  const { elementRef, isVisible } = useScrollReveal(0.3);
+  const { elementRef, isVisible } = useScrollReveal<HTMLDivElement>({ threshold: 0.3 });
   const hasAnimated = useRef(false);
 
   useEffect(() => {
@@ -244,66 +211,106 @@ const StatItem = ({ target, label, suffix = "" }: { target: string, label: strin
   return (
     <div ref={elementRef} className="flex flex-col items-center justify-center space-y-2 px-2 md:px-8">
       <div className="text-5xl font-black text-accent tracking-tighter">
-        {count.toLocaleString()}{suffix || target.replace(/[0-9]/g, '')}
+        {count.toLocaleString()}{target.replace(/[0-9,]/g, '')}
       </div>
       <div className="text-sm text-text-secondary font-bold uppercase tracking-widest text-center">{label}</div>
     </div>
   );
 };
 
-const FAQItem = ({ question, answer }: { question: string, answer: string }) => {
+const FAQItem = ({ question, answer }: { question: string; answer: string }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="border-b border-border">
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="w-full py-6 flex items-center justify-between text-left group"
       >
         <span className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{question}</span>
-        <ChevronDown 
-          className={cn("text-text-tertiary transition-transform duration-300", isOpen && "rotate-180 text-accent")} 
-          size={20} 
-        />
+        <ChevronDown className={cn("text-text-tertiary transition-transform duration-300", isOpen && "rotate-180 text-accent")} size={20} />
       </button>
-      <div className={cn(
-        "overflow-hidden transition-all duration-300 ease-out",
-        isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0"
-      )}>
+      <div className={cn("overflow-hidden transition-all duration-300 ease-out", isOpen ? "max-h-96 pb-6 opacity-100" : "max-h-0 opacity-0")}>
         <p className="text-text-primary/80 leading-relaxed">{answer}</p>
       </div>
     </div>
   );
 };
 
-const StickyCTA = () => {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsVisible(window.scrollY > 600);
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
+const BrandItem = ({ name, weight, delay }: { name: string; weight: string; delay: number }) => {
+  const { elementRef, className } = useScrollReveal<HTMLDivElement>();
   return (
-    <div className={cn(
-      "fixed bottom-0 left-0 right-0 z-40 bg-background-primary border-t border-border px-4 py-4 shadow-2xl transition-all duration-500 md:hidden",
-      isVisible ? "translate-y-0" : "translate-y-full"
-    )}>
-      <div className="flex flex-col gap-3">
-        <p className="text-xs font-bold text-text-primary text-center uppercase tracking-widest hidden sm:block">¿Listo para digitalizar tu barbería?</p>
-        <Link href="/register">
-          <Button className="w-full h-14 text-lg font-black uppercase tracking-widest shadow-xl shadow-accent/20">
-            Comenzar gratis →
-          </Button>
-        </Link>
-      </div>
+    <div
+      ref={elementRef}
+      className={cn("text-xl md:text-2xl text-text-secondary/70 transition-colors hover:text-text-primary cursor-default", weight, className)}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      {name}
     </div>
   );
 };
 
-// --- Main Page ---
+const FeatureCard = ({ icon, title, desc, delay }: { icon: React.ReactNode; title: string; desc: string; delay: number }) => {
+  const { elementRef, className } = useScrollReveal<HTMLDivElement>();
+  return (
+    <Card
+      ref={elementRef}
+      className={cn("p-10 group hover:border-accent/40 transition-all duration-700 bg-background-secondary/20", className)}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold text-text-primary mt-8">{title}</h3>
+      <p className="text-text-secondary mt-3 leading-relaxed">{desc}</p>
+    </Card>
+  );
+};
+
+const StepItem = ({ step, icon, title, desc, delay }: { step: string; icon: React.ReactNode; title: string; desc: string; delay: number }) => {
+  const { elementRef, className } = useScrollReveal<HTMLDivElement>();
+  return (
+    <div
+      ref={elementRef}
+      className={cn("flex flex-col items-center md:items-start text-center md:text-left gap-6 group", className)}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="text-8xl font-black text-accent/5 leading-none transition-colors group-hover:text-accent/10">{step}</div>
+      <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center border border-accent/20 -mt-12 relative z-10 bg-background-primary shadow-xl shadow-accent/5">
+        {icon}
+      </div>
+      <h3 className="text-2xl font-bold text-text-primary">{title}</h3>
+      <p className="text-text-secondary leading-relaxed max-w-xs">{desc}</p>
+    </div>
+  );
+};
+
+const TestimonialCard = ({ text, author, shop, stars, delay }: { text: string; author: string; shop: string; stars: number; delay: number }) => {
+  const { elementRef, className } = useScrollReveal<HTMLDivElement>();
+  return (
+    <Card
+      ref={elementRef}
+      className={cn("p-10 hover:-translate-y-2 transition-all duration-700 bg-background-secondary border-border/60 group shadow-lg", className)}
+      style={{ transitionDelay: `${delay}ms` }}
+    >
+      <div className="text-6xl text-accent/15 font-black leading-none mb-6 -ml-3 select-none">&ldquo;</div>
+      <p className="text-text-primary text-xl leading-relaxed mb-10 font-medium italic">{text}</p>
+      <div className="flex items-center gap-5 border-t border-border pt-8">
+        <Avatar initials={author[0]} isVip className="scale-110" />
+        <div>
+          <div className="flex gap-1 mb-1.5">
+            {[...Array(stars)].map((_, i) => (
+              <Star key={i} size={14} className="fill-warning text-warning" />
+            ))}
+          </div>
+          <p className="text-base font-black text-text-primary">{author}</p>
+          <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">{shop}</p>
+        </div>
+      </div>
+    </Card>
+  );
+};
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -329,7 +336,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-background-primary text-text-primary selection:bg-accent selection:text-background-primary overflow-x-hidden font-sans">
       {/* Navbar */}
-      <nav 
+      <nav
         className={cn(
           "fixed top-0 left-0 right-0 h-16 z-50 transition-all duration-300 px-6 flex items-center justify-between",
           isScrolled ? "bg-background-primary/80 backdrop-blur-md border-b border-border/40" : "bg-transparent"
@@ -344,8 +351,8 @@ export default function LandingPage() {
 
         <div className="hidden md:flex items-center gap-8">
           {navLinks.map(link => (
-            <button 
-              key={link.id} 
+            <button
+              key={link.id}
               onClick={() => scrollTo(link.id)}
               className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors"
             >
@@ -358,7 +365,7 @@ export default function LandingPage() {
           <Link href="/register" className="hidden sm:block">
             <Button size="sm">Comenzar gratis</Button>
           </Link>
-          <button 
+          <button
             className="md:hidden text-text-primary p-2"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
@@ -366,30 +373,18 @@ export default function LandingPage() {
           </button>
         </div>
 
-        {/* Mobile menu backdrop */}
         {mobileMenuOpen && (
-          <div
-            className="fixed inset-0 bg-black/70 z-40 md:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
+          <div className="fixed inset-0 bg-black/70 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)} />
         )}
 
-        {/* Mobile menu — slide-in from right */}
         <div
           className={cn(
             "fixed top-0 right-0 h-full w-[82vw] max-w-xs z-50 md:hidden flex flex-col transition-transform duration-300 ease-out",
             mobileMenuOpen ? "translate-x-0" : "translate-x-full"
           )}
-          style={{
-            background: "linear-gradient(160deg, #111113 0%, #0A0A0B 100%)",
-            borderLeft: "1px solid #1E1E24",
-            boxShadow: "-20px 0 60px rgba(0,0,0,0.7)",
-          }}
+          style={{ background: "linear-gradient(160deg, #111113 0%, #0A0A0B 100%)", borderLeft: "1px solid #1E1E24", boxShadow: "-20px 0 60px rgba(0,0,0,0.7)" }}
         >
-          {/* Accent glow top-right */}
           <div className="absolute top-0 right-0 w-40 h-40 bg-accent/10 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Header */}
           <div className="flex items-center justify-between px-6 pt-8 pb-6 border-b border-border/40 relative">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
@@ -397,44 +392,31 @@ export default function LandingPage() {
               </div>
               <span className="text-base font-black text-text-primary tracking-tight">Trimly</span>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(false)}
-              className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors"
-            >
+            <button onClick={() => setMobileMenuOpen(false)} className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center text-text-secondary hover:text-text-primary transition-colors">
               <X size={16} />
             </button>
           </div>
 
-          {/* Nav links */}
           <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
             <p className="text-[10px] font-black text-text-tertiary uppercase tracking-[0.3em] px-3 mb-4">Navegar</p>
-            {navLinks.map((link, i) => (
+            {navLinks.map(link => (
               <button
                 key={link.id}
                 onClick={() => scrollTo(link.id)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-left transition-all hover:bg-white/5 group"
               >
                 <div className="w-1 h-5 rounded-full bg-accent/0 group-hover:bg-accent transition-all duration-200" />
-                <span className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">
-                  {link.label}
-                </span>
+                <span className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors">{link.label}</span>
               </button>
             ))}
           </nav>
 
-          {/* CTA block */}
           <div className="px-4 pb-10 pt-4 border-t border-border/40 space-y-3 relative">
             <div className="absolute bottom-0 left-0 w-32 h-32 bg-accent/5 rounded-full blur-2xl pointer-events-none" />
             <Link href="/register" onClick={() => setMobileMenuOpen(false)}>
-              <Button size="lg" className="w-full h-12 text-base font-black uppercase shadow-lg shadow-accent/20">
-                Comenzar gratis →
-              </Button>
+              <Button size="lg" className="w-full h-12 text-base font-black uppercase shadow-lg shadow-accent/20">Comenzar gratis →</Button>
             </Link>
-            <Link
-              href="/login"
-              onClick={() => setMobileMenuOpen(false)}
-              className="block text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2"
-            >
+            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="block text-center text-sm font-bold text-text-secondary hover:text-text-primary transition-colors py-2">
               Ya tengo cuenta · Iniciar sesión
             </Link>
           </div>
@@ -442,7 +424,7 @@ export default function LandingPage() {
       </nav>
 
       <main>
-        {/* 1. Hero Section */}
+        {/* 1. Hero */}
         <section id="hero" className="relative pt-28 pb-12 md:pt-48 md:pb-40 px-5 md:px-6">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-accent/5 rounded-full blur-[140px] -z-10 translate-x-1/3 -translate-y-1/4" />
           <div className="absolute inset-0 -z-20 opacity-[0.04]" style={{ backgroundImage: 'radial-gradient(var(--color-text-tertiary) 0.8px, transparent 0.8px)', backgroundSize: '32px 32px' }} />
@@ -452,11 +434,11 @@ export default function LandingPage() {
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <span className="text-base">🌍</span> DISPONIBLE PARA BARBERÍAS DE TODO EL MUNDO
               </div>
-              
+
               <h1 className="text-4xl sm:text-5xl md:text-8xl font-black text-text-primary leading-[1.05] tracking-tight animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
                 Tu barbería merece trabajar con las <span className="text-accent">mejores herramientas</span>
               </h1>
-              
+
               <p className="text-base md:text-2xl text-text-secondary max-w-xl leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-200">
                 Trimly digitaliza tu barbería en minutos. Agenda online, clientes organizados y automatizaciones que trabajan mientras tú cortas.
               </p>
@@ -467,10 +449,7 @@ export default function LandingPage() {
                     Empieza gratis hoy <ArrowRight size={22} className="transition-transform group-hover:translate-x-1.5" />
                   </Button>
                 </Link>
-                <button 
-                  onClick={() => scrollTo('#como-funciona')}
-                  className="w-full sm:w-auto"
-                >
+                <button onClick={() => scrollTo('#como-funciona')} className="w-full sm:w-auto">
                   <Button variant="secondary" size="lg" className="w-full h-14 md:h-16 px-6 md:px-10 text-lg md:text-xl font-bold">
                     <Play size={20} fill="currentColor" /> Ver demo
                   </Button>
@@ -500,31 +479,20 @@ export default function LandingPage() {
                 { n: 'The Barber Shop NY', w: 'font-medium' },
                 { n: 'El Corte Perfecto', w: 'font-bold' },
                 { n: 'Madrid Kings', w: 'font-semibold' },
-                { n: 'Barbería Medellín', w: 'font-extrabold' }
-              ].map((b, i) => {
-                const { elementRef, className } = useScrollReveal();
-                return (
-                  <div 
-                    key={b.n} 
-                    ref={elementRef}
-                    className={cn("text-xl md:text-2xl text-text-secondary/70 transition-colors hover:text-text-primary cursor-default", b.w, className)}
-                    style={{ transitionDelay: `${i * 100}ms` }}
-                  >
-                    {b.n}
-                  </div>
-                );
-              })}
+                { n: 'Barbería Medellín', w: 'font-extrabold' },
+              ].map((b, i) => (
+                <BrandItem key={b.n} name={b.n} weight={b.w} delay={i * 100} />
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 3. ¿Para quién es Trimly? (NEW) */}
+        {/* 3. ¿Para quién es Trimly? */}
         <section className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto space-y-16">
             <h2 className="text-4xl md:text-6xl font-black text-text-primary text-center tracking-tight">Trimly es para ti si...</h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Sí es para ti */}
               <div className="bg-accent/5 border border-accent/20 rounded-3xl p-8 md:p-12 space-y-8">
                 <div className="flex items-center gap-3 text-accent font-black uppercase tracking-widest text-sm">
                   <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
@@ -539,7 +507,7 @@ export default function LandingPage() {
                     'Se te han cruzado citas o se te han olvidado clientes',
                     'Quieres saber exactamente cuánto ganas cada mes',
                     'Tienes clientes que dejaron de venir y no sabes por qué',
-                    'Quieres crecer sin contratar a alguien solo para agendar'
+                    'Quieres crecer sin contratar a alguien solo para agendar',
                   ].map((item, i) => (
                     <li key={i} className="flex gap-4 text-text-primary font-bold leading-relaxed">
                       <span className="text-accent mt-1">✓</span>
@@ -549,7 +517,6 @@ export default function LandingPage() {
                 </ul>
               </div>
 
-              {/* No es para ti */}
               <div className="bg-background-secondary/50 border border-border rounded-3xl p-8 md:p-12 space-y-8">
                 <div className="flex items-center gap-3 text-text-secondary font-black uppercase tracking-widest text-sm">
                   <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center">
@@ -561,7 +528,7 @@ export default function LandingPage() {
                   {[
                     'Buscas solo una app de citas sin automatizaciones',
                     'Tu barbería no tiene clientes recurrentes aún',
-                    'Prefieres gestionar todo manualmente por ahora'
+                    'Prefieres gestionar todo manualmente por ahora',
                   ].map((item, i) => (
                     <li key={i} className="flex gap-4 text-text-secondary font-medium leading-relaxed">
                       <span className="text-text-tertiary mt-1">✗</span>
@@ -588,58 +555,20 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
               {[
-                {
-                  icon: <Calendar className="text-accent" />,
-                  title: 'Agenda online 24/7',
-                  desc: 'Tus clientes reservan desde su celular a cualquier hora, sin llamarte ni escribirte un solo mensaje.'
-                },
-                {
-                  icon: <Zap className="text-accent" />,
-                  title: 'Sin dobles reservas, nunca',
-                  desc: 'Los horarios se bloquean en tiempo real cuando alguien agenda. Cero cruces, cero líos.'
-                },
-                {
-                  icon: <Bot className="text-accent" />,
-                  title: 'Automatizaciones inteligentes',
-                  desc: 'Recordatorios de cita, seguimiento post-visita y felicitaciones de cumpleaños en piloto automático.'
-                },
-                {
-                  icon: <BarChart3 className="text-accent" />,
-                  title: 'Reportes que te hablan',
-                  desc: 'Sabe cuánto ganaste, qué servicios venden más y qué clientes están dejando de venir antes de perderlos.'
-                },
-                {
-                  icon: <UserCheck className="text-accent" />,
-                  title: 'Recupera clientes perdidos',
-                  desc: 'Trimly detecta los inactivos y les escribe por WhatsApp automáticamente para traerlos de vuelta.'
-                },
-                {
-                  icon: <Link2 className="text-accent" />,
-                  title: 'Tu link de reservas',
-                  desc: 'Un link personalizado para Instagram, WhatsApp o donde quieras. Tus clientes agendan solos en segundos.'
-                }
-              ].map((feat, i) => {
-                const { elementRef, className } = useScrollReveal();
-                return (
-                  <Card 
-                    key={feat.title} 
-                    ref={elementRef}
-                    className={cn("p-10 group hover:border-accent/40 transition-all duration-700 bg-background-secondary/20", className)}
-                    style={{ transitionDelay: `${i * 80}ms` }}
-                  >
-                    <div className="w-14 h-14 rounded-2xl bg-accent/10 flex items-center justify-center transition-transform group-hover:scale-110 group-hover:rotate-3">
-                      {feat.icon}
-                    </div>
-                    <h3 className="text-2xl font-bold text-text-primary mt-8">{feat.title}</h3>
-                    <p className="text-text-secondary mt-3 leading-relaxed">{feat.desc}</p>
-                  </Card>
-                );
-              })}
+                { icon: <Calendar className="text-accent" />, title: 'Agenda online 24/7', desc: 'Tus clientes reservan desde su celular a cualquier hora, sin llamarte ni escribirte un solo mensaje.' },
+                { icon: <Zap className="text-accent" />, title: 'Sin dobles reservas, nunca', desc: 'Los horarios se bloquean en tiempo real cuando alguien agenda. Cero cruces, cero líos.' },
+                { icon: <Bot className="text-accent" />, title: 'Automatizaciones inteligentes', desc: 'Recordatorios de cita, seguimiento post-visita y felicitaciones de cumpleaños en piloto automático.' },
+                { icon: <BarChart3 className="text-accent" />, title: 'Reportes que te hablan', desc: 'Sabe cuánto ganaste, qué servicios venden más y qué clientes están dejando de venir antes de perderlos.' },
+                { icon: <UserCheck className="text-accent" />, title: 'Recupera clientes perdidos', desc: 'Trimly detecta los inactivos y les escribe por WhatsApp automáticamente para traerlos de vuelta.' },
+                { icon: <Link2 className="text-accent" />, title: 'Tu link de reservas', desc: 'Un link personalizado para Instagram, WhatsApp o donde quieras. Tus clientes agendan solos en segundos.' },
+              ].map((feat, i) => (
+                <FeatureCard key={feat.title} icon={feat.icon} title={feat.title} desc={feat.desc} delay={i * 80} />
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 5. Comparación (NEW) */}
+        {/* 5. Comparación */}
         <section className="py-24 md:py-40 px-6 bg-background-secondary/10">
           <div className="max-w-7xl mx-auto space-y-20">
             <div className="text-center space-y-6">
@@ -654,7 +583,7 @@ export default function LandingPage() {
                 ['Recordatorios', 'Escribes uno por uno', 'Automático. Trimly lo hace'],
                 ['Clientes inactivos', 'No sabes quién dejó de venir', 'Trimly los detecta y contacta'],
                 ['Ingresos del mes', 'Calculas en papel o de memoria', 'Dashboard con cifras en tiempo real'],
-                ['Tu tiempo libre', 'Contestando mensajes de noche', 'Trabajando, no administrando']
+                ['Tu tiempo libre', 'Contestando mensajes de noche', 'Trabajando, no administrando'],
               ].map((row, i) => (
                 <div key={i} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr] gap-0 bg-background-secondary border border-border rounded-xl overflow-hidden">
                   <div className="px-4 py-3 bg-background-tertiary border-b sm:border-b-0 sm:border-r border-border">
@@ -671,8 +600,8 @@ export default function LandingPage() {
             </div>
 
             <div className="text-center">
-              <Link href="/register" className="w-full sm:w-auto inline-block">
-                <Button size="lg" className="w-full sm:w-auto h-14 px-8 text-base md:text-xl font-black uppercase tracking-widest group">
+              <Link href="/register" className="inline-block">
+                <Button size="lg" className="h-14 px-8 text-base md:text-xl font-black uppercase tracking-widest group">
                   Quiero trabajar con Trimly <ArrowRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </Link>
@@ -690,49 +619,18 @@ export default function LandingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-16 relative">
               <div className="hidden md:block absolute top-32 left-[15%] right-[15%] h-0.5 border-t-2 border-dashed border-border-strong -z-10" />
-
               {[
-                {
-                  step: '01',
-                  icon: <UserPlus className="text-accent" size={32} />,
-                  title: 'Crea tu cuenta',
-                  desc: 'Regístrate gratis, agrega tus barberos y configura tus servicios en menos de 5 minutos.'
-                },
-                {
-                  step: '02',
-                  icon: <Share2 className="text-accent" size={32} />,
-                  title: 'Comparte tu link',
-                  desc: 'Copia tu link de reservas personalizado y pégalo en tu Instagram, WhatsApp o story. Listo.'
-                },
-                {
-                  step: '03',
-                  icon: <Sparkles className="text-accent" size={32} />,
-                  title: 'Trimly hace el resto',
-                  desc: 'Tus clientes agendan solos, reciben recordatorios automáticos y tú ves todo en tu agenda en tiempo real.'
-                }
-              ].map((step, i) => {
-                const { elementRef, className } = useScrollReveal();
-                return (
-                  <div 
-                    key={step.step} 
-                    ref={elementRef}
-                    className={cn("flex flex-col items-center md:items-start text-center md:text-left gap-6 group", className)}
-                    style={{ transitionDelay: `${i * 200}ms` }}
-                  >
-                    <div className="text-8xl font-black text-accent/5 leading-none transition-colors group-hover:text-accent/10">{step.step}</div>
-                    <div className="w-20 h-20 rounded-full bg-accent/10 flex items-center justify-center border border-accent/20 -mt-12 relative z-10 bg-background-primary shadow-xl shadow-accent/5">
-                      {step.icon}
-                    </div>
-                    <h3 className="text-2xl font-bold text-text-primary">{step.title}</h3>
-                    <p className="text-text-secondary leading-relaxed max-w-xs">{step.desc}</p>
-                  </div>
-                );
-              })}
+                { step: '01', icon: <UserPlus className="text-accent" size={32} />, title: 'Crea tu cuenta', desc: 'Regístrate gratis, agrega tus barberos y configura tus servicios en menos de 5 minutos.' },
+                { step: '02', icon: <Share2 className="text-accent" size={32} />, title: 'Comparte tu link', desc: 'Copia tu link de reservas personalizado y pégalo en tu Instagram, WhatsApp o story. Listo.' },
+                { step: '03', icon: <Sparkles className="text-accent" size={32} />, title: 'Trimly hace el resto', desc: 'Tus clientes agendan solos, reciben recordatorios automáticos y tú ves todo en tu agenda en tiempo real.' },
+              ].map((s, i) => (
+                <StepItem key={s.step} step={s.step} icon={s.icon} title={s.title} desc={s.desc} delay={i * 200} />
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 7. Feature Destacada */}
+        {/* 7. Feature Destacada — Página de reservas */}
         <section className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto bg-background-secondary/40 border border-border rounded-2xl md:rounded-[3rem] p-6 md:p-24 grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-20 items-center">
             <div className="space-y-10">
@@ -741,14 +639,13 @@ export default function LandingPage() {
               <p className="text-xl text-text-secondary leading-relaxed">
                 Cada barbería en Trimly recibe su propia página pública con tu logo, tus servicios, tus precios y tus barberos. Tus clientes escogen, agendan y reciben confirmación automática. Tú solo llegas a cortar.
               </p>
-              
               <ul className="space-y-5">
                 {[
                   'Link personalizado listo para compartir',
                   'Funciona desde cualquier celular, sin app',
                   'Slots ocupados se bloquean en tiempo real',
                   'Confirmación automática por email al cliente',
-                  'Tu barbería visible las 24 horas del día'
+                  'Tu barbería visible las 24 horas del día',
                 ].map((item, i) => (
                   <li key={i} className="flex items-center gap-4 text-text-primary font-bold text-lg">
                     <div className="w-6 h-6 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0">
@@ -758,7 +655,6 @@ export default function LandingPage() {
                   </li>
                 ))}
               </ul>
-
               <Link href="/register">
                 <Button size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-wider group shadow-xl shadow-accent/20">
                   Crear mi página gratis <ChevronRight size={20} className="transition-transform group-hover:translate-x-1" />
@@ -772,7 +668,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 8. Objeción Directa / WhatsApp (NEW) */}
+        {/* 8. Objeciones */}
         <section className="py-24 md:py-40 px-6">
           <div className="max-w-7xl mx-auto space-y-20">
             <div className="text-center space-y-6">
@@ -785,23 +681,21 @@ export default function LandingPage() {
                 {
                   icon: <Smartphone className="text-accent" size={32} />,
                   obj: '¿Mis clientes van a saber usarlo?',
-                  resp: 'Si saben abrir un link de WhatsApp, saben reservar en Trimly. No hay nada que instalar ni aprender. Un link, tres clicks, cita confirmada.'
+                  resp: 'Si saben abrir un link de WhatsApp, saben reservar en Trimly. No hay nada que instalar ni aprender. Un link, tres clicks, cita confirmada.',
                 },
                 {
                   icon: <Clock className="text-accent" size={32} />,
                   obj: '¿Cuánto tiempo me toma configurarlo?',
-                  resp: 'Menos de 5 minutos. Creas tu cuenta, agregas tus barberos y servicios, copias tu link y listo. Ya puedes recibir citas el mismo día.'
+                  resp: 'Menos de 5 minutos. Creas tu cuenta, agregas tus barberos y servicios, copias tu link y listo. Ya puedes recibir citas el mismo día.',
                 },
                 {
                   icon: <CreditCard className="text-accent" size={32} />,
                   obj: '¿Y si no me sirve?',
-                  resp: 'El plan básico es gratis para siempre, sin límite de tiempo. Si decides subir al Pro, cancelas cuando quieras desde tu cuenta, sin llamadas, sin trámites, sin contratos. El riesgo es cero porque empiezas sin pagar nada.'
-                }
+                  resp: 'El plan básico es gratis para siempre. Si decides subir al Pro, cancelas cuando quieras desde tu cuenta, sin llamadas, sin trámites. El riesgo es cero.',
+                },
               ].map((item, i) => (
                 <Card key={i} className="p-8 space-y-6 border-border/60 hover:border-accent/30 transition-all duration-500">
-                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">
-                    {item.icon}
-                  </div>
+                  <div className="w-16 h-16 rounded-2xl bg-accent/10 flex items-center justify-center">{item.icon}</div>
                   <div>
                     <div className="text-sm text-text-secondary font-black uppercase tracking-widest">{item.obj}</div>
                     <p className="text-lg font-bold text-text-primary mt-3 leading-relaxed">{item.resp}</p>
@@ -833,61 +727,38 @@ export default function LandingPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
                 {
-                  text: '“Antes perdía clientes porque se me olvidaban las citas. Ahora Trimly me recuerda todo automáticamente y mis clientes también reciben su recordatorio. Un cambio total en mi negocio.”',
+                  text: '"Antes perdía clientes porque se me olvidaban las citas. Ahora Trimly me recuerda todo automáticamente y mis clientes también reciben su recordatorio. Un cambio total en mi negocio."',
                   author: 'Carlos M.',
                   shop: 'El Corte Perfecto · Medellín',
-                  stars: 5
+                  stars: 5,
                 },
                 {
-                  text: '“El link de reservas fue lo mejor que le puse a mi Instagram. Empecé a recibir citas sin tener que contestar un solo WhatsApp. Ahora mis clientes agendan solos y yo me entero en la app.”',
+                  text: '"El link de reservas fue lo mejor que le puse a mi Instagram. Empecé a recibir citas sin tener que contestar un solo WhatsApp. Ahora mis clientes agendan solos y yo me entero en la app."',
                   author: 'Andrés R.',
                   shop: 'Filo & Estilo · Bogotá',
-                  stars: 5
+                  stars: 5,
                 },
                 {
-                  text: '“Los reportes me ayudaron a entender qué días son los más ocupados. Ahora organizo mejor mis horarios y gano más sin trabajar más horas. Vale cada euro.”',
+                  text: '"Los reportes me ayudaron a entender qué días son los más ocupados. Ahora organizo mejor mis horarios y gano más sin trabajar más horas. Vale cada euro."',
                   author: 'Miguel T.',
                   shop: 'Madrid Kings · España',
-                  stars: 5
-                }
-              ].map((testi, i) => {
-                const { elementRef, className } = useScrollReveal();
-                return (
-                  <Card 
-                    key={i} 
-                    ref={elementRef}
-                    className={cn("p-10 hover:-translate-y-2 transition-all duration-700 bg-background-secondary border-border/60 group shadow-lg", className)}
-                    style={{ transitionDelay: `${i * 150}ms` }}
-                  >
-                    <div className="text-6xl text-accent/15 font-black leading-none mb-6 -ml-3 select-none">“</div>
-                    <p className="text-text-primary text-xl leading-relaxed mb-10 font-medium italic">{testi.text}</p>
-                    <div className="flex items-center gap-5 border-t border-border pt-8">
-                      <Avatar initials={testi.author[0]} isVip className="scale-110" />
-                      <div>
-                        <div className="flex gap-1 mb-1.5">
-                          {[...Array(testi.stars)].map((_, i) => (
-                            <Star key={i} size={14} className="fill-warning text-warning" />
-                          ))}
-                        </div>
-                        <p className="text-base font-black text-text-primary">{testi.author}</p>
-                        <p className="text-[11px] font-bold text-text-secondary uppercase tracking-wider">{testi.shop}</p>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
+                  stars: 5,
+                },
+              ].map((t, i) => (
+                <TestimonialCard key={i} text={t.text} author={t.author} shop={t.shop} stars={t.stars} delay={i * 150} />
+              ))}
             </div>
           </div>
         </section>
 
-        {/* 10. Stats / Contador (NEW) */}
+        {/* 10. Stats */}
         <section className="bg-background-secondary/40 border-y border-border/40 py-24 px-6">
           <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
               <div className="py-4 border-b border-border/40 md:border-b-0"><StatItem target="2.400+" label="Citas agendadas este mes" /></div>
               <div className="py-4 border-b border-border/40 md:border-b-0"><StatItem target="50+" label="Barberías activas" /></div>
               <div className="py-4"><StatItem target="98%" label="De clientes que no cancelan" /></div>
-              <div className="py-4"><StatItem target="5 min" label="Para tener tu barbería lista" /></div>
+              <div className="py-4"><StatItem target="5min" label="Para tener tu barbería lista" /></div>
             </div>
           </div>
         </section>
@@ -901,7 +772,7 @@ export default function LandingPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto items-start">
-              {/* Plan Mensual - Básico */}
+              {/* Básico */}
               <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-accent/20 transition-all duration-500 bg-background-primary/40">
                 <div className="space-y-4">
                   <div className="bg-background-tertiary text-text-primary px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Básico</div>
@@ -912,16 +783,8 @@ export default function LandingPage() {
                   </div>
                   <p className="text-text-secondary text-sm">Gestión esencial para tu barbería</p>
                 </div>
-
                 <div className="space-y-5 flex-1">
-                  {[
-                    'Citas ilimitadas',
-                    'Hasta 3 barberos',
-                    'Historial de clientes completo',
-                    'Recordatorios automáticos 24h antes',
-                    'Confirmación inmediata al agendar',
-                    'Reporte diario por email'
-                  ].map(item => (
+                  {['Citas ilimitadas', 'Hasta 3 barberos', 'Historial de clientes completo', 'Recordatorios automáticos 24h antes', 'Confirmación inmediata al agendar', 'Reporte diario por email'].map(item => (
                     <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-secondary">
                       <div className="w-5 h-5 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
                         <Check size={12} strokeWidth={3} className="text-green-500" />
@@ -930,18 +793,16 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-
                 <Link href="/auth/register" className="w-full">
                   <Button variant="secondary" size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest">Comenzar gratis</Button>
                 </Link>
               </Card>
 
-              {/* Plan Filo Pro - Recomendado */}
+              {/* Filo Pro */}
               <Card className="p-8 md:p-10 space-y-8 flex flex-col border-accent relative shadow-2xl shadow-accent/10 md:transform md:scale-[1.05] bg-background-secondary z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-accent text-background-primary px-6 py-2 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl">
                   Recomendado
                 </div>
-                
                 <div className="space-y-4">
                   <h3 className="text-xl font-black text-text-primary uppercase tracking-widest">FILO PRO</h3>
                   <div className="flex items-baseline gap-2">
@@ -950,17 +811,9 @@ export default function LandingPage() {
                   </div>
                   <p className="text-accent text-sm font-bold">Todo para crecer sin límites</p>
                 </div>
-
                 <div className="space-y-5 flex-1">
                   <div className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2">TODO LO DEL BÁSICO, MÁS:</div>
-                  {[
-                    'Link personalizado de reservas online',
-                    'Barberos ilimitados',
-                    'Recuperar clientes inactivos',
-                    'Felicitar cumpleaños automáticamente',
-                    'Seguimiento post-visita y reseñas',
-                    'Reportes avanzados y exportación'
-                  ].map(item => (
+                  {['Link personalizado de reservas online', 'Barberos ilimitados', 'Recuperar clientes inactivos', 'Felicitar cumpleaños automáticamente', 'Seguimiento post-visita y reseñas', 'Reportes avanzados y exportación'].map(item => (
                     <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-primary">
                       <div className="w-5 h-5 rounded-full bg-accent/10 flex items-center justify-center flex-shrink-0">
                         <Check size={12} strokeWidth={3} className="text-accent" />
@@ -969,7 +822,6 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-
                 <div className="space-y-4">
                   <Link href="/auth/register" className="w-full">
                     <Button size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest shadow-xl shadow-accent/20">Comenzar gratis</Button>
@@ -978,7 +830,7 @@ export default function LandingPage() {
                 </div>
               </Card>
 
-              {/* Plan Lifetime / Anual */}
+              {/* Lifetime */}
               <Card className="p-10 space-y-8 flex flex-col border-border/60 hover:border-violet-500/30 transition-all duration-500 bg-background-primary/40">
                 <div className="space-y-4">
                   <div className="bg-violet-500/10 text-violet-400 px-3 py-1 rounded-full text-[10px] font-bold uppercase inline-block">Único Pago</div>
@@ -988,17 +840,9 @@ export default function LandingPage() {
                   </div>
                   <p className="text-violet-400 text-sm font-bold">Paga 1 vez, úsalo para siempre</p>
                 </div>
-
                 <div className="space-y-5 flex-1">
                   <div className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-2">ACCESO TOTAL DE POR VIDA:</div>
-                  {[
-                    'Todas las funciones del plan Filo Pro',
-                    'Página pública de reservas online',
-                    'Barberos ilimitados',
-                    'Reportes y automatizaciones avanzadas',
-                    'Actualizaciones futuras incluidas',
-                    'Sin mensualidades de por vida'
-                  ].map(item => (
+                  {['Todas las funciones del plan Filo Pro', 'Página pública de reservas online', 'Barberos ilimitados', 'Reportes y automatizaciones avanzadas', 'Actualizaciones futuras incluidas', 'Sin mensualidades de por vida'].map(item => (
                     <div key={item} className="flex items-center gap-3 text-sm font-bold text-text-secondary">
                       <div className="w-5 h-5 rounded-full bg-violet-500/10 flex items-center justify-center flex-shrink-0">
                         <Check size={12} strokeWidth={3} className="text-violet-400" />
@@ -1007,7 +851,6 @@ export default function LandingPage() {
                     </div>
                   ))}
                 </div>
-
                 <Link href="/auth/register" className="w-full">
                   <Button variant="secondary" size="lg" className="w-full h-14 text-sm font-black uppercase tracking-widest border-violet-500/30 hover:bg-violet-500/5">Comenzar gratis</Button>
                 </Link>
@@ -1016,36 +859,20 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* 12. FAQ (NEW) */}
+        {/* 12. FAQ */}
         <section className="py-24 md:py-40 px-6">
           <div className="max-w-3xl mx-auto space-y-16">
             <div className="text-center space-y-4">
               <h2 className="text-4xl md:text-6xl font-black text-text-primary tracking-tight">Preguntas frecuentes</h2>
               <p className="text-lg text-text-secondary">Si tienes otra duda, escríbenos directo por WhatsApp.</p>
             </div>
-
             <div className="space-y-4">
               {[
-                {
-                  q: '¿Necesito saber de tecnología para usar Trimly?',
-                  a: 'Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí. No tienes que instalar nada ni aprender ningún software complicado.'
-                },
-                {
-                  q: '¿Funciona con WhatsApp Business?',
-                  a: 'Sí. El link de reservas de Trimly funciona desde cualquier dispositivo y cualquier app de mensajería. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras. Tus clientes solo necesitan abrirlo.'
-                },
-                {
-                  q: '¿Qué pasa si mi cliente no tiene internet?',
-                  a: 'Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos, exactamente igual que si el cliente lo hiciera desde su celular.'
-                },
-                {
-                  q: '¿Puedo cancelar cuando quiera?',
-                  a: 'Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento y no te cobramos nada más. Tus datos y los de tus clientes quedan disponibles para descargar por 30 días después de cancelar.'
-                },
-                {
-                  q: '¿Mis datos y los de mis clientes están seguros?',
-                  a: 'Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás. Tus clientes son tuyos, no nuestros.'
-                }
+                { q: '¿Necesito saber de tecnología para usar Trimly?', a: 'Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí. No tienes que instalar nada ni aprender ningún software complicado.' },
+                { q: '¿Funciona con WhatsApp Business?', a: 'Sí. El link de reservas de Trimly funciona desde cualquier dispositivo y cualquier app de mensajería. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras. Tus clientes solo necesitan abrirlo.' },
+                { q: '¿Qué pasa si mi cliente no tiene internet?', a: 'Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos, exactamente igual que si el cliente lo hiciera desde su celular.' },
+                { q: '¿Puedo cancelar cuando quiera?', a: 'Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento y no te cobramos nada más. Tus datos y los de tus clientes quedan disponibles para descargar por 30 días después de cancelar.' },
+                { q: '¿Mis datos y los de mis clientes están seguros?', a: 'Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás. Tus clientes son tuyos, no nuestros.' },
               ].map((faq, i) => (
                 <FAQItem key={i} question={faq.q} answer={faq.a} />
               ))}
@@ -1058,7 +885,6 @@ export default function LandingPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-[0.08] -z-0">
             <Scissors size={800} className="-rotate-12" />
           </div>
-
           <div className="max-w-5xl mx-auto text-center space-y-12 relative z-10">
             <h2 className="text-3xl sm:text-5xl md:text-8xl font-black text-background-primary leading-tight tracking-tight">
               ¿Listo para llevar tu barbería al siguiente nivel?
@@ -1115,7 +941,7 @@ export default function LandingPage() {
                 <li><Link href="#" className="text-base font-bold text-text-secondary hover:text-text-primary transition-colors">Política de privacidad</Link></li>
               </ul>
             </div>
-            
+
             <div className="space-y-8">
               <h4 className="text-xs font-black text-text-primary uppercase tracking-[0.3em]">Producto</h4>
               <ul className="space-y-5">
@@ -1134,7 +960,6 @@ export default function LandingPage() {
         </div>
       </footer>
 
-      {/* 14. Sticky CTA Móvil (NEW) */}
       <StickyCTA />
     </div>
   );

@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import LandingPage from '@/components/landing/LandingPage';
 
 export const metadata: Metadata = {
-  title: "Trimly — Digitaliza tu barbería hoy",
-  description: "Agenda online, automatizaciones y reportes para barberías en Colombia, España y Estados Unidos. Empieza gratis en minutos.",
+  title: "Trimly — Software de gestión para barberías | Agenda online gratis",
+  description: "Digitaliza tu barbería en 5 minutos. Agenda online 24/7, automatizaciones por WhatsApp, reportes en tiempo real y más. Sin tarjeta de crédito.",
+  keywords: ["software barbería", "agenda online barbería", "gestión barbería", "reservas barbería colombia", "app barbería", "trimly"],
   metadataBase: new URL('https://trimly.co'),
   alternates: {
     canonical: '/',
@@ -80,7 +81,23 @@ export default function Home() {
                     "name": "¿Necesito saber de tecnología para usar Trimly?",
                     "acceptedAnswer": {
                       "@type": "Answer",
-                      "text": "Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos."
+                      "text": "Para nada. Si sabes usar WhatsApp y Instagram, te sobra. La configuración inicial toma menos de 5 minutos y el sistema funciona solo desde ahí."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "¿Funciona con WhatsApp Business?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Sí. El link de reservas de Trimly funciona desde cualquier dispositivo. Puedes pegarlo en tu perfil de WhatsApp Business, en tu bio de Instagram o donde quieras."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "¿Qué pasa si mi cliente no tiene internet?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Siempre puedes agendar la cita tú mismo desde el panel de Trimly. El sistema te permite agregar citas manualmente en segundos."
                     }
                   },
                   {
@@ -88,7 +105,15 @@ export default function Home() {
                     "name": "¿Puedo cancelar cuando quiera?",
                     "acceptedAnswer": {
                       "@type": "Answer",
-                      "text": "Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento."
+                      "text": "Sí, sin contratos ni permanencia. Cancelas desde tu cuenta en cualquier momento. Tus datos quedan disponibles para descargar por 30 días."
+                    }
+                  },
+                  {
+                    "@type": "Question",
+                    "name": "¿Mis datos y los de mis clientes están seguros?",
+                    "acceptedAnswer": {
+                      "@type": "Answer",
+                      "text": "Completamente. Trimly usa encriptación estándar de la industria y los datos no se comparten con terceros jamás."
                     }
                   }
                 ]
