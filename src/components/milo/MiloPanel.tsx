@@ -92,10 +92,10 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-background-primary border-l border-border shadow-2xl z-[70] flex flex-col"
+            className="fixed inset-y-0 right-0 w-full md:w-[400px] bg-background-secondary border-l border-border shadow-xl z-[70] flex flex-col"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-border bg-background-primary shrink-0">
+            <div className="flex items-center justify-between p-5 border-b border-border bg-primary-bg shrink-0">
               <div className="flex items-center gap-3">
                 <div className="relative w-10 h-10">
                   <Image src={miloImg} alt="Milo" fill className="object-contain" />
@@ -139,16 +139,16 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
                   className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'} items-end gap-2`}
                 >
                   {msg.type === 'milo' && (
-                    <div className="w-7 h-7 rounded-full bg-[#1A1A2E] border border-border flex items-center justify-center shrink-0 mb-1 overflow-hidden">
+                    <div className="w-7 h-7 rounded-full bg-background-tertiary border border-border flex items-center justify-center shrink-0 mb-1 overflow-hidden">
                       <Image src={miloImg} alt="M" width={22} height={22} className="object-contain" />
                     </div>
                   )}
-                  
-                  <div 
+
+                  <div
                     className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap shadow-sm ${
-                      msg.type === 'user' 
-                        ? 'bg-accent text-background-primary rounded-tr-none' 
-                        : 'bg-[#1A1A2E] text-white rounded-tl-none'
+                      msg.type === 'user'
+                        ? 'bg-primary text-text-inverse rounded-tr-none'
+                        : 'bg-background-tertiary text-text-primary border border-border rounded-tl-none'
                     }`}
                   >
                     {msg.content}
@@ -158,20 +158,20 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
 
               {isTyping && (
                 <div className="flex justify-start items-end gap-2">
-                  <div className="w-7 h-7 rounded-full bg-[#1A1A2E] border border-border flex items-center justify-center shrink-0 mb-1 overflow-hidden">
+                  <div className="w-7 h-7 rounded-full bg-background-tertiary border border-border flex items-center justify-center shrink-0 mb-1 overflow-hidden">
                     <Image src={miloImg} alt="M" width={22} height={22} className="object-contain" />
                   </div>
-                  <div className="bg-[#1A1A2E] px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-white/40 rounded-full" />
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-white/40 rounded-full" />
-                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-white/40 rounded-full" />
+                  <div className="bg-background-tertiary border border-border px-4 py-3 rounded-2xl rounded-tl-none shadow-sm flex gap-1 items-center">
+                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 bg-text-muted rounded-full" />
+                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 bg-text-muted rounded-full" />
+                    <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 bg-text-muted rounded-full" />
                   </div>
                 </div>
               )}
             </div>
 
             {/* Options Area */}
-            <div className="p-5 border-t border-border bg-background-primary shrink-0">
+            <div className="p-5 border-t border-border bg-background-secondary shrink-0">
               <div className="flex flex-wrap justify-end gap-2">
                 {!isTyping && currentNode.options.map((option, idx) => (
                   <motion.button
@@ -181,9 +181,9 @@ export function MiloPanel({ isOpen, onClose }: { isOpen: boolean, onClose: () =>
                     transition={{ delay: idx * 0.08 }}
                     onClick={() => handleOptionClick(option)}
                     className={`px-4 py-2 rounded-full text-xs font-bold transition-all border flex items-center gap-2 ${
-                      option.isSpecial 
+                      option.isSpecial
                         ? 'bg-[#25D366] text-white border-none hover:shadow-lg hover:shadow-[#25D366]/20'
-                        : 'bg-accent/10 text-accent border-accent/20 hover:bg-accent hover:text-background-primary'
+                        : 'bg-primary-bg text-primary border-primary/20 hover:bg-primary hover:text-text-inverse'
                     }`}
                   >
                     {option.isSpecial && <MessageCircle size={14} />}

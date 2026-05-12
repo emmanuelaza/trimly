@@ -10,40 +10,42 @@ export default function ToasterProvider() {
       toastOptions={{
         duration: 4000,
         style: {
-          background: "#18181F",
-          color: "#F0F0F5",
-          border: "1px solid #2A2A35",
+          background: "#FFFFFF",
+          color: "#0F1729",
+          border: "1px solid #E2E6EE",
           borderRadius: "14px",
           fontSize: "13px",
           fontWeight: "500",
           padding: "12px 16px",
-          boxShadow: "0 8px 40px rgba(0,0,0,0.7)",
+          boxShadow: "0 8px 32px rgba(15,23,41,0.12)",
           maxWidth: "380px",
         },
         success: {
           iconTheme: {
-            primary: "#7EE787",
-            secondary: "#0A0A0F",
+            primary: "#22C55E",
+            secondary: "#FFFFFF",
           },
           style: {
-            background: "#0F1F11",
-            border: "1px solid rgba(126,231,135,0.25)",
+            background: "#FFFFFF",
+            border: "1px solid rgba(34,197,94,0.30)",
+            borderLeft: "3px solid #22C55E",
           },
         },
         error: {
           iconTheme: {
-            primary: "#F05060",
-            secondary: "#0A0A0F",
+            primary: "#EF4444",
+            secondary: "#FFFFFF",
           },
           style: {
-            background: "#1C0B0C",
-            border: "1px solid rgba(240,80,96,0.25)",
+            background: "#FFFFFF",
+            border: "1px solid rgba(239,68,68,0.30)",
+            borderLeft: "3px solid #EF4444",
           },
         },
         loading: {
           style: {
-            background: "#18181F",
-            border: "1px solid #2A2A35",
+            background: "#FFFFFF",
+            border: "1px solid #E2E6EE",
           },
         },
       }}

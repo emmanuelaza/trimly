@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
-import { Syne, Geist, JetBrains_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const syne = Syne({
+const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-display",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const geist = Geist({
+const inter = Inter({
   variable: "--font-body",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -33,8 +33,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className={`${syne.variable} ${geist.variable} ${jetbrainsMono.variable}`}>
-      <body className="bg-background-primary text-text-primary selection:bg-accent/20 selection:text-primary-light transition-colors duration-300">
+    <html lang="es" className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+      <body className="bg-background-primary text-text-primary selection:bg-accent/15 transition-colors duration-300">
         <ToasterProvider />
         {children}
       </body>
