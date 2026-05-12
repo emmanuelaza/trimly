@@ -70,8 +70,6 @@ const BLANK_FORM = {
   monto: '',
   fecha: new Date().toISOString().split('T')[0],
   es_recurrente: false,
-  frecuencia: '',
-  notas: '',
 }
 
 export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) {
@@ -102,8 +100,6 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
       monto: String(e.monto),
       fecha: e.fecha,
       es_recurrente: e.es_recurrente,
-      frecuencia: e.frecuencia ?? '',
-      notas: e.notas ?? '',
     })
     setEditingExpense(e)
     setShowForm(true)
@@ -141,8 +137,8 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
   }
 
   const r = resumen
-  const deltaIngresos = r && r.ingresosMesAnterior > 0
-    ? Math.round(((r.ingresosMes - r.ingresosMesAnterior) / r.ingresosMesAnterior) * 100) : null
+  const deltaIngresos = r && r.ingresosNetosMesAnterior > 0
+    ? Math.round(((r.ingresosNetos - r.ingresosNetosMesAnterior) / r.ingresosNetosMesAnterior) * 100) : null
   const deltaEgresos = r && r.egresosMesAnterior > 0
     ? Math.round(((r.egresosMes - r.egresosMesAnterior) / r.egresosMesAnterior) * 100) : null
   const maxIngreso = Math.max(1, ...(r?.ingresosPorDia.map(d => d.ingresos) ?? [1]))
@@ -170,15 +166,15 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard label="Ingresos del mes" value={r ? COP(r.ingresosMes) : '—'} delta={deltaIngresos} icon={<TrendingUp size={18} />} color="text-success" bg="bg-success/10" />
+        <KpiCard label="Ingresos netos" value={r ? COP(r.ingresosNetos) : '—'} delta={deltaIngresos} icon={<TrendingUp size={18} />} color="text-success" bg="bg-success/10" />
         <KpiCard label="Egresos del mes" value={r ? COP(r.egresosMes) : '—'} delta={deltaEgresos !== null ? -deltaEgresos : null} icon={<TrendingDown size={18} />} color="text-error" bg="bg-error/10" deltaInvert />
         <KpiCard label="Nómina pagada" value={r ? COP(r.gastosNomina) : '—'} icon={<DollarSign size={18} />} color="text-accent" bg="bg-accent/10" />
         <KpiCard
-          label="Ganancia neta"
-          value={r ? COP(r.gananciaNeta) : '—'}
-          icon={!r || r.gananciaNeta >= 0 ? <TrendingUp size={18} /> : <Minus size={18} />}
-          color={!r || r.gananciaNeta >= 0 ? 'text-success' : 'text-error'}
-          bg={!r || r.gananciaNeta >= 0 ? 'bg-success/10' : 'bg-error/10'}
+          label="Utilidad neta"
+          value={r ? COP(r.utilidadNeta) : '—'}
+          icon={!r || r.utilidadNeta >= 0 ? <TrendingUp size={18} /> : <Minus size={18} />}
+          color={!r || r.utilidadNeta >= 0 ? 'text-success' : 'text-error'}
+          bg={!r || r.utilidadNeta >= 0 ? 'bg-success/10' : 'bg-error/10'}
         />
       </div>
 
@@ -225,7 +221,7 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
               <p className="text-xs font-black text-text-tertiary uppercase tracking-widest mb-5">Ingresos por servicio</p>
               <div className="space-y-3">
                 {r.ingresosPorServicio.map((s) => {
-                  const pct = r.ingresosMes > 0 ? Math.round((s.ingresos / r.ingresosMes) * 100) : 0
+                  const pct = r.ingresosNetos > 0 ? Math.round((s.ingresos / r.ingresosNetos) * 100) : 0
                   return (
                     <div key={s.nombre} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
@@ -255,7 +251,7 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
               {expandedCats && (
                 <div className="mt-5 space-y-3">
                   {r.egresosPorCategoria.map((c) => {
-                    const pct = r.egresosMes > 0 ? Math.round((c.monto / r.egresosMes) * 100) : 0
+                    const pct = r.egresosMes > 0 ? Math.round((c.monto / r.egresosMes) * 100) : 0 // egresosMes includes nomina via expenses
                     const label = CATEGORIAS.find(x => x.value === c.categoria)?.label ?? c.categoria
                     return (
                       <div key={c.categoria} className="space-y-1">
@@ -362,32 +358,10 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
               />
             </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Notas (opcional)</label>
-            <input
-              value={form.notas}
-              onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-              placeholder="Observaciones adicionales"
-              className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
-            />
-          </div>
           <label className="flex items-center gap-3 cursor-pointer">
             <input type="checkbox" checked={form.es_recurrente} onChange={e => setForm(f => ({ ...f, es_recurrente: e.target.checked }))} className="w-4 h-4 rounded accent-accent" />
             <span className="text-sm text-text-secondary">Gasto recurrente</span>
           </label>
-          {form.es_recurrente && (
-            <select
-              value={form.frecuencia}
-              onChange={e => setForm(f => ({ ...f, frecuencia: e.target.value }))}
-              className="w-full h-11 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
-            >
-              <option value="">Selecciona frecuencia</option>
-              <option value="mensual">Mensual</option>
-              <option value="semanal">Semanal</option>
-              <option value="diario">Diario</option>
-              <option value="anual">Anual</option>
-            </select>
-          )}
           <div className="flex gap-3 pt-2">
             <Button variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>Cancelar</Button>
             <Button className="flex-1" onClick={handleSubmit} loading={isPending}>

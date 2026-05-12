@@ -91,7 +91,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
       p.barber?.name ?? '',
       p.amount_barber,
       `${p.period_start} a ${p.period_end}`,
-      p.metodo_pago ?? '',
+      p.payment_method ?? '',
       p.payment_note ?? '',
     ])
     const csv = 'data:text/csv;charset=utf-8,Fecha,Barbero,Monto,Período,Método,Nota\n'
@@ -103,7 +103,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
   }
 
   const schemeLabel = (s: string) =>
-    s === 'percentage' ? 'Porcentaje' : s === 'fixed_monthly' ? 'Fijo mensual' : s === 'fixed_per_service' ? 'Por servicio' : 'Sin configurar'
+    s === 'porcentaje' ? 'Porcentaje' : s === 'fijo_mensual' ? 'Fijo mensual' : s === 'fijo_por_servicio' ? 'Por servicio' : 'Sin configurar'
 
   return (
     <div className="space-y-6">
@@ -240,7 +240,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-text-primary">{p.barber?.name ?? 'Barbero'}</p>
-                    <p className="text-xs text-text-tertiary">{p.period_start} al {p.period_end} · {p.metodo_pago ?? p.payment_method ?? 'efectivo'}</p>
+                    <p className="text-xs text-text-tertiary">{p.period_start} al {p.period_end} · {p.payment_method ?? 'efectivo'}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-bold text-success tabular-nums">{COP(p.amount_barber)}</p>

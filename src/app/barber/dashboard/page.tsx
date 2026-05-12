@@ -63,9 +63,11 @@ export default function BarberDashboardPage() {
   )
 
   const displayData = data || {
-    barber: { name: session.barberName },
-    stats: { appointmentsToday: 0, earningsToday: 0, earningsMonth: 0 },
-    todayAppointments: []
+    barber: { id: '', name: session.barberName, barbershopName: '' },
+    esquema: null,
+    stats: { citasHoy: 0, proximasCitas: 0, totalGeneradoMes: 0, misGananciasMes: 0 },
+    proximasCitas: [],
+    citasCompletadas: [],
   };
 
   return (
@@ -78,9 +80,9 @@ export default function BarberDashboardPage() {
             Hoy es {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           className="gap-2 border-border-strong text-text-secondary hover:text-danger"
           onClick={logout}
         >
@@ -89,7 +91,7 @@ export default function BarberDashboardPage() {
         </Button>
       </div>
 
-      <BarberDashboardClient initialData={displayData} />
+      <BarberDashboardClient data={displayData} />
     </div>
   );
 }

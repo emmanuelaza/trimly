@@ -8,25 +8,23 @@ interface Barber {
   id: string;
   name: string;
   avatar_url?: string;
-  barber_payment_schemes?: any[];
-  barber_service_rates?: any[];
 }
 
 interface NominaAppointment {
   id: string;
   barber_id: string;
   service_id: string;
-  price: number | string;
+  price_charged: number | string;
   status: string;
-  date: string;
+  scheduled_at: string;
 }
 
 export async function getBarberPaymentScheme(barberId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("barber_payment_schemes")
-    .select("*")
-    .eq("barber_id", barberId)
+    .select("barbero_id, tipo, porcentaje, monto_fijo")
+    .eq("barbero_id", barberId)
     .maybeSingle();
 
   if (error) {
@@ -36,13 +34,13 @@ export async function getBarberPaymentScheme(barberId: string) {
   return data;
 }
 
-export async function updateBarberPaymentScheme(barberId: string, type: string, percentage?: number, fixedAmount?: number) {
+export async function updateBarberPaymentScheme(barberId: string, tipo: string, porcentaje?: number, montoFijo?: number) {
   try {
     const supabase = await createClient();
     const { data: existing } = await supabase
       .from("barber_payment_schemes")
       .select("id")
-      .eq("barber_id", barberId)
+      .eq("barbero_id", barberId)
       .maybeSingle();
 
     let error;
@@ -50,27 +48,26 @@ export async function updateBarberPaymentScheme(barberId: string, type: string, 
       const { error: updateError } = await supabase
         .from("barber_payment_schemes")
         .update({
-          type,
-          percentage: type === 'percentage' ? percentage : null,
-          fixed_amount: type === 'fixed_monthly' ? fixedAmount : null,
-          updated_at: new Date().toISOString()
+          tipo,
+          porcentaje: tipo === 'porcentaje' ? porcentaje : null,
+          monto_fijo: tipo === 'fijo_mensual' ? montoFijo : null,
         })
-        .eq("barber_id", barberId);
+        .eq("barbero_id", barberId);
       error = updateError;
     } else {
       const { error: insertError } = await supabase
         .from("barber_payment_schemes")
         .insert({
-          barber_id: barberId,
-          type,
-          percentage: type === 'percentage' ? percentage : null,
-          fixed_amount: type === 'fixed_monthly' ? fixedAmount : null
+          barbero_id: barberId,
+          tipo,
+          porcentaje: tipo === 'porcentaje' ? porcentaje : null,
+          monto_fijo: tipo === 'fijo_mensual' ? montoFijo : null,
         });
       error = insertError;
     }
 
     if (error) throw error;
-    
+
     revalidatePath("/dashboard/equipo");
     revalidatePath("/dashboard/nomina");
     return { success: true };
@@ -122,23 +119,33 @@ export async function getPayrollData(period: { start: string, end: string }) {
     // Get all barbers
     const { data: barbers, error: bError } = await supabase
       .from("barbers")
-      .select(`
-        id, name, avatar_url,
-        barber_payment_schemes(type, percentage, fixed_amount),
-        barber_service_rates(service_id, fixed_amount)
-      `)
+      .select("id, name, avatar_url")
       .eq("barbershop_id", barbershopId);
 
     if (bError) throw bError;
 
+    const barberIds = (barbers ?? []).map((b: Barber) => b.id);
+
+    // Get payment schemes (separate query — FK column is barbero_id)
+    const { data: schemes } = await supabase
+      .from("barber_payment_schemes")
+      .select("barbero_id, tipo, porcentaje, monto_fijo")
+      .in("barbero_id", barberIds);
+
+    // Get per-service rates
+    const { data: allServiceRates } = await supabase
+      .from("barber_service_rates")
+      .select("barber_id, service_id, fixed_amount")
+      .in("barber_id", barberIds);
+
     // Get all completed appointments in the period
     const { data: appointments, error: aError } = await supabase
       .from("appointments")
-      .select("id, barber_id, service_id, price, status, date")
+      .select("id, barber_id, service_id, price_charged, status, scheduled_at")
       .eq("barbershop_id", barbershopId)
       .eq("status", "completed")
-      .gte("date", period.start)
-      .lte("date", period.end);
+      .gte("scheduled_at", period.start)
+      .lte("scheduled_at", period.end + "T23:59:59");
 
     if (aError) throw aError;
 
@@ -155,20 +162,19 @@ export async function getPayrollData(period: { start: string, end: string }) {
     // Calculate liquidation for each barber
     const liquidation = (barbers as Barber[]).map((barber: Barber) => {
       const barberAppointments = (appointments as NominaAppointment[])?.filter((a: NominaAppointment) => a.barber_id === barber.id) || [];
-      const scheme = barber.barber_payment_schemes?.[0];
-      const serviceRates = barber.barber_service_rates || [];
+      const scheme = (schemes ?? []).find((s: any) => s.barbero_id === barber.id);
+      const serviceRates = (allServiceRates ?? []).filter((r: any) => r.barber_id === barber.id);
 
       let amountGenerated = 0;
       let amountBarber = 0;
 
-      if (scheme?.type === 'percentage') {
-        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
-        amountBarber = (amountGenerated * (Number(scheme.percentage) || 0)) / 100;
-      } else if (scheme?.type === 'fixed_monthly') {
-        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
-        amountBarber = Number(scheme.fixed_amount) || 0; // Should probably be pro-rated if period is not a month, but user didn't specify. I'll stick to full amount for now.
-      } else if (scheme?.type === 'fixed_per_service') {
-        amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price) || 0), 0);
+      amountGenerated = barberAppointments.reduce((sum: number, a: NominaAppointment) => sum + (Number(a.price_charged) || 0), 0);
+
+      if (scheme?.tipo === 'porcentaje') {
+        amountBarber = (amountGenerated * (Number(scheme.porcentaje) || 0)) / 100;
+      } else if (scheme?.tipo === 'fijo_mensual') {
+        amountBarber = Number(scheme.monto_fijo) || 0;
+      } else if (scheme?.tipo === 'fijo_por_servicio') {
         amountBarber = barberAppointments.reduce((sum: number, a: NominaAppointment) => {
           const rate = serviceRates.find((r: any) => r.service_id === a.service_id);
           return sum + (Number(rate?.fixed_amount) || 0);
@@ -182,8 +188,8 @@ export async function getPayrollData(period: { start: string, end: string }) {
         appointmentsCount: barberAppointments.length,
         amountGenerated,
         amountBarber,
-        scheme: scheme?.type || 'not_configured',
-        percentage: scheme?.percentage,
+        scheme: scheme?.tipo || 'not_configured',
+        percentage: scheme?.porcentaje,
         status: payment?.status || 'pending',
         paymentId: payment?.id
       };
@@ -224,7 +230,7 @@ export async function markAsPaid(data: {
       payment_date: new Date().toISOString(),
       payment_note: data.note,
       paid_by: user?.id,
-      metodo_pago: data.metodoPago,
+      payment_method: data.metodoPago,
     });
 
     if (error) throw error;
@@ -237,8 +243,7 @@ export async function markAsPaid(data: {
       monto: data.amountBarber,
       fecha: new Date().toISOString().split('T')[0],
       es_recurrente: false,
-      notas: data.note || null,
-    }).catch(() => {/* non-critical */});
+    }).catch(() => {/* non-critical: expenses table may not exist yet */});
 
     revalidatePath("/dashboard/nomina");
     revalidatePath("/dashboard/reportes");
@@ -256,11 +261,7 @@ export async function getPaymentHistory() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from("nomina_payments")
-      .select(`
-        *,
-        barber:barbers(name, avatar_url),
-        payer:auth_users_public(full_name)
-      `)
+      .select("*, barber:barbers(name, avatar_url)")
       .eq("barbershop_id", barbershopId)
       .order("payment_date", { ascending: false });
 

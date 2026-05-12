@@ -35,17 +35,17 @@ export async function getMetricasData(): Promise<MetricasData | null> {
   type ApptRow = {
     id: string
     scheduled_at: string
-    total_price: number | null
+    price_charged: number | null
     status: string
     service_id: string | null
     client_id: string | null
-    services: { name: string } | null
+    services: { name: string; price: number } | null
     clients: { name: string; created_at: string } | null
   }
 
   const { data: appointments } = await supabase
     .from('appointments')
-    .select('id, scheduled_at, total_price, status, service_id, client_id, services(name), clients(name, created_at)')
+    .select('id, scheduled_at, price_charged, status, service_id, client_id, services(name, price), clients(name, created_at)')
     .eq('barbershop_id', barbershopId)
     .gte('scheduled_at', hace90dias.toISOString())
     .order('scheduled_at', { ascending: true })
@@ -81,8 +81,8 @@ export async function getMetricasData(): Promise<MetricasData | null> {
     (a) => new Date(a.scheduled_at) >= inicioMesAnterior && new Date(a.scheduled_at) <= finMesAnterior,
   )
 
-  const ingresosMes = citasMes.reduce((s, a) => s + Number(a.total_price ?? 0), 0)
-  const ingresosMesAnterior = citasMesAnterior.reduce((s, a) => s + Number(a.total_price ?? 0), 0)
+  const ingresosMes = citasMes.reduce((s, a) => s + Number(a.price_charged ?? a.services?.price ?? 0), 0)
+  const ingresosMesAnterior = citasMesAnterior.reduce((s, a) => s + Number(a.price_charged ?? a.services?.price ?? 0), 0)
   const ticketPromedio = completed.length > 0 ? Math.round(ingresosMes / (citasMes.length || 1)) : 0
 
   const totalAppts90 = allAppts.filter((a) => a.status !== 'cancelled').length
@@ -113,7 +113,7 @@ export async function getMetricasData(): Promise<MetricasData | null> {
     const nombre = (a.services as { name: string } | null)?.name ?? 'Otro'
     if (!servicioMap[nombre]) servicioMap[nombre] = { nombre, count: 0, ingresos: 0 }
     servicioMap[nombre].count++
-    servicioMap[nombre].ingresos += Number(a.total_price ?? 0)
+    servicioMap[nombre].ingresos += Number(a.price_charged ?? a.services?.price ?? 0)
   }
   const topServicios = Object.values(servicioMap)
     .sort((a, b) => b.count - a.count)
@@ -126,7 +126,7 @@ export async function getMetricasData(): Promise<MetricasData | null> {
     const key = a.client_id ?? nombre
     if (!clienteMap[key]) clienteMap[key] = { nombre, visitas: 0, gasto: 0 }
     clienteMap[key].visitas++
-    clienteMap[key].gasto += Number(a.total_price ?? 0)
+    clienteMap[key].gasto += Number(a.price_charged ?? a.services?.price ?? 0)
   }
   const topClientes = Object.values(clienteMap)
     .sort((a, b) => b.visitas - a.visitas)
@@ -149,7 +149,7 @@ export async function getMetricasData(): Promise<MetricasData | null> {
   const diaMap: Record<string, number> = {}
   for (const a of recientes14) {
     const dia = new Date(a.scheduled_at).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric' })
-    diaMap[dia] = (diaMap[dia] ?? 0) + Number(a.total_price ?? 0)
+    diaMap[dia] = (diaMap[dia] ?? 0) + Number(a.price_charged ?? a.services?.price ?? 0)
   }
   const ingresosPorDia = Object.entries(diaMap).map(([dia, ingresos]) => ({ dia, ingresos }))
 

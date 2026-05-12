@@ -1,101 +1,152 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { startOfDay, endOfDay, startOfMonth, endOfMonth } from "date-fns";
 
-interface Appointment {
+export interface BarberAppt {
   id: string;
+  scheduled_at: string;
   status: string;
-  price: number | string;
-  service_id: string;
-  date: string;
-  [key: string]: any;
+  price_charged: number | null;
+  clientName: string;
+  clientPhone: string | null;
+  serviceName: string;
+  servicePrice: number;
+  serviceDuration: number;
+  notes: string | null;
 }
 
-export async function getBarberDashboardDataByToken(barberId: string, token: string) {
+export interface BarberDashData {
+  barber: { id: string; name: string; barbershopName: string };
+  esquema: { tipo: string; porcentaje: number | null; monto_fijo: number | null } | null;
+  stats: {
+    citasHoy: number;
+    proximasCitas: number;
+    totalGeneradoMes: number;
+    misGananciasMes: number;
+  };
+  proximasCitas: BarberAppt[];
+  citasCompletadas: BarberAppt[];
+}
+
+export async function getBarberDashboardDataByToken(
+  barberId: string,
+  token: string,
+): Promise<BarberDashData | null> {
   const supabase = await createClient();
 
-  // VALIDAR TOKEN ANTES DE ENTREGAR DATA
+  // Validate token
   const { data: tokenValid } = await supabase
-    .from('barber_tokens')
-    .select('id')
-    .eq('barber_id', barberId)
-    .eq('token', token)
-    .eq('is_active', true)
-    .gte('expires_at', new Date().toISOString())
+    .from("barber_tokens")
+    .select("id")
+    .eq("barber_id", barberId)
+    .eq("token", token)
+    .eq("is_active", true)
+    .gte("expires_at", new Date().toISOString())
     .maybeSingle();
 
-  if (!tokenValid) {
-    console.error("Attempted access with invalid or expired token for barber:", barberId);
-    return null;
-  }
+  if (!tokenValid) return null;
 
-  // Get barber record
-  const { data: barber, error: bError } = await supabase
+  // Barber info
+  const { data: barber } = await supabase
     .from("barbers")
-    .select(`
-      *,
-      barbershops(name),
-      barber_payment_schemes(type, percentage, fixed_amount),
-      barber_service_rates(service_id, fixed_amount)
-    `)
+    .select("id, name, barbershops(name)")
     .eq("id", barberId)
     .maybeSingle();
 
-  if (bError || !barber) return null;
+  if (!barber) return null;
 
-  const today = startOfDay(new Date()).toISOString();
-  const todayEnd = endOfDay(new Date()).toISOString();
-  const monthStart = startOfMonth(new Date()).toISOString();
-  const monthEnd = endOfMonth(new Date()).toISOString();
+  // Payment scheme (Spanish column names)
+  const { data: esquema } = await supabase
+    .from("barber_payment_schemes")
+    .select("tipo, porcentaje, monto_fijo")
+    .eq("barbero_id", barberId)
+    .maybeSingle();
 
-  // Get appointments
-  const { data: todayAppointments } = await supabase
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59).toISOString();
+  const mesStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  // Future appointments (upcoming)
+  const { data: futuras } = await supabase
     .from("appointments")
-    .select("*")
-    .eq("barber_id", barber.id)
-    .gte("date", today)
-    .lte("date", todayEnd)
-    .order("date", { ascending: true });
+    .select(
+      "id, scheduled_at, status, notes, price_charged, clients(name, phone), services(name, price, duration_minutes)",
+    )
+    .eq("barber_id", barberId)
+    .in("status", ["confirmed", "pending"])
+    .gte("scheduled_at", now.toISOString())
+    .order("scheduled_at", { ascending: true })
+    .limit(30);
 
-  const { data: monthAppointments } = await supabase
+  // Completed appointments (recent history)
+  const { data: completadas } = await supabase
     .from("appointments")
-    .select("*")
-    .eq("barber_id", barber.id)
+    .select("id, scheduled_at, status, price_charged, clients(name, phone), services(name, price, duration_minutes)")
+    .eq("barber_id", barberId)
     .eq("status", "completed")
-    .gte("date", monthStart)
-    .lte("date", monthEnd);
+    .order("scheduled_at", { ascending: false })
+    .limit(20);
 
-  // Calculate earnings
-  const calculateEarnings = (apps: Appointment[]) => {
-    const scheme = barber.barber_payment_schemes?.[0];
-    const rates = barber.barber_service_rates || [];
+  // Month earnings
+  const { data: citasMes } = await supabase
+    .from("appointments")
+    .select("price_charged, services(price)")
+    .eq("barber_id", barberId)
+    .eq("status", "completed")
+    .gte("scheduled_at", mesStart);
 
-    if (scheme?.type === 'percentage') {
-      const total = apps.reduce((sum: number, a: Appointment) => sum + (Number(a.price) || 0), 0);
-      return (total * (Number(scheme.percentage) || 0)) / 100;
-    } else if (scheme?.type === 'fixed_per_service') {
-      return apps.reduce((sum: number, a: Appointment) => {
-        const rate = rates.find((r: any) => r.service_id === a.service_id);
-        return sum + (Number(rate?.fixed_amount) || 0);
-      }, 0);
-    } else if (scheme?.type === 'fixed_monthly') {
-      return Number(scheme.fixed_amount) || 0;
-    }
-    return 0;
-  };
+  const mapAppt = (a: any): BarberAppt => ({
+    id: a.id,
+    scheduled_at: a.scheduled_at,
+    status: a.status,
+    price_charged: a.price_charged ?? null,
+    clientName: (a.clients as any)?.name ?? "Cliente",
+    clientPhone: (a.clients as any)?.phone ?? null,
+    serviceName: (a.services as any)?.name ?? "Servicio",
+    servicePrice: Number((a.services as any)?.price ?? 0),
+    serviceDuration: Number((a.services as any)?.duration_minutes ?? 30),
+    notes: a.notes ?? null,
+  });
 
-  const earningsToday = calculateEarnings((todayAppointments as Appointment[])?.filter((a: Appointment) => a.status === 'completed') || []);
-  const earningsMonth = calculateEarnings((monthAppointments as Appointment[]) || []);
+  const totalGeneradoMes = (citasMes ?? []).reduce((s: number, a: any) => {
+    return s + Number(a.price_charged ?? (a.services as any)?.price ?? 0);
+  }, 0);
+
+  let misGananciasMes = 0;
+  if (esquema?.tipo === "porcentaje") {
+    misGananciasMes = totalGeneradoMes * (Number(esquema.porcentaje) || 0) / 100;
+  } else if (esquema?.tipo === "fijo_mensual") {
+    misGananciasMes = Number(esquema.monto_fijo) || 0;
+  } else {
+    misGananciasMes = totalGeneradoMes;
+  }
+
+  const todayAppts = (futuras ?? []).filter(
+    (a: { scheduled_at: string }) => a.scheduled_at >= todayStart && a.scheduled_at <= todayEnd,
+  );
 
   return {
-    barber,
-    stats: {
-      appointmentsToday: todayAppointments?.length || 0,
-      earningsToday,
-      earningsMonth
+    barber: {
+      id: barber.id,
+      name: barber.name,
+      barbershopName: (barber.barbershops as any)?.name ?? "",
     },
-    todayAppointments: todayAppointments || []
+    esquema: esquema
+      ? {
+          tipo: esquema.tipo,
+          porcentaje: esquema.porcentaje ? Number(esquema.porcentaje) : null,
+          monto_fijo: esquema.monto_fijo ? Number(esquema.monto_fijo) : null,
+        }
+      : null,
+    stats: {
+      citasHoy: todayAppts.length,
+      proximasCitas: (futuras ?? []).length,
+      totalGeneradoMes,
+      misGananciasMes,
+    },
+    proximasCitas: (futuras ?? []).map(mapAppt),
+    citasCompletadas: (completadas ?? []).map(mapAppt),
   };
 }
 
@@ -103,7 +154,7 @@ export async function completeAppointment(id: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("appointments")
-    .update({ status: 'completed' })
+    .update({ status: "completed" })
     .eq("id", id);
 
   if (error) return { success: false, error: error.message };

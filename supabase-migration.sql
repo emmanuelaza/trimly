@@ -61,20 +61,18 @@ ALTER TABLE appointments
 -- ── 2. EGRESOS ───────────────────────────────────────────────
 
 CREATE TABLE IF NOT EXISTS expenses (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  id            uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   barbershop_id uuid NOT NULL REFERENCES barbershops(id) ON DELETE CASCADE,
-  categoria text NOT NULL
+  categoria     text NOT NULL
     CHECK (categoria IN (
       'arriendo', 'servicios_publicos', 'insumos',
       'nomina', 'marketing', 'equipos', 'impuestos', 'otro'
     )),
-  descripcion text NOT NULL,
-  monto numeric(10,2) NOT NULL,
-  fecha date NOT NULL DEFAULT CURRENT_DATE,
+  descripcion   text NOT NULL,
+  monto         numeric(10,2) NOT NULL,
+  fecha         date NOT NULL DEFAULT CURRENT_DATE,
   es_recurrente boolean DEFAULT false,
-  frecuencia text CHECK (frecuencia IN ('diario', 'semanal', 'mensual', 'anual')),
-  notas text,
-  created_at timestamp with time zone DEFAULT NOW()
+  created_at    timestamp with time zone DEFAULT NOW()
 );
 
 ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
@@ -83,17 +81,13 @@ DROP POLICY IF EXISTS "owner_expenses" ON expenses;
 CREATE POLICY "owner_expenses" ON expenses FOR ALL
   USING (barbershop_id IN (SELECT id FROM barbershops WHERE owner_id = auth.uid()));
 
--- ── 3. NÓMINA ────────────────────────────────────────────────
+-- ── 3. NÓMINA — agregar payment_method si no existe ──────────
 
 ALTER TABLE nomina_payments
-  ADD COLUMN IF NOT EXISTS periodo_inicio date,
-  ADD COLUMN IF NOT EXISTS periodo_fin date,
-  ADD COLUMN IF NOT EXISTS monto_generado numeric(10,2) DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS monto_barbero numeric(10,2) DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS estado text DEFAULT 'pendiente'
-    CHECK (estado IN ('pendiente', 'pagado')),
-  ADD COLUMN IF NOT EXISTS fecha_pago timestamp with time zone,
-  ADD COLUMN IF NOT EXISTS metodo_pago text
-    CHECK (metodo_pago IN ('efectivo', 'nequi', 'daviplata', 'transferencia', 'otro')),
-  ADD COLUMN IF NOT EXISTS nota_pago text,
-  ADD COLUMN IF NOT EXISTS pagado_por uuid;
+  ADD COLUMN IF NOT EXISTS payment_method text
+    CHECK (payment_method IN ('efectivo', 'nequi', 'daviplata', 'transferencia', 'otro'));
+
+-- ── 4. APPOINTMENTS — descuento de cupones ────────────────────
+
+ALTER TABLE appointments
+  ADD COLUMN IF NOT EXISTS descuento_aplicado numeric(10,2) DEFAULT 0;
