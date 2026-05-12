@@ -236,14 +236,15 @@ export async function markAsPaid(data: {
     if (error) throw error;
 
     // Auto-create expense record for this payroll payment
-    await supabase.from('expenses').insert({
+    const { error: expError } = await supabase.from('expenses').insert({
       barbershop_id: barbershopId,
       categoria: 'nomina',
       descripcion: `Nómina ${data.barberName} — ${data.periodStart} al ${data.periodEnd}`,
       monto: data.amountBarber,
       fecha: new Date().toISOString().split('T')[0],
       es_recurrente: false,
-    }).catch(() => {/* non-critical: expenses table may not exist yet */});
+    });
+    if (expError) console.error(expError);
 
     revalidatePath("/dashboard/nomina");
     revalidatePath("/dashboard/reportes");
