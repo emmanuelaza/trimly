@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   Menu, X, ArrowRight, Check, Star, ChevronDown,
   Calendar, Bell, BarChart3, Users, ShoppingBag,
   Clock, DollarSign, SmilePlus, TrendingUp,
   CreditCard, Shield, Ban, Rocket,
-  Instagram, Youtube, MessageCircle, Music2,
+  Camera, Tv, MessageCircle, Music2,
   MapPin, Heart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -133,10 +133,10 @@ const FAQ_ITEMS = [
 ];
 
 const SOCIAL_LINKS = [
-  { href: '#', label: 'Instagram', Icon: Instagram },
+  { href: '#', label: 'Instagram', Icon: Camera },
   { href: '#', label: 'TikTok',    Icon: Music2 },
   { href: '#', label: 'WhatsApp',  Icon: MessageCircle },
-  { href: '#', label: 'YouTube',   Icon: Youtube },
+  { href: '#', label: 'YouTube',   Icon: Tv },
 ];
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
@@ -282,22 +282,6 @@ function DashboardMockup() {
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Auto-scrolling testimonials
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [fading, setFading] = useState(false);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFading(true);
-      setTimeout(() => {
-        setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
-        setFading(false);
-      }, 350);
-    }, 4500);
-    return () => clearInterval(interval);
-  }, []);
-
-  const t = TESTIMONIALS[activeTestimonial];
 
   return (
     <div className="min-h-screen bg-background font-body">
@@ -436,57 +420,63 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── TESTIMONIALS (auto-carousel) ── */}
-      <section id="testimonios" className="max-w-4xl mx-auto px-4 py-16">
-        <div className="text-center mb-10">
+      {/* ── TESTIMONIALS (infinite scroll carousel) ── */}
+      <section id="testimonios" className="py-16 overflow-hidden">
+        <div className="text-center mb-10 px-4">
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Barberos que ya crecen con Trimly</p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
             Ellos ya están viendo resultados
           </h2>
         </div>
 
-        <div className="bg-background-secondary border border-border rounded-2xl p-8 md:p-12 shadow-sm overflow-hidden">
-          {/* Slide */}
-          <div className={cn('flex flex-col md:flex-row items-center gap-8 transition-opacity duration-350', fading ? 'opacity-0' : 'opacity-100')}>
-            {/* Avatar */}
-            <div className="flex-shrink-0 flex flex-col items-center gap-3">
-              <div className="w-20 h-20 rounded-full bg-primary-bg flex items-center justify-center text-2xl font-bold text-primary border-2 border-primary/20">
-                {t.initials}
-              </div>
-              <div className="text-center">
-                <p className="font-bold text-sm text-text-primary">{t.name}</p>
-                <p className="text-xs text-primary font-medium">{t.shop}</p>
-                <div className="flex items-center justify-center gap-0.5 mt-1.5">
+        {/* Carousel track — duplicated for seamless infinite loop */}
+        <div className="relative">
+          {/* Left fade */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-background to-transparent z-10 pointer-events-none" />
+          {/* Right fade */}
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-background to-transparent z-10 pointer-events-none" />
+
+          <div
+            className="flex gap-5"
+            style={{ animation: 'scroll-cards 28s linear infinite', width: 'max-content' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'paused'; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.animationPlayState = 'running'; }}
+          >
+            {[...TESTIMONIALS, ...TESTIMONIALS].map((t, i) => (
+              <div
+                key={i}
+                className="w-[320px] md:w-[380px] flex-shrink-0 bg-background-secondary border border-border rounded-2xl p-6 shadow-sm flex flex-col gap-4"
+              >
+                {/* Stars */}
+                <div className="flex items-center gap-0.5">
                   {Array.from({ length: t.stars }).map((_, j) => (
-                    <Star key={j} size={12} className="fill-warning text-warning" />
+                    <Star key={j} size={14} className="fill-warning text-warning" />
                   ))}
                 </div>
-              </div>
-            </div>
 
-            {/* Quote */}
-            <div className="relative flex-1">
-              {/* Big decorative quote mark */}
-              <div className="absolute -top-4 -left-2 text-6xl font-serif text-primary/10 leading-none select-none">&ldquo;</div>
-              <p className="text-base md:text-lg text-text-primary leading-relaxed relative z-10 pt-4">
-                {t.quote}
-              </p>
-              <div className="flex items-center gap-1.5 mt-3">
-                <MapPin size={12} className="text-text-muted flex-shrink-0" />
-                <span className="text-xs text-text-muted">{t.location}</span>
-              </div>
-            </div>
-          </div>
+                {/* Quote */}
+                <p className="text-sm text-text-secondary leading-relaxed flex-1">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
 
-          {/* Progress dots */}
-          <div className="flex justify-center gap-2 mt-8">
-            {TESTIMONIALS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => { setFading(true); setTimeout(() => { setActiveTestimonial(i); setFading(false); }, 200); }}
-                className={cn('h-2 rounded-full transition-all duration-300', i === activeTestimonial ? 'w-6 bg-primary' : 'w-2 bg-border-strong hover:bg-text-muted')}
-                aria-label={`Ver testimonio ${i + 1}`}
-              />
+                {/* Author */}
+                <div className="flex items-center gap-3 pt-2 border-t border-border">
+                  <div className="w-9 h-9 rounded-full bg-primary-bg flex items-center justify-center text-xs font-bold text-primary border border-primary/20 flex-shrink-0">
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-text-primary">{t.name}</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs text-primary font-medium">{t.shop}</p>
+                      <span className="text-border-strong">·</span>
+                      <div className="flex items-center gap-1">
+                        <MapPin size={10} className="text-text-muted" />
+                        <span className="text-xs text-text-muted">{t.location}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
