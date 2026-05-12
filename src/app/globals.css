@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @theme {
   /* ─── BACKGROUNDS ────────────────────────────── */
@@ -207,7 +206,10 @@
   .stagger-6 { animation-delay: 300ms; }
 
   .skeleton-premium {
-    @apply skeleton;
+    background: linear-gradient(90deg, #18181F 25%, #1E1E28 50%, #18181F 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 10px;
   }
 
   .page-fade {
