@@ -196,13 +196,15 @@ export async function getPayrollData(period: { start: string, end: string }) {
   }
 }
 
-export async function markAsPaid(data: { 
-  barberId: string, 
-  periodStart: string, 
-  periodEnd: string, 
-  amountGenerated: number, 
-  amountBarber: number, 
-  note?: string 
+export async function markAsPaid(data: {
+  barberId: string
+  barberName: string
+  periodStart: string
+  periodEnd: string
+  amountGenerated: number
+  amountBarber: number
+  metodoPago: 'efectivo' | 'nequi' | 'daviplata' | 'transferencia' | 'otro'
+  note?: string
 }) {
   try {
     const barbershopId = await getBarbershopId();
@@ -221,12 +223,25 @@ export async function markAsPaid(data: {
       status: 'paid',
       payment_date: new Date().toISOString(),
       payment_note: data.note,
-      paid_by: user?.id
+      paid_by: user?.id,
+      metodo_pago: data.metodoPago,
     });
 
     if (error) throw error;
-    
+
+    // Auto-create expense record for this payroll payment
+    await supabase.from('expenses').insert({
+      barbershop_id: barbershopId,
+      categoria: 'nomina',
+      descripcion: `Nómina ${data.barberName} — ${data.periodStart} al ${data.periodEnd}`,
+      monto: data.amountBarber,
+      fecha: new Date().toISOString().split('T')[0],
+      es_recurrente: false,
+      notas: data.note || null,
+    }).catch(() => {/* non-critical */});
+
     revalidatePath("/dashboard/nomina");
+    revalidatePath("/dashboard/reportes");
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

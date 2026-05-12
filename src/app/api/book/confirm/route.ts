@@ -7,15 +7,19 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log('Booking request:', body);
 
-    const { 
-      barbershopId, 
-      barberId, 
-      serviceId, 
-      scheduledAt, 
-      clientName, 
-      clientPhone, 
+    const {
+      barbershopId,
+      barberId,
+      serviceId,
+      scheduledAt,
+      clientName,
+      clientPhone,
       clientEmail,
-      priceCharged
+      priceCharged,
+      referralCode,
+      referralClienteId,
+      referralValor,
+      referralTipo,
     } = body;
     
     console.log('Processed fields:', { barbershopId, barberId, serviceId, scheduledAt, clientName, clientPhone });
@@ -80,6 +84,12 @@ export async function POST(req: Request) {
     }
 
     // 3. Create Appointment
+    const descuento = referralCode && referralValor
+      ? (referralTipo === 'porcentaje'
+          ? Math.round((priceCharged * referralValor) / 100)
+          : referralValor)
+      : 0;
+
     const { data: appointment, error: appErr } = await supabase
       .from("appointments")
       .insert({
@@ -89,7 +99,9 @@ export async function POST(req: Request) {
         barber_id: barberId,
         scheduled_at: scheduledAt,
         status: "confirmed",
-        price_charged: priceCharged
+        price_charged: priceCharged,
+        referral_code_usado: referralCode || null,
+        descuento_referido: descuento,
       })
       .select()
       .single();
@@ -103,6 +115,34 @@ export async function POST(req: Request) {
     }
 
     console.log('Appointment created successfully:', appointment.id);
+
+    // 3b. Register referral use and credit the referrer
+    if (referralCode && referralClienteId && referralValor) {
+      try {
+        const creditAmount = referralTipo === 'porcentaje'
+          ? Math.round((priceCharged * referralValor) / 100)
+          : referralValor;
+
+        await supabase.from('referral_uses').insert({
+          barbershop_id: barbershopId,
+          referral_code: referralCode.toUpperCase(),
+          cliente_que_refirio: referralClienteId,
+          cliente_nuevo: clientId,
+          credito_otorgado: creditAmount,
+          estado: 'pendiente',
+        });
+
+        const { data: referidor } = await supabase
+          .from('clients')
+          .select('credito_acumulado')
+          .eq('id', referralClienteId)
+          .maybeSingle();
+        const newCredit = (Number(referidor?.credito_acumulado) || 0) + creditAmount;
+        await supabase.from('clients').update({ credito_acumulado: newCredit }).eq('id', referralClienteId);
+      } catch (refErr) {
+        console.error('Referral registration error:', refErr);
+      }
+    }
 
     // 4. Send Confirmation Email Directly
     if (clientEmail) {

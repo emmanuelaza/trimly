@@ -61,6 +61,33 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
+  // Referral code
+  const [referralCode, setReferralCode] = useState('');
+  const [referralValidating, setReferralValidating] = useState(false);
+  const [referralResult, setReferralResult] = useState<{
+    valid: boolean; clienteName?: string; clienteId?: string; beneficio?: string;
+    valorBeneficio?: number; tipoBeneficio?: string; error?: string
+  } | null>(null);
+
+  const validateReferral = async () => {
+    if (!referralCode.trim()) return;
+    setReferralValidating(true);
+    setReferralResult(null);
+    try {
+      const res = await fetch('/api/book/validate-referral', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo: referralCode, barbershopId: barbershop.id }),
+      });
+      const data = await res.json();
+      setReferralResult(data);
+    } catch {
+      setReferralResult({ valid: false, error: 'Error al validar el código' });
+    } finally {
+      setReferralValidating(false);
+    }
+  };
+
   const showOccupiedToast = () => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
     toast.custom((t) => (
@@ -255,7 +282,11 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
           clientName: clientInfo.name,
           clientPhone: clientInfo.phone,
           clientEmail: clientInfo.email,
-          priceCharged: selectedService.price
+          priceCharged: selectedService.price,
+          referralCode: referralResult?.valid ? referralCode.toUpperCase().trim() : null,
+          referralClienteId: referralResult?.valid ? referralResult.clienteId : null,
+          referralValor: referralResult?.valid ? referralResult.valorBeneficio : null,
+          referralTipo: referralResult?.valid ? referralResult.tipoBeneficio : null,
         })
       });
 
@@ -525,8 +556,8 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
                 {clientInfo.email && (
                   <label className="flex items-center gap-3 p-2 cursor-pointer">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={clientInfo.acceptReminders}
                       onChange={e => setClientInfo(prev => ({ ...prev, acceptReminders: e.target.checked }))}
                       className="w-4 h-4 rounded border-border bg-background-tertiary text-accent focus:ring-accent accent-accent"
@@ -534,6 +565,38 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                     <span className="text-[11px] text-text-secondary">Quiero recibir un recordatorio por email</span>
                   </label>
                 )}
+
+                <div className="space-y-1.5 pt-2">
+                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">¿Tienes un código de referido? (opcional)</label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="XXXXXXXX"
+                      value={referralCode}
+                      onChange={e => {
+                        setReferralCode(e.target.value.toUpperCase());
+                        if (referralResult) setReferralResult(null);
+                      }}
+                      className="uppercase tracking-widest"
+                    />
+                    <button
+                      type="button"
+                      onClick={validateReferral}
+                      disabled={referralValidating || !referralCode.trim()}
+                      className="px-4 py-2 rounded-xl text-xs font-bold bg-background-secondary border border-border text-text-secondary hover:border-accent hover:text-accent transition-all disabled:opacity-40"
+                    >
+                      {referralValidating ? '...' : 'Validar'}
+                    </button>
+                  </div>
+                  {referralResult?.valid && (
+                    <div className="flex items-center gap-2 px-3 py-2 bg-success/10 border border-success/20 rounded-xl text-xs text-success font-medium">
+                      <Check size={14} />
+                      Código válido — {referralResult.beneficio} · Referido por {referralResult.clienteName}
+                    </div>
+                  )}
+                  {referralResult && !referralResult.valid && (
+                    <p className="text-xs text-error px-1">{referralResult.error ?? 'Código no válido'}</p>
+                  )}
+                </div>
 
                 <Button 
                   variant="primary" 

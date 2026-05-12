@@ -1,254 +1,435 @@
-"use client";
+'use client'
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
-import { StatCard } from '@/components/ui/StatCard';
-import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
-import { IngresosChart } from '@/components/reportes/IngresosChart';
-import { FileSpreadsheet, Download, Lock } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
-import { exportReportData } from '@/app/actions/reports';
+import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  TrendingUp, TrendingDown, DollarSign, Minus, Plus, Pencil, Trash2, ChevronDown, ChevronUp,
+} from 'lucide-react'
+import { PageHeader } from '@/components/ui/PageHeader'
+import { Button } from '@/components/ui/Button'
+import { Modal } from '@/components/ui/Modal'
+import { ConfirmModal } from '@/components/ui/ConfirmModal'
+import { cn } from '@/lib/utils'
+import {
+  createExpense, updateExpense, deleteExpense,
+  type Expense, type ExpenseCategoria, type ResumenFinanciero,
+} from '@/app/actions/finanzas'
+import toast from 'react-hot-toast'
 
-import { formatTime, formatDate, getTodayString } from '@/lib/dateUtils';
+const COP = (n: number) =>
+  new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n)
 
-type Periodo = 'hoy' | 'semana' | 'mes' | 'todo';
+const CATEGORIAS: { value: ExpenseCategoria; label: string }[] = [
+  { value: 'arriendo', label: 'Arriendo' },
+  { value: 'servicios_publicos', label: 'Servicios públicos' },
+  { value: 'insumos', label: 'Insumos' },
+  { value: 'nomina', label: 'Nómina' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'equipos', label: 'Equipos' },
+  { value: 'impuestos', label: 'Impuestos' },
+  { value: 'otro', label: 'Otro' },
+]
 
-const PERIODOS: { id: Periodo; label: string }[] = [
-  { id: 'hoy', label: 'Hoy' },
-  { id: 'semana', label: 'Esta semana' },
-  { id: 'mes', label: 'Este mes' },
-  { id: 'todo', label: 'Todo' },
-];
+const CAT_COLORS: Record<string, string> = {
+  arriendo: 'bg-blue-500',
+  servicios_publicos: 'bg-yellow-500',
+  insumos: 'bg-green-500',
+  nomina: 'bg-purple-500',
+  marketing: 'bg-pink-500',
+  equipos: 'bg-orange-500',
+  impuestos: 'bg-red-500',
+  otro: 'bg-gray-500',
+}
 
-export default function ReportesClient({ 
-  stats, 
-  initialPeriod, 
-  subscriptionStatus,
-  planType
-}: { 
-  stats: any, 
-  initialPeriod: Periodo,
-  subscriptionStatus?: string,
-  planType?: string
-}) {
-  const router = useRouter();
-  const [periodo, setPeriodo] = useState<Periodo>(initialPeriod);
-  const [exporting, setExporting] = useState(false);
+const MES_LABELS: Record<string, string> = {
+  '01': 'Ene', '02': 'Feb', '03': 'Mar', '04': 'Abr', '05': 'May', '06': 'Jun',
+  '07': 'Jul', '08': 'Ago', '09': 'Sep', '10': 'Oct', '11': 'Nov', '12': 'Dic',
+}
 
-  const handlePeriodChange = (p: Periodo) => {
-    setPeriodo(p);
-    router.push(`/dashboard/reportes?p=${p}`);
-  };
+function getMesesOpciones() {
+  const now = new Date()
+  const opciones = []
+  for (let i = 0; i < 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    const mm = String(d.getMonth() + 1).padStart(2, '0')
+    opciones.push({ value: val, label: `${MES_LABELS[mm]} ${d.getFullYear()}` })
+  }
+  return opciones
+}
 
-  const isPremiumPlan = planType === 'filo_pro' || planType === 'anual' || planType === 'lifetime';
-  const canExport = isPremiumPlan && subscriptionStatus === 'active';
+interface Props {
+  resumen: ResumenFinanciero | null
+  expenses: Expense[]
+  mesFiltro?: string
+}
 
-  const handleExport = async () => {
-    if (!canExport) {
-        toast.error("Exportación disponible en plan Filo Pro");
-        return;
+const BLANK_FORM = {
+  categoria: 'insumos' as ExpenseCategoria,
+  descripcion: '',
+  monto: '',
+  fecha: new Date().toISOString().split('T')[0],
+  es_recurrente: false,
+  frecuencia: '',
+  notas: '',
+}
+
+export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [tab, setTab] = useState<'resumen' | 'gastos'>('resumen')
+  const [showForm, setShowForm] = useState(false)
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [form, setForm] = useState(BLANK_FORM)
+  const [expandedCats, setExpandedCats] = useState(false)
+
+  const meses = getMesesOpciones()
+  const mesActual = mesFiltro ?? meses[0].value
+
+  const handleMesChange = (mes: string) => router.push(`/dashboard/reportes?mes=${mes}`)
+
+  const openCreate = () => {
+    setForm(BLANK_FORM)
+    setEditingExpense(null)
+    setShowForm(true)
+  }
+
+  const openEdit = (e: Expense) => {
+    setForm({
+      categoria: e.categoria,
+      descripcion: e.descripcion,
+      monto: String(e.monto),
+      fecha: e.fecha,
+      es_recurrente: e.es_recurrente,
+      frecuencia: e.frecuencia ?? '',
+      notas: e.notas ?? '',
+    })
+    setEditingExpense(e)
+    setShowForm(true)
+  }
+
+  const handleSubmit = () => {
+    if (!form.descripcion || !form.monto || !form.fecha) {
+      toast.error('Completa los campos requeridos')
+      return
     }
-
-    setExporting(true);
-    try {
-      const now = new Date();
-      let startDate = new Date();
-      if (periodo === 'hoy') {
-        const bogotaToday = getTodayString();
-        startDate = new Date(`${bogotaToday}T00:00:00-05:00`);
+    const fd = new FormData()
+    Object.entries(form).forEach(([k, v]) => fd.set(k, String(v)))
+    startTransition(async () => {
+      const result = editingExpense ? await updateExpense(editingExpense.id, fd) : await createExpense(fd)
+      if (result.error) {
+        toast.error(result.error)
+      } else {
+        toast.success(editingExpense ? 'Gasto actualizado' : 'Gasto registrado')
+        setShowForm(false)
+        router.refresh()
       }
-      else if (periodo === 'semana') startDate.setDate(now.getDate() - 7);
-      else if (periodo === 'mes') startDate.setMonth(now.getMonth() - 1);
-      else if (periodo === 'todo') startDate = new Date(2000, 0, 1);
+    })
+  }
 
-      const data = await exportReportData(startDate.toISOString(), now.toISOString());
-      
-      if (!data) throw new Error("No se pudieron obtener los datos");
+  const handleDelete = () => {
+    if (!deletingId) return
+    startTransition(async () => {
+      const result = await deleteExpense(deletingId)
+      if (result.error) { toast.error(result.error) } else {
+        toast.success('Gasto eliminado')
+        setDeletingId(null)
+        router.refresh()
+      }
+    })
+  }
 
-      const wb = XLSX.utils.book_new();
-
-      // HOJA 1: RESUMEN
-      const resumenData = [
-        ["Trimly", "Reporte de Negocio"],
-        [],
-        ["Período", `${formatDate(startDate.toISOString())} - ${formatDate(now.toISOString())}`],
-        ["Total de citas", data.appointments.length],
-        ["Citas completadas", data.appointments.filter((a: any) => a.status === 'completed').length],
-        ["Citas canceladas", data.appointments.filter((a: any) => a.status === 'cancelled').length],
-        ["Ingresos totales", stats.ingresos],
-        ["Ticket promedio", data.appointments.length > 0 ? (stats.ingresos / data.appointments.length) : 0],
-        ["Servicio más popular", stats.servicios[0]?.n || 'N/A'],
-        ["Barbero con más citas", stats.barberos[0]?.n || 'N/A']
-      ];
-      const wsResumen = XLSX.utils.aoa_to_sheet(resumenData);
-
-      // Estilo básico (xlsx no soporta estilos complejos en versión gratuita, pero podemos usar headers)
-      XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen");
-
-      // HOJA 2: CITAS
-      const citasHeaders = [["Trimly", "Detalle de Citas"], [], ["Fecha", "Hora", "Cliente", "Teléfono", "Servicio", "Barbero", "Precio", "Estado"]];
-      const citasRows = data.appointments.map((a: any) => {
-          const d = new Date(a.scheduled_at);
-          return [
-              formatDate(a.scheduled_at),
-              formatTime(a.scheduled_at),
-              a.client?.name || 'N/A',
-              a.client?.phone || 'N/A',
-              a.service?.name || 'N/A',
-              a.barber?.name || 'N/A',
-              Number(a.price_charged) || 0,
-              a.status
-          ];
-      });
-      const wsCitas = XLSX.utils.aoa_to_sheet([...citasHeaders, ...citasRows]);
-      XLSX.utils.book_append_sheet(wb, wsCitas, "Citas");
-
-      // HOJA 3: CLIENTES
-      const clientesHeaders = [["Trimly", "Listado de Clientes"], [], ["Nombre", "Teléfono", "Email", "Total visitas", "Última visita", "Total gastado"]];
-      const clientesRows = data.clients.map((c: any) => [
-          c.name,
-          c.phone || 'N/A',
-          c.email || 'N/A',
-          c.totalVisits,
-          c.last_visit ? formatDate(c.last_visit) : 'N/A',
-          Number(c.totalSpent) || 0
-      ]);
-      const wsClientes = XLSX.utils.aoa_to_sheet([...clientesHeaders, ...clientesRows]);
-      XLSX.utils.book_append_sheet(wb, wsClientes, "Clientes");
-
-      const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-      saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `Trimly-Reporte-${startDate.toISOString().split('T')[0]}-${now.toISOString().split('T')[0]}.xlsx`);
-
-      toast.success("Reporte exportado correctamente");
-    } catch (error: any) {
-      toast.error("Error al exportar: " + error.message);
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  const isEmpty = !stats || stats.citas === 0;
+  const r = resumen
+  const deltaIngresos = r && r.ingresosMesAnterior > 0
+    ? Math.round(((r.ingresosMes - r.ingresosMesAnterior) / r.ingresosMesAnterior) * 100) : null
+  const deltaEgresos = r && r.egresosMesAnterior > 0
+    ? Math.round(((r.egresosMes - r.egresosMesAnterior) / r.egresosMesAnterior) * 100) : null
+  const maxIngreso = Math.max(1, ...(r?.ingresosPorDia.map(d => d.ingresos) ?? [1]))
 
   return (
-    <div className="space-y-10 max-w-[1200px] mx-auto pb-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold text-text-primary">Reportes</h1>
-          <p className="text-sm text-text-tertiary mt-1">Métricas y rendimiento de tu negocio.</p>
-        </div>
-
-        <div className="flex items-center gap-3">
-            <div title={!canExport ? "Disponible en plan Filo Pro" : ""}>
-                <Button 
-                    variant="secondary" 
-                    size="sm" 
-                    onClick={handleExport}
-                    loading={exporting}
-                    className={`h-9 ${!canExport ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
-                >
-                    {canExport ? <FileSpreadsheet size={16} /> : <Lock size={14} />}
-                    Exportar a Excel
-                </Button>
-            </div>
-
-            <div className="inline-flex bg-background-secondary border border-border p-1 rounded-xl gap-0.5 h-9 items-center">
-            {PERIODOS.map(p => (
-                <button
-                key={p.id}
-                onClick={() => handlePeriodChange(p.id)}
-                className={`px-4 py-1 text-xs font-semibold rounded-lg transition-all h-7 ${
-                    periodo === p.id
-                    ? 'bg-accent text-background-primary shadow-sm'
-                    : 'text-text-tertiary hover:text-text-primary'
-                }`}
-                >
-                {p.label}
-                </button>
-            ))}
-            </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 page-fade">
-        <StatCard label="Ingresos" value={`$${(stats?.ingresos || 0).toLocaleString()}`} trend={`${stats?.ingPrev > 0 ? (stats.ingresos >= stats.ingPrev ? '↑' : '↓') : ''} ${stats?.ingPrev > 0 ? Math.abs((stats.ingresos - stats.ingPrev) / stats.ingPrev * 100).toFixed(0) + '%' : ''}`} sub="vs mes anterior" />
-        <StatCard label="Citas Mes" value={stats?.citas || 0} />
-        <StatCard label="Tasa No-Show" value={`${(stats?.noShowRate || 0).toFixed(1)}%`} color={stats?.noShowRate > 15 ? 'danger' : 'success'} />
-        <StatCard label="Nuevos Clientes" value={stats?.nuevos || 0} />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="text-sm font-bold text-text-primary">Clientes Nuevos por Semana</h2>
-              <p className="text-xs text-text-tertiary mt-0.5">Crecimiento mensual</p>
-            </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Ingresos y Egresos"
+        description="Seguimiento financiero de tu barbería"
+        action={
+          <div className="flex items-center gap-2">
+            <select
+              value={mesActual}
+              onChange={e => handleMesChange(e.target.value)}
+              className="h-9 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            >
+              {meses.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+            </select>
+            <Button onClick={openCreate} className="h-9 gap-1.5">
+              <Plus size={15} /> Agregar gasto
+            </Button>
           </div>
-          {isEmpty ? (
-            <div className="h-64 flex flex-col items-center justify-center text-text-tertiary border border-dashed border-border rounded-xl">
-              <p className="text-sm">Aún no hay datos de clientes registrados</p>
-            </div>
-          ) : (
-             <div className="h-64 flex items-end gap-2 px-4">
-                {stats.clientesSemanales.map((d: any) => (
-                  <div key={d.label} className="flex-1 flex flex-col items-center gap-2">
-                    <div className="w-full bg-accent rounded-t-lg transition-all hover:opacity-80" style={{ height: `${(d.value / Math.max(...stats.clientesSemanales.map((w:any) => w.value))) * 180}px` }} />
-                    <span className="text-[10px] text-text-tertiary uppercase">{d.label}</span>
+        }
+      />
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard label="Ingresos del mes" value={r ? COP(r.ingresosMes) : '—'} delta={deltaIngresos} icon={<TrendingUp size={18} />} color="text-success" bg="bg-success/10" />
+        <KpiCard label="Egresos del mes" value={r ? COP(r.egresosMes) : '—'} delta={deltaEgresos !== null ? -deltaEgresos : null} icon={<TrendingDown size={18} />} color="text-error" bg="bg-error/10" deltaInvert />
+        <KpiCard label="Nómina pagada" value={r ? COP(r.gastosNomina) : '—'} icon={<DollarSign size={18} />} color="text-accent" bg="bg-accent/10" />
+        <KpiCard
+          label="Ganancia neta"
+          value={r ? COP(r.gananciaNeta) : '—'}
+          icon={!r || r.gananciaNeta >= 0 ? <TrendingUp size={18} /> : <Minus size={18} />}
+          color={!r || r.gananciaNeta >= 0 ? 'text-success' : 'text-error'}
+          bg={!r || r.gananciaNeta >= 0 ? 'bg-success/10' : 'bg-error/10'}
+        />
+      </div>
+
+      {/* Tabs */}
+      <div className="flex p-1 bg-background-secondary rounded-xl w-fit border border-border">
+        {(['resumen', 'gastos'] as const).map(t => (
+          <button
+            key={t}
+            onClick={() => setTab(t)}
+            className={cn(
+              'px-5 py-2 text-xs font-bold rounded-lg transition-all',
+              tab === t ? 'bg-background-primary shadow-sm text-accent' : 'text-text-tertiary hover:text-text-secondary',
+            )}
+          >
+            {t === 'resumen' ? 'Resumen de ingresos' : 'Gestión de gastos'}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'resumen' && (
+        <div className="space-y-6">
+          <div className="bg-background-secondary rounded-2xl border border-border p-6">
+            <p className="text-xs font-black text-text-tertiary uppercase tracking-widest mb-5">Ingresos por día</p>
+            {r && r.ingresosPorDia.length > 0 ? (
+              <div className="flex items-end gap-1 h-32 overflow-x-auto pb-4">
+                {r.ingresosPorDia.map((d) => (
+                  <div key={d.dia} className="flex flex-col items-center gap-1 flex-1 min-w-[32px]">
+                    <div
+                      className="w-full bg-accent rounded-t-sm transition-all hover:bg-accent/80"
+                      style={{ height: `${Math.max(4, Math.round((d.ingresos / maxIngreso) * 100))}%` }}
+                      title={COP(d.ingresos)}
+                    />
+                    <span className="text-[9px] text-text-tertiary">{d.dia}</span>
                   </div>
                 ))}
-             </div>
+              </div>
+            ) : (
+              <p className="text-sm text-text-tertiary text-center py-8">Sin citas completadas este mes</p>
+            )}
+          </div>
+
+          {r && r.ingresosPorServicio.length > 0 && (
+            <div className="bg-background-secondary rounded-2xl border border-border p-6">
+              <p className="text-xs font-black text-text-tertiary uppercase tracking-widest mb-5">Ingresos por servicio</p>
+              <div className="space-y-3">
+                {r.ingresosPorServicio.map((s) => {
+                  const pct = r.ingresosMes > 0 ? Math.round((s.ingresos / r.ingresosMes) * 100) : 0
+                  return (
+                    <div key={s.nombre} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-text-primary font-medium">{s.nombre}</span>
+                        <span className="text-text-secondary tabular-nums">{COP(s.ingresos)} <span className="text-text-tertiary">({s.count} citas)</span></span>
+                      </div>
+                      <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                        <div className="h-full bg-accent rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
-        </Card>
+        </div>
+      )}
 
-        <Card className="p-6">
-          <h2 className="text-sm font-bold text-text-primary mb-5">Servicios Populares</h2>
-          <div className="space-y-4">
-            {stats?.servicios?.length > 0 ? stats.servicios.map((s: any) => (
-              <div key={s.n} className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-text-primary">{s.n}</p>
-                  <p className="text-[10px] text-text-tertiary">{s.c} citas</p>
+      {tab === 'gastos' && (
+        <div className="space-y-6">
+          {r && r.egresosPorCategoria.length > 0 && (
+            <div className="bg-background-secondary rounded-2xl border border-border p-6">
+              <button className="w-full flex items-center justify-between" onClick={() => setExpandedCats(v => !v)}>
+                <p className="text-xs font-black text-text-tertiary uppercase tracking-widest">Gastos por categoría</p>
+                {expandedCats ? <ChevronUp size={16} className="text-text-tertiary" /> : <ChevronDown size={16} className="text-text-tertiary" />}
+              </button>
+              {expandedCats && (
+                <div className="mt-5 space-y-3">
+                  {r.egresosPorCategoria.map((c) => {
+                    const pct = r.egresosMes > 0 ? Math.round((c.monto / r.egresosMes) * 100) : 0
+                    const label = CATEGORIAS.find(x => x.value === c.categoria)?.label ?? c.categoria
+                    return (
+                      <div key={c.categoria} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className={cn('w-2 h-2 rounded-full', CAT_COLORS[c.categoria] ?? 'bg-gray-500')} />
+                            <span className="text-text-primary font-medium">{label}</span>
+                          </div>
+                          <span className="text-text-secondary tabular-nums">{COP(c.monto)} <span className="text-text-tertiary">({pct}%)</span></span>
+                        </div>
+                        <div className="h-1.5 bg-background-tertiary rounded-full overflow-hidden">
+                          <div className={cn('h-full rounded-full', CAT_COLORS[c.categoria] ?? 'bg-gray-500')} style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
-                <Badge variant="accent">${s.t.toLocaleString()}</Badge>
+              )}
+            </div>
+          )}
+
+          <div className="bg-background-secondary rounded-2xl border border-border overflow-hidden">
+            <div className="p-5 border-b border-border flex items-center justify-between">
+              <p className="text-sm font-bold text-text-primary">Registro de gastos</p>
+              <span className="text-xs text-text-tertiary">{expenses.length} registros</span>
+            </div>
+            {expenses.length === 0 ? (
+              <div className="py-16 text-center">
+                <p className="text-sm text-text-tertiary">Sin gastos registrados este mes</p>
+                <Button onClick={openCreate} variant="secondary" className="mt-4 gap-1.5">
+                  <Plus size={14} /> Agregar gasto
+                </Button>
               </div>
-            )) : (
-              <p className="text-xs text-text-tertiary py-10 text-center">Sin servicios este mes</p>
+            ) : (
+              <div className="divide-y divide-border">
+                {expenses.map((e) => {
+                  const catLabel = CATEGORIAS.find(c => c.value === e.categoria)?.label ?? e.categoria
+                  return (
+                    <div key={e.id} className="flex items-center gap-4 px-5 py-4 hover:bg-background-tertiary/30 transition-colors">
+                      <span className={cn('w-2.5 h-2.5 rounded-full shrink-0', CAT_COLORS[e.categoria] ?? 'bg-gray-500')} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-text-primary truncate">{e.descripcion}</p>
+                        <p className="text-xs text-text-tertiary mt-0.5">
+                          {catLabel} · {new Date(e.fecha + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                        </p>
+                      </div>
+                      <span className="text-sm font-bold text-error tabular-nums shrink-0">{COP(e.monto)}</span>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => openEdit(e)} className="p-1.5 rounded-lg hover:bg-background-tertiary text-text-tertiary hover:text-text-primary transition-colors">
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => setDeletingId(e.id)} className="p-1.5 rounded-lg hover:bg-error/10 text-text-tertiary hover:text-error transition-colors">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
             )}
           </div>
-        </Card>
-      </div>
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="p-6">
-          <h2 className="text-sm font-bold text-text-primary mb-5">Productividad por Barbero</h2>
-          <div className="space-y-3">
-            {stats?.barberos?.length > 0 ? stats.barberos.map((b: any) => (
-              <div key={b.n} className="flex items-center gap-4">
-                <div className="w-8 h-8 rounded-full bg-background-tertiary flex items-center justify-center text-[10px] font-bold text-text-primary">
-                  {b.n.substring(0, 2).toUpperCase()}
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="text-text-primary">{b.n}</span>
-                    <span className="text-text-tertiary">{b.c} citas</span>
-                  </div>
-                  <div className="w-full bg-background-tertiary h-1.5 rounded-full overflow-hidden">
-                    <div className="bg-accent h-full" style={{ width: `${(b.c / stats.citas) * 100}%` }} />
-                  </div>
-                </div>
-              </div>
-            )) : (
-              <p className="text-xs text-text-tertiary py-5 text-center">No hay barbers registrados</p>
-            )}
+      <Modal isOpen={showForm} onClose={() => setShowForm(false)} title={editingExpense ? 'Editar gasto' : 'Agregar gasto'}>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Categoría *</label>
+            <select
+              value={form.categoria}
+              onChange={e => setForm(f => ({ ...f, categoria: e.target.value as ExpenseCategoria }))}
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            >
+              {CATEGORIAS.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
           </div>
-        </Card>
-      </div>
-      
-      <p className="text-xs text-text-tertiary text-center">Trimly Dashboard v1.0 · Actualizado en tiempo real</p>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Descripción *</label>
+            <input
+              value={form.descripcion}
+              onChange={e => setForm(f => ({ ...f, descripcion: e.target.value }))}
+              placeholder="Ej. Arriendo local mes de mayo"
+              className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Monto (COP) *</label>
+              <input
+                type="number"
+                value={form.monto}
+                onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+                placeholder="0"
+                className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Fecha *</label>
+              <input
+                type="date"
+                value={form.fecha}
+                onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))}
+                className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+              />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Notas (opcional)</label>
+            <input
+              value={form.notas}
+              onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
+              placeholder="Observaciones adicionales"
+              className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
+          </div>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input type="checkbox" checked={form.es_recurrente} onChange={e => setForm(f => ({ ...f, es_recurrente: e.target.checked }))} className="w-4 h-4 rounded accent-accent" />
+            <span className="text-sm text-text-secondary">Gasto recurrente</span>
+          </label>
+          {form.es_recurrente && (
+            <select
+              value={form.frecuencia}
+              onChange={e => setForm(f => ({ ...f, frecuencia: e.target.value }))}
+              className="w-full h-11 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            >
+              <option value="">Selecciona frecuencia</option>
+              <option value="mensual">Mensual</option>
+              <option value="semanal">Semanal</option>
+              <option value="diario">Diario</option>
+              <option value="anual">Anual</option>
+            </select>
+          )}
+          <div className="flex gap-3 pt-2">
+            <Button variant="secondary" className="flex-1" onClick={() => setShowForm(false)}>Cancelar</Button>
+            <Button className="flex-1" onClick={handleSubmit} loading={isPending}>
+              {editingExpense ? 'Guardar cambios' : 'Agregar gasto'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <ConfirmModal
+        isOpen={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={handleDelete}
+        title="Eliminar gasto"
+        description="¿Seguro que quieres eliminar este gasto? Esta acción no se puede deshacer."
+        confirmLabel="Eliminar"
+        confirmVariant="danger"
+        loading={isPending}
+      />
     </div>
-  );
+  )
+}
+
+function KpiCard({
+  label, value, delta, icon, color, bg, deltaInvert = false,
+}: {
+  label: string; value: string; delta?: number | null; icon: React.ReactNode
+  color: string; bg: string; deltaInvert?: boolean
+}) {
+  const isPositive = delta !== null && delta !== undefined && delta >= 0
+  return (
+    <div className="bg-background-secondary rounded-2xl border border-border p-5 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-text-tertiary uppercase tracking-widest">{label}</span>
+        <div className={cn('w-8 h-8 rounded-xl flex items-center justify-center', bg, color)}>{icon}</div>
+      </div>
+      <p className="text-xl font-black text-text-primary tabular-nums">{value}</p>
+      {delta !== null && delta !== undefined && (
+        <p className={cn('text-xs font-semibold', isPositive !== deltaInvert ? 'text-success' : 'text-error')}>
+          {delta >= 0 ? '+' : ''}{delta}% vs mes anterior
+        </p>
+      )}
+    </div>
+  )
 }

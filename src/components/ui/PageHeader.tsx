@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button } from './Button'
 
-interface PageHeaderAction {
+interface PageHeaderActionObj {
   label: string
   onClick: () => void
   icon?: React.ReactNode
@@ -10,9 +10,14 @@ interface PageHeaderAction {
 interface PageHeaderProps {
   title: string
   description?: string
-  action?: PageHeaderAction
+  /** Either a `{ label, onClick, icon? }` object or any React node (e.g. a custom toolbar) */
+  action?: PageHeaderActionObj | React.ReactNode
   badge?: string
   count?: number
+}
+
+function isActionObj(a: unknown): a is PageHeaderActionObj {
+  return typeof a === 'object' && a !== null && 'label' in a && 'onClick' in a
 }
 
 export function PageHeader({ title, description, action, badge, count }: PageHeaderProps) {
@@ -35,9 +40,15 @@ export function PageHeader({ title, description, action, badge, count }: PageHea
         {description && <p className="text-sm text-text-muted mt-0.5">{description}</p>}
       </div>
       {action && (
-        <Button size="sm" onClick={action.onClick} leftIcon={action.icon} className="flex-shrink-0">
-          {action.label}
-        </Button>
+        <div className="flex-shrink-0">
+          {isActionObj(action) ? (
+            <Button size="sm" onClick={action.onClick} leftIcon={action.icon}>
+              {action.label}
+            </Button>
+          ) : (
+            action as React.ReactNode
+          )}
+        </div>
       )}
     </div>
   )
