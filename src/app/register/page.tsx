@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Eye, EyeOff, Check, Scissors } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
 import { signUpAction } from "@/app/actions/auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { TrimlyLogo } from "@/components/ui/TrimlyLogo";
 import toast from "react-hot-toast";
 
 export default function RegisterPage() {
@@ -69,12 +70,7 @@ export default function RegisterPage() {
       {/* Columna Izquierda - Formulario */}
       <div className="flex items-center justify-center p-8 md:p-12 bg-background-primary">
         <div className="w-full max-w-md space-y-8">
-          <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 rounded-lg bg-accent flex items-center justify-center transition-transform group-hover:rotate-12">
-              <Scissors size={18} className="text-background-primary" />
-            </div>
-            <span className="text-xl font-bold text-text-primary tracking-tight">Trimly</span>
-          </Link>
+          <TrimlyLogo href="/" size={32} textClassName="text-xl" />
 
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-text-primary">Crea tu cuenta gratis</h1>

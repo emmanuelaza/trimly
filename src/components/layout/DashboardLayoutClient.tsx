@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
+import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
 const NAV_SECTIONS = [
@@ -143,19 +144,10 @@ export function DashboardLayoutClient({
           )}
         >
           {!collapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold font-display text-primary">
-                T
-              </div>
-              <span className="font-display font-bold text-base text-text-primary tracking-tight">
-                Trimly
-              </span>
-            </Link>
+            <TrimlyLogo href="/dashboard" size={28} textClassName="text-sm" />
           )}
           {collapsed && (
-            <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold font-display text-primary">
-              T
-            </div>
+            <TrimlyLogo href="/dashboard" size={28} showText={false} />
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
@@ -336,11 +328,8 @@ export function DashboardLayoutClient({
           </div>
 
           {/* Logo — mobile */}
-          <div className="md:hidden flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold font-display text-primary">
-              T
-            </div>
-            <span className="font-display font-bold text-sm text-text-primary">Trimly</span>
+          <div className="md:hidden">
+            <TrimlyLogo href="/dashboard" size={24} textClassName="text-sm" />
           </div>
 
           {/* Topbar actions */}
