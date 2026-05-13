@@ -9,7 +9,7 @@ import {
   ShoppingBag, Wallet, Tag, Star, BarChart3,
   TrendingUp, Gift, Settings, Link2,
   Building2, ChevronRight, Menu, Bell,
-  LogOut, Zap,
+  LogOut, Zap, CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
@@ -33,6 +33,7 @@ const NAV_SECTIONS = [
       { href: '/dashboard/productos',        icon: ShoppingBag, label: 'Productos' },
       { href: '/dashboard/automatizaciones', icon: Zap,         label: 'Automatizaciones' },
       { href: '/dashboard/cupones',          icon: Tag,         label: 'Cupones' },
+      { href: '/dashboard/pases',            icon: CreditCard,  label: 'Pases' },
       { href: '/dashboard/resenas',          icon: Star,        label: 'Reseñas' },
     ],
   },
@@ -66,6 +67,7 @@ const PAGE_LABELS: Record<string, string> = {
   '/dashboard/productos': 'Productos',
   '/dashboard/automatizaciones': 'Automatizaciones',
   '/dashboard/cupones': 'Cupones',
+  '/dashboard/pases': 'Pases',
   '/dashboard/resenas': 'Reseñas',
   '/dashboard/equipo': 'Equipo',
   '/dashboard/nomina': 'Nómina',

@@ -29,6 +29,7 @@ export interface ResumenFinanciero {
   ingresosBrutos: number
   descuentosTotales: number
   ingresosNetos: number
+  ingresosPases: number
   egresosMes: number
   gastosNomina: number
   utilidadNeta: number
@@ -61,6 +62,7 @@ export async function getResumenFinanciero(mes?: string): Promise<ResumenFinanci
     { data: expenses },
     { data: expensesAnterior },
     { data: nominaPagos },
+    { data: pasesMes },
   ] = await Promise.all([
     supabase
       .from('appointments')
@@ -95,6 +97,12 @@ export async function getResumenFinanciero(mes?: string): Promise<ResumenFinanci
       .eq('status', 'paid')
       .gte('payment_date', inicioMes.toISOString())
       .lte('payment_date', finMes.toISOString()),
+    supabase
+      .from('client_subscriptions')
+      .select('price_paid')
+      .eq('barbershop_id', barbershopId)
+      .gte('starts_at', inicioMes.toISOString().split('T')[0])
+      .lte('starts_at', finMes.toISOString().split('T')[0]),
   ])
 
   type ApptRow = {
@@ -138,7 +146,10 @@ export async function getResumenFinanciero(mes?: string): Promise<ResumenFinanci
   const gastosNomina = (nominaPagos ?? []).reduce(
     (s: number, p: { amount_barber: number }) => s + Number(p.amount_barber), 0,
   )
-  const utilidadNeta = ingresosNetos - egresosMes - gastosNomina
+  const ingresosPases = (pasesMes ?? []).reduce(
+    (s: number, p: { price_paid: number }) => s + Number(p.price_paid ?? 0), 0,
+  )
+  const utilidadNeta = ingresosNetos + ingresosPases - egresosMes - gastosNomina
   const ticketPromedio = mesAppts.length > 0 ? Math.round(ingresosNetos / mesAppts.length) : 0
 
   // Ingresos netos por día
@@ -176,6 +187,7 @@ export async function getResumenFinanciero(mes?: string): Promise<ResumenFinanci
     ingresosBrutos,
     descuentosTotales,
     ingresosNetos,
+    ingresosPases,
     egresosMes,
     gastosNomina,
     utilidadNeta,

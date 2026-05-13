@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Scissors, 
-  User, 
-  Calendar, 
-  Clock, 
-  CheckCircle, 
-  ChevronRight, 
+import {
+  Scissors,
+  User,
+  Calendar,
+  Clock,
+  CheckCircle,
+  ChevronRight,
   ChevronLeft,
   MessageCircle,
   MapPin,
-  Check
+  Check,
+  CreditCard,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -61,6 +62,9 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     acceptReminders: true
   });
 
+  // Active pass banner
+  const [activePase, setActivePase] = useState<{ planName: string; servicesLeft: number | null; unlimited: boolean } | null>(null)
+
   // Referral code
   const [referralCode, setReferralCode] = useState('');
   const [referralValidating, setReferralValidating] = useState(false);
@@ -68,6 +72,35 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
     valid: boolean; clienteName?: string; clienteId?: string; beneficio?: string;
     valorBeneficio?: number; tipoBeneficio?: string; error?: string
   } | null>(null);
+
+  const checkActivePase = async (phone: string) => {
+    if (phone.replace(/\D/g, '').length < 7) { setActivePase(null); return }
+    try {
+      const supabase = getSupabase()
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('barbershop_id', barbershop.id)
+        .ilike('phone', `%${phone.replace(/\D/g, '')}%`)
+        .maybeSingle() as { data: { id: string } | null; error: any }
+      if (!clientData) { setActivePase(null); return }
+      const today = new Date().toISOString().split('T')[0]
+      const { data: sub } = await supabase
+        .from('client_subscriptions')
+        .select('services_used, subscription_plans(name, services_included, unlimited_services)')
+        .eq('client_id', clientData.id)
+        .eq('status', 'active')
+        .gte('expires_at', today)
+        .maybeSingle() as { data: { services_used: number; subscription_plans: any } | null; error: any }
+      if (!sub) { setActivePase(null); return }
+      const plan = sub.subscription_plans as any
+      setActivePase({
+        planName: plan?.name ?? 'Plan activo',
+        servicesLeft: plan?.unlimited_services ? null : (plan?.services_included ?? 0) - sub.services_used,
+        unlimited: plan?.unlimited_services ?? false,
+      })
+    } catch { setActivePase(null) }
+  }
 
   const validateReferral = async () => {
     if (!referralCode.trim()) return;
@@ -539,12 +572,27 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Celular</label>
-                  <Input 
-                    placeholder="300 123 4567" 
+                  <Input
+                    placeholder="300 123 4567"
                     value={clientInfo.phone}
-                    onChange={e => setClientInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={e => {
+                      setClientInfo(prev => ({ ...prev, phone: e.target.value }))
+                      checkActivePase(e.target.value)
+                    }}
                   />
                 </div>
+
+                {activePase && (
+                  <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-accent/10 border border-accent/20">
+                    <CreditCard size={16} className="text-accent shrink-0" />
+                    <div>
+                      <p className="text-xs font-bold text-accent">{activePase.planName} activo</p>
+                      <p className="text-[10px] text-text-secondary">
+                        {activePase.unlimited ? 'Cortes ilimitados' : `${activePase.servicesLeft} cortes disponibles`}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Email (opcional)</label>
                   <Input 
