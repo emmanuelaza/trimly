@@ -24,7 +24,7 @@ export async function getAppointments() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("appointments")
-    .select("id, scheduled_at, status, notes, price_charged, client:clients(name, phone), barber:barbers(name), service:services(name, price)")
+    .select("id, scheduled_at, status, notes, price_charged, client:clients(name, phone), barber:barbers(name), service:services(name, price, duration_minutes)")
     .eq("barbershop_id", barbershopId)
     .order("scheduled_at", { ascending: true });
 
