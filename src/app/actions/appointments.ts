@@ -6,6 +6,7 @@ import { getBarbershopId } from "./utils";
 import { getResend } from "@/lib/resend";
 import { getBaseEmailTemplate } from "@/lib/emailTemplates";
 import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
+import { sendPushToShop } from "@/lib/push";
 
 import { buildScheduledAt as buildLocalScheduledAt, getTodayString } from "@/lib/dateUtils";
 
@@ -70,7 +71,7 @@ export async function createAppointment(formData: FormData) {
       }
     }
 
-    const { data: svc } = await supabase.from("services").select("price").eq("id", service_id).single();
+    const { data: svc } = await supabase.from("services").select("name, price").eq("id", service_id).single();
     const price_charged = svc ? svc.price : 0;
 
     const { error, data: insertData } = await supabase.from("appointments").insert({
@@ -84,6 +85,31 @@ export async function createAppointment(formData: FormData) {
     }).select().single();
 
     if (error) return { success: false, error: error.message };
+
+    // Push notification
+    try {
+      const [{ data: client }, { data: barber }] = await Promise.all([
+        supabase.from('clients').select('name').eq('id', client_id).maybeSingle(),
+        barber_id
+          ? supabase.from('barbers').select('name').eq('id', barber_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+      ])
+      const fecha = new Date(scheduled_at).toLocaleDateString('es-CO', {
+        weekday: 'short', day: 'numeric', month: 'short',
+      })
+      const hora = new Date(scheduled_at).toLocaleTimeString('es-CO', {
+        hour: '2-digit', minute: '2-digit',
+      })
+      await sendPushToShop({
+        barbershopId,
+        title: '📅 Nueva cita agendada',
+        body: `${client?.name ?? 'Cliente'} agendó ${svc?.name ?? 'un servicio'} el ${fecha} a las ${hora}${barber?.name ? ` con ${barber.name}` : ''}`,
+        url: '/dashboard/agenda',
+        tag: 'nueva_cita',
+      })
+    } catch (pushErr) {
+      console.error('Push notification error:', pushErr)
+    }
 
     // Automations
     try {
