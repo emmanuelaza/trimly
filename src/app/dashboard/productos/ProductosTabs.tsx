@@ -33,8 +33,8 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 border-b border-border w-full max-w-sm">
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2 border-b border-border">
           <button
             onClick={() => setActiveTab('catalogo')}
             className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
@@ -57,11 +57,9 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
           </button>
         </div>
 
-        {activeTab === 'catalogo' && (
-          <Button onClick={handleOpenCrearModal} className="gap-2">
-            <Plus size={16} /> Agregar producto
-          </Button>
-        )}
+        <Button onClick={handleOpenCrearModal} className="gap-2 flex-shrink-0">
+          <Plus size={16} /> Agregar producto
+        </Button>
       </div>
 
       {activeTab === 'catalogo' && (
