@@ -100,7 +100,7 @@ export async function getOccupiedSlots(barbershopId: string, barberId: string | 
 
   let query = getSupabase()
     .from("appointments")
-    .select("scheduled_at, duration_minutes, status")
+    .select("scheduled_at, status, services(duration_minutes)")
     .eq("barbershop_id", barbershopId)
     .gte("scheduled_at", dateStart.toISOString())
     .lte("scheduled_at", dateEnd.toISOString())

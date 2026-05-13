@@ -149,7 +149,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
     let query = getSupabase()
       .from('appointments')
-      .select('scheduled_at, duration_minutes, status, barber_id')
+      .select('scheduled_at, status, barber_id, services(duration_minutes)')
       .eq('barbershop_id', barbershop.id)
       .gte('scheduled_at', startIso)
       .lte('scheduled_at', endIso)
@@ -260,7 +260,7 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       bookedAppointments.forEach(apt => {
         const aptBogotaStr = new Date(apt.scheduled_at).toLocaleString('en-US', { timeZone: 'America/Bogota' });
         const aptStart = new Date(aptBogotaStr);
-        const aptDuration = (apt.duration_minutes || 30);
+        const aptDuration = ((apt.services as any)?.duration_minutes || 30);
         const aptEnd = new Date(aptStart.getTime() + aptDuration * 60000);
         
         if (slotStart < aptEnd && slotEnd > aptStart) {
