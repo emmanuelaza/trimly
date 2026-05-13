@@ -68,6 +68,7 @@ export async function updateClient(id: string, formData: FormData) {
     const phone = formData.get("telefono") as string;
     const email = formData.get("email") as string;
     const birthdate = formData.get("birthdate") as string;
+    const notas = formData.get("notas") as string;
 
     if (!name) return { success: false, error: "El nombre es obligatorio" };
 
@@ -76,7 +77,8 @@ export async function updateClient(id: string, formData: FormData) {
       name,
       phone: phone || null,
       email: email || null,
-      birthdate: birthdate || null
+      birthdate: birthdate || null,
+      notas: notas || null,
     }).eq("id", id);
 
     if (error) {

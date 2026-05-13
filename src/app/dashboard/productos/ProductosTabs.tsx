@@ -133,8 +133,9 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
       )}
 
       {isCrearModalOpen && (
-        <CrearProductoModal 
-          onClose={() => setIsCrearModalOpen(false)} 
+        <CrearProductoModal
+          key={editProductData?.id ?? 'new'}
+          onClose={() => setIsCrearModalOpen(false)}
           product={editProductData}
         />
       )}

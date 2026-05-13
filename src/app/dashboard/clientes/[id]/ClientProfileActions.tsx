@@ -57,8 +57,20 @@ export default function ClientProfileActions({ cliente, allClientes, servicios }
       </div>
 
       {/* Edit Modal */}
-      <Modal isOpen={isEditOpen} onClose={() => setIsEditOpen(false)} title="Editar Cliente">
-        <form onSubmit={handleUpdate} className="space-y-4">
+      <Modal
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        title="Editar Cliente"
+        footer={
+          <div className="flex gap-3">
+            <Button variant="secondary" type="button" className="flex-1" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
+            <Button type="submit" form="edit-client-form" className="flex-1" disabled={isPending}>
+              {isPending ? "Guardando..." : <><Save size={16} /> Guardar Cambios</>}
+            </Button>
+          </div>
+        }
+      >
+        <form id="edit-client-form" onSubmit={handleUpdate} className="space-y-4">
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Nombre Completo</label>
             <Input name="nombre" defaultValue={cliente.name} required />
@@ -75,11 +87,15 @@ export default function ClientProfileActions({ cliente, allClientes, servicios }
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Cumpleaños</label>
             <Input name="birthdate" type="date" defaultValue={cliente.birthdate || cliente.birthday} />
           </div>
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="secondary" type="button" onClick={() => setIsEditOpen(false)}>Cancelar</Button>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Guardando..." : <><Save size={16} /> Guardar Cambios</>}
-            </Button>
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Notas</label>
+            <textarea
+              name="notas"
+              defaultValue={cliente.notas || ''}
+              placeholder="Notas internas sobre el cliente..."
+              rows={3}
+              className="w-full bg-background-tertiary border border-border rounded-lg px-4 py-2.5 text-sm text-text-primary placeholder-text-tertiary focus:outline-none focus:border-accent transition-colors resize-none"
+            />
           </div>
         </form>
       </Modal>
