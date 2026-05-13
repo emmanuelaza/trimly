@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
+import { PushBanner } from '@/components/notifications/PushBanner'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
@@ -84,6 +85,8 @@ interface DashboardLayoutClientProps {
   userName: string
   isTrial: boolean
   trialDaysLeft: number
+  barbershopId?: string
+  userId?: string
 }
 
 export function DashboardLayoutClient({
@@ -92,6 +95,8 @@ export function DashboardLayoutClient({
   userName,
   isTrial,
   trialDaysLeft,
+  barbershopId,
+  userId,
 }: DashboardLayoutClientProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -346,6 +351,9 @@ export function DashboardLayoutClient({
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 md:p-6 pb-20 md:pb-6 animate-fadeIn">
+            {barbershopId && userId && (
+              <PushBanner barbershopId={barbershopId} userId={userId} />
+            )}
             {children}
           </div>
         </main>

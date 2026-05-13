@@ -4,9 +4,24 @@ import React from 'react';
 import Image from 'next/image';
 import { useBarberSession } from '@/hooks/useBarberSession';
 import BarberDashboardClient from './BarberDashboardClient';
-import { LogOut, Calendar as CalendarIcon } from 'lucide-react';
+import { LogOut, Calendar as CalendarIcon, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/RedesignComponents';
 import miloImg from '@/assets/milo.png';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
+
+function PushPrompt({ session }: { session: { barberId: string; barbershopId: string } }) {
+  const { status, subscribe } = usePushNotifications(session.barbershopId, session.barberId)
+  if (status !== 'default') return null
+  return (
+    <div className="flex items-center gap-3 p-4 bg-accent/8 border border-accent/20 rounded-xl mb-4">
+      <Bell size={18} className="text-accent flex-shrink-0" />
+      <p className="text-sm flex-1 text-text-primary">
+        Activa las notificaciones para saber cuándo tienes una cita nueva 🔔
+      </p>
+      <Button size="sm" onClick={subscribe}>Activar</Button>
+    </div>
+  )
+}
 
 export default function BarberDashboardPage() {
   const { session, loading, logout } = useBarberSession();
@@ -72,6 +87,7 @@ export default function BarberDashboardPage() {
 
   return (
     <div className="space-y-10 pb-20">
+      <PushPrompt session={session} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-text-primary tracking-tight">Hola, {session.barberName} 👋</h1>

@@ -71,6 +71,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         userName={user.user_metadata?.full_name || "Owner"}
         isTrial={isTrial}
         trialDaysLeft={trialDaysLeft}
+        barbershopId={barbershopId}
+        userId={user.id}
       >
         {children}
       </DashboardLayoutClient>
