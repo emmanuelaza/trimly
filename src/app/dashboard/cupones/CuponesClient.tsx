@@ -226,8 +226,22 @@ export function CuponesClient({ cupones }: CuponesClientProps) {
       )}
 
       {/* Modal crear cupón */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Nuevo cupón">
-        <form onSubmit={handleCreate} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Nuevo cupón"
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="cupon-form" size="sm" loading={loading}>
+              Crear cupón
+            </Button>
+          </div>
+        }
+      >
+        <form id="cupon-form" onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
               Código del cupón *
@@ -313,14 +327,6 @@ export function CuponesClient({ cupones }: CuponesClientProps) {
             </div>
           </div>
 
-          <div className="flex gap-3 justify-end pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" size="sm" loading={loading}>
-              Crear cupón
-            </Button>
-          </div>
         </form>
       </Modal>
 

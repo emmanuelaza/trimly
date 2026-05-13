@@ -7,10 +7,11 @@ export interface ModalProps {
   onClose: () => void
   title?: string
   children: React.ReactNode
+  footer?: React.ReactNode
   className?: string
 }
 
-export function Modal({ isOpen, onClose, title, children, className }: ModalProps) {
+export function Modal({ isOpen, onClose, title, children, footer, className }: ModalProps) {
   if (!isOpen) return null
 
   return (
@@ -52,6 +53,13 @@ export function Modal({ isOpen, onClose, title, children, className }: ModalProp
           <div className="p-5 overflow-y-auto flex-1">
             {children}
           </div>
+
+          {/* Sticky footer for action buttons */}
+          {footer && (
+            <div className="flex-shrink-0 px-5 pb-5 pt-4 border-t border-border/50">
+              {footer}
+            </div>
+          )}
         </div>
       </div>
     </>

@@ -53,8 +53,18 @@ export function CrearProductoModal({ onClose, product }: CrearProductoModalProps
       isOpen
       onClose={onClose}
       title={isEditing ? 'Editar producto' : 'Agregar producto'}
+      footer={
+        <div className="flex gap-3">
+          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="producto-form" variant="primary" className="flex-1" loading={isPending}>
+            {isEditing ? 'Guardar cambios' : 'Agregar producto'}
+          </Button>
+        </div>
+      }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form id="producto-form" onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-text-secondary mb-1.5">Nombre *</label>
           <Input name="nombre" required defaultValue={product?.nombre} placeholder="Ej: Pomada mate" />
@@ -107,15 +117,6 @@ export function CrearProductoModal({ onClose, product }: CrearProductoModalProps
         {error && (
           <p className="text-sm text-danger bg-danger/10 px-3 py-2 rounded-lg">{error}</p>
         )}
-
-        <div className="flex gap-3 pt-2">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" variant="primary" className="flex-1" loading={isPending}>
-            {isEditing ? 'Guardar cambios' : 'Agregar producto'}
-          </Button>
-        </div>
       </form>
     </Modal>
   );

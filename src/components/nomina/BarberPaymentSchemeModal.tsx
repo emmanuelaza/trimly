@@ -59,7 +59,20 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Esquema de Pago: ${barber.name}`}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={`Esquema de Pago: ${barber.name}`}
+      footer={
+        <div className="flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
+          <Button className="flex-1 gap-2" onClick={handleSave} disabled={isSaving}>
+            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+            Guardar Esquema
+          </Button>
+        </div>
+      }
+    >
       <div className="space-y-6 py-2">
         <p className="text-sm text-text-tertiary">
           Define cómo quieres pagarle a {barber.name}. Este esquema se usará para calcular la liquidación en el módulo de Nómina.
@@ -195,13 +208,6 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
           )}
         </div>
 
-        <div className="flex gap-3 pt-6 border-t border-border">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>Cancelar</Button>
-          <Button className="flex-1 gap-2" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-            Guardar Esquema
-          </Button>
-        </div>
       </div>
     </Modal>
   );

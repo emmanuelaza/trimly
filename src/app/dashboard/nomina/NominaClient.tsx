@@ -259,6 +259,14 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
           isOpen={!!payingItem}
           onClose={() => setPayingItem(null)}
           title={`Pagar a ${payingItem.barber.name}`}
+          footer={
+            <div className="flex gap-3">
+              <Button variant="secondary" className="flex-1" onClick={() => setPayingItem(null)}>Cancelar</Button>
+              <Button className="flex-1 gap-2 bg-success hover:bg-success/90" onClick={handleConfirmPago} loading={isPending}>
+                <CheckCircle2 size={16} /> Confirmar pago
+              </Button>
+            </div>
+          }
         >
           <div className="space-y-6">
             <div className="bg-background-tertiary/30 rounded-xl p-4 text-center">
@@ -296,13 +304,6 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
                 placeholder="Ej. Transferencia Bancolombia"
                 className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
               />
-            </div>
-
-            <div className="flex gap-3">
-              <Button variant="secondary" className="flex-1" onClick={() => setPayingItem(null)}>Cancelar</Button>
-              <Button className="flex-1 gap-2 bg-success hover:bg-success/90" onClick={handleConfirmPago} loading={isPending}>
-                <CheckCircle2 size={16} /> Confirmar pago
-              </Button>
             </div>
           </div>
         </Modal>

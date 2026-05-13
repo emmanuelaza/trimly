@@ -61,7 +61,21 @@ export function VentaModal({ onClose, product, barbers, appointments }: VentaMod
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Registrar venta">
+    <Modal
+      isOpen
+      onClose={onClose}
+      title="Registrar venta"
+      footer={
+        <div className="flex gap-3">
+          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="button" variant="primary" className="flex-1" loading={isPending} onClick={handleSubmit}>
+            Confirmar venta
+          </Button>
+        </div>
+      }
+    >
       <div className="space-y-5">
         <div className="bg-background-tertiary rounded-xl p-4">
           <p className="text-xs text-text-tertiary mb-1">Producto</p>
@@ -138,15 +152,6 @@ export function VentaModal({ onClose, product, barbers, appointments }: VentaMod
         {error && (
           <p className="text-sm text-danger bg-danger/10 px-3 py-2 rounded-lg">{error}</p>
         )}
-
-        <div className="flex gap-3">
-          <Button type="button" variant="secondary" className="flex-1" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="button" variant="primary" className="flex-1" loading={isPending} onClick={handleSubmit}>
-            Confirmar venta
-          </Button>
-        </div>
       </div>
     </Modal>
   );

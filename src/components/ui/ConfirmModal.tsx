@@ -35,7 +35,27 @@ export function ConfirmModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      footer={
+        <div className="flex gap-3 justify-end">
+          <Button variant="ghost" onClick={onClose} size="sm" type="button">
+            Cancelar
+          </Button>
+          <Button
+            variant={confirmVariant === 'danger' ? 'danger' : 'primary'}
+            onClick={handleConfirm}
+            loading={loading}
+            size="sm"
+            type="button"
+          >
+            {confirmLabel}
+          </Button>
+        </div>
+      }
+    >
       <p className="text-sm text-text-secondary leading-relaxed">{description}</p>
 
       {note && (
@@ -51,21 +71,6 @@ export function ConfirmModal({
           />
         </div>
       )}
-
-      <div className="flex gap-3 mt-6 justify-end">
-        <Button variant="ghost" onClick={onClose} size="sm" type="button">
-          Cancelar
-        </Button>
-        <Button
-          variant={confirmVariant === 'danger' ? 'danger' : 'primary'}
-          onClick={handleConfirm}
-          loading={loading}
-          size="sm"
-          type="button"
-        >
-          {confirmLabel}
-        </Button>
-      </div>
     </Modal>
   )
 }

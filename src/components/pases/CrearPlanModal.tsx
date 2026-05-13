@@ -80,7 +80,29 @@ export function CrearPlanModal({ isOpen, onClose, plan, servicios }: Props) {
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={editing ? 'Editar plan' : 'Crear plan'}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={editing ? 'Editar plan' : 'Crear plan'}
+      footer={
+        <div className="flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 h-10 rounded-xl border border-border text-sm font-bold text-text-secondary hover:bg-background-secondary transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 h-10 rounded-xl bg-accent text-background-primary text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-accent/90 transition-colors"
+          >
+            {saving && <Loader2 size={14} className="animate-spin" />}
+            {editing ? 'Guardar cambios' : 'Crear plan'}
+          </button>
+        </div>
+      }
+    >
       <div className="space-y-5 py-1">
         <div className="space-y-1.5">
           <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Nombre del plan</label>
@@ -216,22 +238,6 @@ export function CrearPlanModal({ isOpen, onClose, plan, servicios }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-3 pt-4 border-t border-border">
-          <button
-            onClick={onClose}
-            className="flex-1 h-10 rounded-xl border border-border text-sm font-bold text-text-secondary hover:bg-background-secondary transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex-1 h-10 rounded-xl bg-accent text-background-primary text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-accent/90 transition-colors"
-          >
-            {saving && <Loader2 size={14} className="animate-spin" />}
-            {editing ? 'Guardar cambios' : 'Crear plan'}
-          </button>
-        </div>
       </div>
     </Modal>
   )

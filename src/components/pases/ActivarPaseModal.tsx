@@ -69,8 +69,32 @@ export function ActivarPaseModal({ isOpen, onClose, planes, clientes }: Props) {
 
   const stepTitles = ['Buscar cliente', 'Seleccionar plan', 'Pago', '¡Pase activado!']
 
+  const stepFooter =
+    step === 3 ? (
+      <div className="flex gap-3">
+        <button onClick={() => setStep(2)} className="flex-1 h-10 rounded-xl border border-border text-sm font-bold text-text-secondary hover:bg-background-secondary transition-colors">
+          Atrás
+        </button>
+        <button
+          onClick={handleActivar}
+          disabled={saving}
+          className="flex-1 h-10 rounded-xl bg-accent text-background-primary text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-accent/90 transition-colors"
+        >
+          {saving ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
+          Activar pase
+        </button>
+      </div>
+    ) : step === 4 ? (
+      <button
+        onClick={handleClose}
+        className="w-full h-10 rounded-xl bg-accent text-background-primary text-sm font-bold hover:bg-accent/90 transition-colors"
+      >
+        Listo
+      </button>
+    ) : null
+
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={`Activar pase — ${stepTitles[step - 1]}`}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={`Activar pase — ${stepTitles[step - 1]}`} footer={stepFooter}>
       {/* Progress */}
       <div className="flex gap-1.5 mb-6">
         {[1, 2, 3, 4].map(s => (
@@ -218,20 +242,6 @@ export function ActivarPaseModal({ isOpen, onClose, planes, clientes }: Props) {
             <input type="checkbox" checked={isGift} onChange={e => setIsGift(e.target.checked)} className="accent-accent w-4 h-4" />
             <span className="text-xs text-text-secondary">Este pase es un regalo</span>
           </label>
-
-          <div className="flex gap-3 pt-2 border-t border-border">
-            <button onClick={() => setStep(2)} className="flex-1 h-10 rounded-xl border border-border text-sm font-bold text-text-secondary hover:bg-background-secondary transition-colors">
-              Atrás
-            </button>
-            <button
-              onClick={handleActivar}
-              disabled={saving}
-              className="flex-1 h-10 rounded-xl bg-accent text-background-primary text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-40 hover:bg-accent/90 transition-colors"
-            >
-              {saving ? <Loader2 size={14} className="animate-spin" /> : <CreditCard size={14} />}
-              Activar pase
-            </button>
-          </div>
         </div>
       )}
 
@@ -255,13 +265,6 @@ export function ActivarPaseModal({ isOpen, onClose, planes, clientes }: Props) {
               <p className="text-[10px] text-text-tertiary mt-2">Muéstralo en cada visita</p>
             </div>
           )}
-
-          <button
-            onClick={handleClose}
-            className="w-full h-10 rounded-xl bg-accent text-background-primary text-sm font-bold hover:bg-accent/90 transition-colors"
-          >
-            Listo
-          </button>
         </div>
       )}
     </Modal>
