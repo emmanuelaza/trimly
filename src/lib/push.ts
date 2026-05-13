@@ -1,8 +1,9 @@
 import webpush from 'web-push'
 import { createClient } from '@supabase/supabase-js'
 
+const vapidSubject = process.env.VAPID_SUBJECT ?? ''
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
+  vapidSubject.startsWith('mailto:') || vapidSubject.startsWith('https://') ? vapidSubject : `mailto:${vapidSubject}`,
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 )

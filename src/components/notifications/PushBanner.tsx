@@ -1,9 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePushNotifications } from '@/hooks/usePushNotifications'
-import { Button } from '@/components/ui/Button'
-import { X } from 'lucide-react'
+import { Bell, X } from 'lucide-react'
 
 interface Props {
   barbershopId: string
@@ -11,29 +9,66 @@ interface Props {
 }
 
 export function PushBanner({ barbershopId, userId }: Props) {
-  const [dismissed, setDismissed] = useState(true)
-  const { status, subscribe } = usePushNotifications(barbershopId, userId)
+  const [show, setShow] = useState(false)
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    const key = `push_dismissed_${userId}`
-    const wasDismissed = localStorage.getItem(key)
-    if (!wasDismissed && status === 'default') {
-      setDismissed(false)
-    }
-  }, [status, userId])
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+    if (Notification.permission !== 'default') return
+    const dismissed = localStorage.getItem(`push_banner_${userId}`)
+    if (!dismissed) setShow(true)
+  }, [userId])
 
-  if (dismissed || status === 'granted' || status === 'denied' || status === 'unsupported') {
-    return null
+  if (!show) return null
+
+  async function activate() {
+    setLoading(true)
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+
+      const permission = await Notification.requestPermission()
+      if (permission !== 'granted') {
+        setShow(false)
+        return
+      }
+
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidKey) {
+        console.error('VAPID key not found')
+        return
+      }
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      })
+
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subscription: sub.toJSON(),
+          barbershopId,
+          userId,
+        }),
+      })
+
+      setShow(false)
+      new Notification('¡Notificaciones activadas! 🔔', {
+        body: 'Te avisaremos cuando llegue una cita nueva',
+        icon: '/logo-icon.png',
+      })
+    } catch (err) {
+      console.error('Error activando push:', err)
+    } finally {
+      setLoading(false)
+    }
   }
 
   function dismiss() {
-    localStorage.setItem(`push_dismissed_${userId}`, '1')
-    setDismissed(true)
-  }
-
-  async function handleSubscribe() {
-    const ok = await subscribe()
-    if (ok) dismiss()
+    localStorage.setItem(`push_banner_${userId}`, '1')
+    setShow(false)
   }
 
   return (
@@ -46,12 +81,16 @@ export function PushBanner({ barbershopId, userId }: Props) {
         </p>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <Button size="sm" onClick={handleSubscribe}>
-          Activar
-        </Button>
+        <button
+          onClick={activate}
+          disabled={loading}
+          className="px-3 py-1.5 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity"
+        >
+          {loading ? 'Activando...' : 'Activar'}
+        </button>
         <button
           onClick={dismiss}
-          className="text-text-muted hover:text-text-primary transition-colors"
+          className="text-text-muted hover:text-text-primary transition-colors p-1 rounded"
           aria-label="Cerrar"
         >
           <X size={16} />
@@ -59,4 +98,14 @@ export function PushBanner({ barbershopId, userId }: Props) {
       </div>
     </div>
   )
+}
+
+function urlBase64ToUint8Array(base64String: string): ArrayBuffer {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4)
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const rawData = window.atob(base64)
+  const buf = new ArrayBuffer(rawData.length)
+  const view = new Uint8Array(buf)
+  for (let i = 0; i < rawData.length; i++) view[i] = rawData.charCodeAt(i)
+  return buf
 }
