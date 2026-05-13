@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Building2, Plus, MapPin, Phone, Pencil, Trash2 } from 'lucide-react'
+import { Building2, Plus, MapPin, Phone, Pencil, Trash2, Globe } from 'lucide-react'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
@@ -15,7 +15,7 @@ interface SedesClientProps {
   sedes: Sede[]
 }
 
-const emptyForm = { nombre: '', direccion: '', telefono: '' }
+const emptyForm = { nombre: '', direccion: '', telefono: '', ciudad: '' }
 
 export function SedesClient({ sedes }: SedesClientProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
@@ -27,7 +27,12 @@ export function SedesClient({ sedes }: SedesClientProps) {
   const openCreate = () => { setEditing(null); setForm(emptyForm); setIsModalOpen(true) }
   const openEdit = (s: Sede) => {
     setEditing(s)
-    setForm({ nombre: s.nombre, direccion: s.direccion ?? '', telefono: s.telefono ?? '' })
+    setForm({
+      nombre: s.nombre,
+      direccion: s.direccion ?? '',
+      telefono: s.telefono ?? '',
+      ciudad: s.ciudad ?? '',
+    })
     setIsModalOpen(true)
   }
 
@@ -96,8 +101,14 @@ export function SedesClient({ sedes }: SedesClientProps) {
               </div>
               <div>
                 <p className="font-bold text-text-primary">{sede.nombre}</p>
-                {sede.direccion && (
+                {sede.ciudad && (
                   <div className="flex items-center gap-1.5 mt-1.5">
+                    <Globe size={12} className="text-text-muted flex-shrink-0" />
+                    <span className="text-xs text-text-muted">{sede.ciudad}</span>
+                  </div>
+                )}
+                {sede.direccion && (
+                  <div className="flex items-center gap-1.5 mt-1">
                     <MapPin size={12} className="text-text-muted flex-shrink-0" />
                     <span className="text-xs text-text-muted">{sede.direccion}</span>
                   </div>
@@ -115,8 +126,22 @@ export function SedesClient({ sedes }: SedesClientProps) {
       )}
 
       {/* Modal create/edit */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editing ? 'Editar sede' : 'Nueva sede'}>
-        <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editing ? 'Editar sede' : 'Nueva sede'}
+        footer={
+          <div className="flex gap-3 justify-end">
+            <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" form="sede-form" size="sm" loading={loading}>
+              {editing ? 'Guardar cambios' : 'Agregar sede'}
+            </Button>
+          </div>
+        }
+      >
+        <form id="sede-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
               Nombre de la sede *
@@ -131,12 +156,23 @@ export function SedesClient({ sedes }: SedesClientProps) {
           </div>
           <div>
             <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
+              Ciudad
+            </label>
+            <input
+              value={form.ciudad}
+              onChange={(e) => setForm({ ...form, ciudad: e.target.value })}
+              placeholder="Ej: Bogotá, Medellín"
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
               Dirección
             </label>
             <input
               value={form.direccion}
               onChange={(e) => setForm({ ...form, direccion: e.target.value })}
-              placeholder="Ej: Calle 72 #10-45, Bogotá"
+              placeholder="Ej: Calle 72 #10-45"
               className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
             />
           </div>
@@ -150,10 +186,6 @@ export function SedesClient({ sedes }: SedesClientProps) {
               placeholder="Ej: +57 300 000 0000"
               className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
             />
-          </div>
-          <div className="flex gap-3 justify-end pt-2">
-            <Button type="button" variant="ghost" size="sm" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-            <Button type="submit" size="sm" loading={loading}>{editing ? 'Guardar cambios' : 'Agregar sede'}</Button>
           </div>
         </form>
       </Modal>
