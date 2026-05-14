@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendConfirmationEmail } from '@/lib/emails';
-import { sendPushToShop } from '@/lib/push';
+import { sendPushToShop, sendPushToClient } from '@/lib/push';
 
 export async function POST(req: Request) {
   try {
@@ -140,6 +140,28 @@ export async function POST(req: Request) {
       })
     } catch (pushErr) {
       console.error('Push notification error:', pushErr)
+    }
+
+    // 3c. Push confirmation to client (if they subscribed)
+    try {
+      const { data: pushAuto } = await supabase
+        .from('automations')
+        .select('is_active')
+        .eq('barbershop_id', barbershopId)
+        .eq('type', 'push_clientes')
+        .maybeSingle()
+      if (pushAuto?.is_active) {
+        const hora = new Date(scheduledAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+        const fecha = new Date(scheduledAt).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
+        await sendPushToClient(clientId, {
+          title: '✅ Cita confirmada',
+          body: `Tu cita está reservada para el ${fecha} a las ${hora}. ¡Te esperamos!`,
+          url: '/',
+          tag: 'confirmacion_cliente',
+        })
+      }
+    } catch (e) {
+      console.error('Client push error:', e)
     }
 
     // 3d. Register referral use and credit the referrer

@@ -23,6 +23,43 @@ export interface PushPayload {
   tag?: string
 }
 
+export async function sendPushToClient(clientId: string, payload: Omit<PushPayload, 'barbershopId'>): Promise<number> {
+  const supabase = getSupabase()
+
+  const { data: subs } = await supabase
+    .from('push_subscriptions')
+    .select('endpoint, keys_p256dh, keys_auth')
+    .eq('user_id', clientId)
+    .eq('notif_cancelacion', true)
+
+  if (!subs?.length) return 0
+
+  const message = JSON.stringify({
+    title: payload.title,
+    body: payload.body,
+    url: payload.url || '/',
+    tag: payload.tag || 'trimly-cliente',
+  })
+
+  let sent = 0
+  await Promise.allSettled(
+    subs.map(async sub => {
+      try {
+        await webpush.sendNotification(
+          { endpoint: sub.endpoint, keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth } },
+          message
+        )
+        sent++
+      } catch (err: any) {
+        if (err.statusCode === 410) {
+          await supabase.from('push_subscriptions').delete().eq('endpoint', sub.endpoint)
+        }
+      }
+    })
+  )
+  return sent
+}
+
 export async function sendPushToShop(payload: PushPayload): Promise<number> {
   const supabase = getSupabase()
 

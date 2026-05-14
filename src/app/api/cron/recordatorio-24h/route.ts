@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 import { getResend } from '@/lib/resend';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
+import { sendPushToClient } from '@/lib/push';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,8 +24,9 @@ export async function GET(req: Request) {
     const { data: appointments, error } = await supabaseAdmin
       .from('appointments')
       .select(`
-        id, 
-        scheduled_at, 
+        id,
+        client_id,
+        scheduled_at,
         barbershop_id,
         client:clients(name, email),
         service:services(name),
@@ -78,12 +80,33 @@ export async function GET(req: Request) {
         await supabaseAdmin.from('automation_logs').insert({
           automation_type: 'reminder_24h',
           appointment_id: app.id,
-          client_id: (app as any).client_id, 
+          client_id: app.client_id,
           channel: 'email',
           barbershop_id: app.barbershop_id
         });
 
         sentCount++;
+      }
+
+      // Push reminder to client (independent of email automation)
+      try {
+        const { data: pushAuto } = await supabaseAdmin
+          .from('automations')
+          .select('is_active')
+          .eq('barbershop_id', app.barbershop_id)
+          .eq('type', 'push_clientes')
+          .maybeSingle()
+        if (pushAuto?.is_active && app.client_id) {
+          const time = new Date(app.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+          await sendPushToClient(app.client_id, {
+            title: '✂️ Tu cita es mañana',
+            body: `Recuerda: ${(app.service as any)?.name ?? 'tu cita'} a las ${time}. ¡Te esperamos!`,
+            url: '/',
+            tag: 'recordatorio_cliente',
+          })
+        }
+      } catch (e) {
+        console.error('Client push reminder error:', e)
       }
     }
 

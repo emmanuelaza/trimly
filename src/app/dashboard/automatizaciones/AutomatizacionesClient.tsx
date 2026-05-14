@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useTransition } from 'react';
+import { useTransition } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { toggleAutomation } from '@/app/actions/barbershops';
@@ -23,7 +23,8 @@ const AUTOMATION_DEFS: AutomationDef[] = [
   { id: "3", type: "post_visit", group: "DESPUÉS DE LA CITA", emoji: "⭐", title: "Seguimiento post-visita", desc: "¿Cómo te quedó el corte? Pide reseñas 24h después." },
   { id: "4", type: "daily_report", group: "DESPUÉS DE LA CITA", emoji: "📈", title: "Reporte diario al cierre", desc: "Recibe en tu email un resumen de cómo le fue al negocio hoy a las 8PM." },
   { id: "5", type: "recover_inactive", group: "RETENCIÓN DE CLIENTES", emoji: "💔", title: "Recuperar inactivos", desc: "Mensaje automático a los clientes que llevan más de 45 días sin venir.", isNew: true },
-  { id: "6", type: "birthday", group: "RETENCIÓN DE CLIENTES", emoji: "🎂", title: "Felicitación de cumpleaños", desc: "Envía un descuento sorpresa en el día especial del cliente." }
+  { id: "6", type: "birthday", group: "RETENCIÓN DE CLIENTES", emoji: "🎂", title: "Felicitación de cumpleaños", desc: "Envía un descuento sorpresa en el día especial del cliente." },
+  { id: "7", type: "push_clientes", group: "NOTIFICACIONES PUSH", emoji: "🔔", title: "Recordatorios push a clientes", desc: "Tus clientes pueden activar notificaciones en el celular al agendar. Reciben recordatorio 24h antes de su cita, sin necesidad de email.", isNew: true },
 ];
 
 export default function AutomatizacionesClient({ initialAutomations, stats }: { initialAutomations: any[], stats: any }) {
