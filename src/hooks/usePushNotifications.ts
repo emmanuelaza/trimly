@@ -75,7 +75,14 @@ export function usePushNotifications(barbershopId?: string, userId?: string) {
       const reg = await navigator.serviceWorker.getRegistration()
       const sub = await reg?.pushManager.getSubscription()
       if (sub) {
+        const endpoint = sub.endpoint
         await sub.unsubscribe()
+        // Remove from DB
+        await fetch('/api/push/unsubscribe', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ endpoint, userId, barbershopId }),
+        })
       }
       setStatus('default')
     } catch (err) {

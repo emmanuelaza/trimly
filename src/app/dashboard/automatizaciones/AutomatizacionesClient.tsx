@@ -16,16 +16,17 @@ interface AutomationDef {
   title: string;
   desc: string;
   isNew?: boolean;
+  isPush?: boolean;
 }
 
 const AUTOMATION_DEFS: AutomationDef[] = [
-  { id: "1", type: "reminder_24h",    group: "ANTES DE LA CITA",        emoji: "⏰", title: "Recordatorio 24h antes",       desc: "Envía un email automático recordando la cita del día siguiente." },
-  { id: "2", type: "confirmation",    group: "ANTES DE LA CITA",        emoji: "✅", title: "Confirmación al agendar",      desc: "Mensaje inmediato con los detalles de la reserva." },
-  { id: "3", type: "post_visit",      group: "DESPUÉS DE LA CITA",      emoji: "⭐", title: "Seguimiento post-visita",      desc: "¿Cómo te quedó el corte? Pide reseñas 24h después." },
-  { id: "4", type: "daily_report",    group: "DESPUÉS DE LA CITA",      emoji: "📈", title: "Reporte diario al cierre",     desc: "Recibe en tu email un resumen del negocio cada noche." },
-  { id: "5", type: "recover_inactive",group: "RETENCIÓN DE CLIENTES",   emoji: "💔", title: "Recuperar inactivos",          desc: "Mensaje a clientes que llevan más de 45 días sin venir.", isNew: true },
-  { id: "6", type: "birthday",        group: "RETENCIÓN DE CLIENTES",   emoji: "🎂", title: "Felicitación de cumpleaños",   desc: "Envía un descuento sorpresa en el día especial del cliente." },
-  { id: "7", type: "push_nueva_cita", group: "NOTIFICACIONES EN VIVO",  emoji: "🔔", title: "Notificación de nueva cita",   desc: "Recibe una alerta instantánea en el navegador cuando llegue una reserva.", isNew: true },
+  { id: "1", type: "reminder_24h",    group: "ANTES DE LA CITA",       emoji: "⏰", title: "Recordatorio 24h antes",       desc: "Envía un email automático recordando la cita del día siguiente." },
+  { id: "2", type: "confirmation",    group: "ANTES DE LA CITA",       emoji: "✅", title: "Confirmación al agendar",      desc: "Mensaje inmediato con los detalles de la reserva." },
+  { id: "3", type: "post_visit",      group: "DESPUÉS DE LA CITA",     emoji: "⭐", title: "Seguimiento post-visita",      desc: "¿Cómo te quedó el corte? Pide reseñas 24h después." },
+  { id: "4", type: "daily_report",    group: "DESPUÉS DE LA CITA",     emoji: "📈", title: "Reporte diario al cierre",     desc: "Recibe en tu email un resumen del negocio cada noche." },
+  { id: "5", type: "recover_inactive",group: "RETENCIÓN DE CLIENTES",  emoji: "💔", title: "Recuperar inactivos",          desc: "Mensaje a clientes que llevan más de 45 días sin venir.", isNew: true },
+  { id: "6", type: "birthday",        group: "RETENCIÓN DE CLIENTES",  emoji: "🎂", title: "Felicitación de cumpleaños",   desc: "Envía un descuento sorpresa en el día especial del cliente." },
+  { id: "7", type: "push_nueva_cita", group: "NOTIFICACIONES EN VIVO", emoji: "🔔", title: "Notificación de nueva cita",   desc: "Alerta instantánea en el navegador cuando llegue una reserva.", isNew: true, isPush: true },
 ];
 
 interface Props {
@@ -33,52 +34,65 @@ interface Props {
   stats: any;
   barbershopId: string;
   userId: string;
+  hasPushSubscription: boolean;
 }
 
-export default function AutomatizacionesClient({ initialAutomations, stats, barbershopId, userId }: Props) {
+export default function AutomatizacionesClient({ initialAutomations, stats, barbershopId, userId, hasPushSubscription }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const { subscribe, unsubscribe, status: pushStatus } = usePushNotifications(barbershopId, userId);
 
-  // Local optimistic state so the toggle reacts instantly
-  const [activeStates, setActiveStates] = useState<Record<string, boolean>>(
-    () => Object.fromEntries(
+  const [activeStates, setActiveStates] = useState<Record<string, boolean>>(() => {
+    const base = Object.fromEntries(
       AUTOMATION_DEFS.map(def => [
         def.type,
         initialAutomations.find(a => a.type === def.type)?.is_active ?? false,
       ])
-    )
-  );
+    );
+    // Push state comes from push_subscriptions, not automations table
+    base['push_nueva_cita'] = hasPushSubscription;
+    return base;
+  });
 
   const getIsActive = (type: string) => activeStates[type] ?? false;
 
   const handleToggle = (type: string, current: boolean) => {
+    const def = AUTOMATION_DEFS.find(d => d.type === type);
+
     startTransition(async () => {
       try {
-        if (type === 'push_nueva_cita') {
+        if (def?.isPush) {
           if (!current) {
+            // Turning ON: request browser permission + save subscription
             if (!('Notification' in window) || !('serviceWorker' in navigator)) {
               toast.error('Tu navegador no soporta notificaciones push');
               return;
             }
             const ok = await subscribe();
             if (!ok) {
-              toast.error('Necesitas permitir las notificaciones en el navegador para activar esto');
+              toast.error('Necesitas permitir las notificaciones en el navegador');
               return;
             }
+            // Subscription saved → update UI
+            setActiveStates(prev => ({ ...prev, [type]: true }));
+            toast.success('Notificaciones activadas');
+            router.refresh();
           } else {
+            // Turning OFF: remove subscription
             await unsubscribe();
+            setActiveStates(prev => ({ ...prev, [type]: false }));
+            toast.success('Notificaciones desactivadas');
+            router.refresh();
           }
+          return; // Don't touch automations table for push
         }
 
-        // Optimistic update — changes the toggle immediately
+        // Regular automation toggle
         setActiveStates(prev => ({ ...prev, [type]: !current }));
-
         await toggleAutomation(type, !current);
         toast.success(current ? 'Desactivado correctamente' : 'Activado correctamente');
         router.refresh();
       } catch {
-        // Revert on error
         setActiveStates(prev => ({ ...prev, [type]: current }));
         toast.error('Error al actualizar');
       }
@@ -101,9 +115,9 @@ export default function AutomatizacionesClient({ initialAutomations, stats, barb
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="CITAS RECORDADAS"    value={stats.recordadas}  sub="este mes"    color="success" />
-        <StatCard label="CLIENTES RECUPERADOS" value={stats.recuperados} sub="último mes"  color="accent" />
-        <StatCard label="NO-SHOWS EVITADOS"   value={stats.evitados}    sub="estimados"   color="info" />
+        <StatCard label="CITAS RECORDADAS"     value={stats.recordadas}  sub="este mes"   color="success" />
+        <StatCard label="CLIENTES RECUPERADOS" value={stats.recuperados} sub="último mes" color="accent" />
+        <StatCard label="NO-SHOWS EVITADOS"    value={stats.evitados}    sub="estimados"  color="info" />
       </div>
 
       <div className="max-w-4xl space-y-10">
@@ -115,8 +129,7 @@ export default function AutomatizacionesClient({ initialAutomations, stats, barb
             <div className="grid gap-3">
               {items.map(item => {
                 const isActive = getIsActive(item.type);
-                const isPush = item.type === 'push_nueva_cita';
-                const pushBlocked = isPush && pushStatus === 'denied';
+                const pushBlocked = item.isPush && pushStatus === 'denied';
 
                 return (
                   <Card
@@ -139,18 +152,14 @@ export default function AutomatizacionesClient({ initialAutomations, stats, barb
                         <p className="text-sm text-text-secondary">{item.desc}</p>
                         {pushBlocked && (
                           <p className="text-xs text-warning mt-1">
-                            Notificaciones bloqueadas en el navegador. Actívalas desde la configuración del sitio.
+                            Notificaciones bloqueadas. Actívalas desde la configuración del sitio en tu navegador.
                           </p>
                         )}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <label
-                        className={`relative inline-flex items-center ${
-                          isPending || pushBlocked ? 'opacity-50 pointer-events-none' : 'cursor-pointer'
-                        }`}
-                      >
+                      <label className={`relative inline-flex items-center ${isPending || pushBlocked ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
                         <input
                           type="checkbox"
                           className="sr-only peer"
