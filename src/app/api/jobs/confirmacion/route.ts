@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
-import { getBaseEmailTemplate, getConfirmationEmailTemplate } from '@/lib/emailTemplates';
+import { sendEmail } from '@/lib/email';
+import { getConfirmationEmailTemplate } from '@/lib/emailTemplates';
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +9,6 @@ export async function POST(req: Request) {
     if (!citaId) return NextResponse.json({ error: 'Falta citaId' }, { status: 400 });
 
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
 
     // Consultar cita con detalles
     const { data: app, error } = await supabaseAdmin
@@ -83,19 +82,14 @@ export async function POST(req: Request) {
       });
 
       try {
-        const { data: emailRes, error: emailError } = await resend.emails.send({
-          from: 'Trimly <onboarding@resend.dev>', // Usar onboarding como pidió el usuario
+        await sendEmail({
           to: clientData.email,
+          toName: clientData.name,
           subject: `Tu cita está confirmada — ${shopData?.name || 'Trimly'}`,
           html
         });
 
-        if (emailError) {
-          console.error('Resend Error:', emailError);
-          throw emailError;
-        }
-
-        console.log('Email enviado exitosamente:', emailRes);
+        console.log('Email enviado exitosamente a:', clientData.email);
 
         await supabaseAdmin.from('automation_logs').insert({
           automation_type: 'confirmation',
@@ -105,7 +99,7 @@ export async function POST(req: Request) {
           barbershop_id: app.barbershop_id
         });
       } catch (sendErr) {
-        console.error('Error al enviar email con Resend:', sendErr);
+        console.error('Error al enviar email con Brevo:', sendErr);
         throw sendErr;
       }
     } else {

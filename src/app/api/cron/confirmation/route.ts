@@ -1,15 +1,13 @@
 import { NextResponse } from 'next/server';
-import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
-import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const cronSecret = process.env.CRON_SECRET;
+    if (req.headers.get('x-vercel-cron') !== '1' && authHeader !== `Bearer ${cronSecret}`) {
+      return Response.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     // Nota: La confirmación suele ser un trigger inmediato, 

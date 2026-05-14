@@ -7,7 +7,6 @@ import BarberDashboardClient from './BarberDashboardClient';
 import { LogOut, Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/RedesignComponents';
 import miloImg from '@/assets/milo.png';
-import { PushBanner } from '@/components/notifications/PushBanner';
 
 export default function BarberDashboardPage() {
   const { session, loading, logout } = useBarberSession();
@@ -73,7 +72,6 @@ export default function BarberDashboardPage() {
 
   return (
     <div className="space-y-10 pb-20">
-      <PushBanner barbershopId={session.barbershopId} userId={session.barberId} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-black text-text-primary tracking-tight">Hola, {session.barberName} 👋</h1>

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
@@ -8,12 +8,12 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const cronSecret = process.env.CRON_SECRET;
+    if (req.headers.get('x-vercel-cron') !== '1' && authHeader !== `Bearer ${cronSecret}`) {
+      return Response.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
 
     const { data: barbershops } = await supabaseAdmin.from('barbershops').select('id, name, owner_id');
     if (!barbershops) return NextResponse.json({ ok: true, skipped: 'No barbershops' });
@@ -60,11 +60,10 @@ export async function GET(req: Request) {
              </div>`
           );
 
-          await resend.emails.send({
-            from: 'Trimly <no-reply@trimlyapp.com>',
+          await sendEmail({
             to: owner.email,
             subject: `📈 Reporte Diario: ${shop.name}`,
-            html
+            html,
           });
         }
       }

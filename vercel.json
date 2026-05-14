@@ -2,7 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/recordatorio-24h",
-      "schedule": "0 15 * * *"
+      "schedule": "0 13 * * *"
+    },
+    {
+      "path": "/api/cron/post-visit",
+      "schedule": "0 14 * * *"
     },
     {
       "path": "/api/cron/reporte-diario",
@@ -10,11 +14,11 @@
     },
     {
       "path": "/api/cron/recuperar-inactivos",
-      "schedule": "0 16 * * 1"
+      "schedule": "0 14 * * 1"
     },
     {
       "path": "/api/cron/cumpleanos",
-      "schedule": "0 14 * * *"
+      "schedule": "0 12 * * *"
     }
   ]
 }

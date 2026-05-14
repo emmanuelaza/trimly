@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
@@ -8,18 +8,17 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: Request) {
   try {
     const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const cronSecret = process.env.CRON_SECRET;
+    if (req.headers.get('x-vercel-cron') !== '1' && authHeader !== `Bearer ${cronSecret}`) {
+      return Response.json({ error: 'No autorizado' }, { status: 401 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
-    
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const dateStr = tomorrow.toISOString().split('T')[0];
 
-    // 2. Fetch appointments for tomorrow joined with relevant data
     const { data: appointments, error } = await supabaseAdmin
       .from('appointments')
       .select(`
@@ -29,7 +28,8 @@ export async function GET(req: Request) {
         barbershop_id,
         client:clients(name, email),
         service:services(name),
-        barber:barbers(name)
+        barber:barbers(name),
+        barbershop:barbershops(name)
       `)
       .gte('scheduled_at', `${dateStr}T00:00:00Z`)
       .lte('scheduled_at', `${dateStr}T23:59:59Z`)
@@ -53,26 +53,30 @@ export async function GET(req: Request) {
       const serviceData = app.service as any;
       const barberData = app.barber as any;
 
+      const shopData = (app as any).barbershop as any;
+
       if (automation?.is_active && clientData?.email) {
-        const time = new Date(app.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        // 4. Send Email
+        const time = new Date(app.scheduled_at).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+        const fecha = new Date(app.scheduled_at).toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+
         const html = getBaseEmailTemplate(
-          "Recordatorio de tu Cita",
-          `<p>Hola <strong>${clientData.name}</strong>, te recordamos tu cita para mañana en Trimly:</p>
-           <div style="background: #f4f4f4; padding: 20px; border-radius: 8px; margin: 20px 0;">
-             <p><strong>Servicio:</strong> ${serviceData?.name}</p>
-             <p><strong>Barbero:</strong> ${barberData?.name || 'Por asignar'}</p>
-             <p><strong>Hora:</strong> ${time}</p>
+          'Recordatorio: tu cita es mañana ✂️',
+          `<p>Hola <strong>${clientData.name}</strong>, te recordamos tu cita para mañana:</p>
+           <div class="highlight">
+             <p class="label">Servicio</p><p>${serviceData?.name}</p>
+             <p class="label">Barbero</p><p>${barberData?.name || 'Por asignar'}</p>
+             <p class="label">Fecha</p><p>${fecha}</p>
+             <p class="label">Hora</p><p>${time}</p>
+             <p class="label">Barbería</p><p>${shopData?.name || ''}</p>
            </div>
            <p>¡Te esperamos!</p>`
         );
 
-        await resend.emails.send({
-          from: 'Trimly <no-reply@trimlyapp.com>',
+        await sendEmail({
           to: clientData.email,
+          toName: clientData.name,
           subject: '✂️ Recordatorio: tu cita es mañana',
-          html
+          html,
         });
 
         // 5. Log activity

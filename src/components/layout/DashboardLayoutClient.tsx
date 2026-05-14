@@ -8,13 +8,11 @@ import {
   LayoutDashboard, Calendar, Users, Scissors,
   ShoppingBag, Wallet, Tag, Star, BarChart3,
   TrendingUp, Gift, Settings, Link2,
-  Building2, ChevronRight, Menu,
+  Building2, ChevronRight, Menu, Bell,
   LogOut, Zap, CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
-import { PushBanner } from '@/components/notifications/PushBanner'
-import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
@@ -342,16 +340,15 @@ export function DashboardLayoutClient({
 
           {/* Topbar actions */}
           <div className="flex items-center gap-2">
-            <NotificationBell barbershopId={barbershopId} />
+            <button className="relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-background-3 text-text-secondary hover:text-text-primary transition-colors">
+              <Bell size={16} />
+            </button>
           </div>
         </header>
 
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto">
           <div className="p-4 md:p-6 pb-20 md:pb-6 animate-fadeIn">
-            {barbershopId && userId && (
-              <PushBanner barbershopId={barbershopId} userId={userId} />
-            )}
             {children}
           </div>
         </main>

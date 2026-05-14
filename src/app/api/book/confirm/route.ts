@@ -116,19 +116,7 @@ export async function POST(req: Request) {
 
     console.log('Appointment created successfully:', appointment.id);
 
-    // 3b. Push notification to shop
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app'
-      const fecha = new Date(scheduledAt).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
-      const hora = new Date(scheduledAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
-      await fetch(`${baseUrl}/api/push/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ barbershopId, title: '📅 Nueva cita agendada', body: `Nueva reserva el ${fecha} a las ${hora}`, url: '/dashboard/agenda', tag: 'nueva_cita' })
-      })
-    } catch (e) { console.error('Push error:', e) }
-
-    // 3c. Register referral use and credit the referrer
+    // 3b. Register referral use and credit the referrer
     if (referralCode && referralClienteId && referralValor) {
       try {
         const creditAmount = referralTipo === 'porcentaje'

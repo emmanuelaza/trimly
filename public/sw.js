@@ -2,29 +2,6 @@ self.addEventListener('install', () => self.skipWaiting())
 self.addEventListener('activate', e =>
   e.waitUntil(clients.claim()))
 
-self.addEventListener('push', e => {
-  if (!e.data) return
-  const data = e.data.json()
-  e.waitUntil(
-    Promise.all([
-      self.registration.showNotification(data.title, {
-        body: data.body,
-        icon: '/logo-icon.png',
-        badge: '/logo-icon.png',
-        vibrate: [200, 100, 200],
-        tag: data.tag || 'trimly',
-        renotify: true,
-        requireInteraction: false,
-        silent: false,
-        data: { url: data.url || '/dashboard' }
-      }),
-      clients.matchAll({ type: 'window' }).then(list => {
-        list.forEach(c => c.postMessage({ type: 'PUSH_RECEIVED', payload: data }))
-      })
-    ])
-  )
-})
-
 self.addEventListener('notificationclick', e => {
   e.notification.close()
   const url = e.notification.data?.url || '/dashboard'

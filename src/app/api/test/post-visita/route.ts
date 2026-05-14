@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
     
     // Buscar la cita más reciente
     const { data: app, error } = await supabaseAdmin
@@ -40,9 +39,9 @@ export async function GET() {
        <p><a href="#" style="color: #0070f3;">Dejar reseña</a></p>`
     );
 
-    await resend.emails.send({
-      from: 'Trimly <no-reply@trimlyapp.com>',
+    await sendEmail({
       to: clientData.email,
+      toName: clientData.name,
       subject: '⭐ TEST: ¿Cómo te quedó el corte?',
       html
     });

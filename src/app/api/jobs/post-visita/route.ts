@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export async function POST(req: Request) {
@@ -9,7 +9,6 @@ export async function POST(req: Request) {
     if (!citaId) return NextResponse.json({ error: 'Falta citaId' }, { status: 400 });
 
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
 
     const { data: app, error } = await supabaseAdmin
       .from('appointments')
@@ -41,9 +40,9 @@ export async function POST(req: Request) {
          <p><a href="#" style="color: #0070f3;">Dejar reseña</a></p>`
       );
 
-      await resend.emails.send({
-        from: 'Trimly <no-reply@trimlyapp.com>',
+      await sendEmail({
         to: clientData.email,
+        toName: clientData.name,
         subject: '⭐ ¿Cómo te quedó el corte?',
         html
       });

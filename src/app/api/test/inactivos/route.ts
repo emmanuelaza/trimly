@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,6 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const resend = getResend();
     
     // Buscar cualquier cliente con email para la prueba
     const { data: client, error } = await supabaseAdmin
@@ -29,9 +28,9 @@ export async function GET() {
        <p>¿Qué tal si agendas una cita para este fin de semana? ¡Te esperamos con el mejor servicio!</p>`
     );
 
-    await resend.emails.send({
-      from: 'Trimly <no-reply@trimlyapp.com>',
+    await sendEmail({
       to: client.email,
+      toName: client.name,
       subject: '✂️ TEST: Te extrañamos',
       html
     });

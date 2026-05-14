@@ -82,16 +82,6 @@ export async function createAppointment(formData: FormData) {
 
     if (error) return { success: false, error: error.message };
 
-    // Push notification
-    try {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app'
-      await fetch(`${baseUrl}/api/push/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ barbershopId, title: '📅 Nueva cita creada', body: 'Cita agendada en el dashboard', url: '/dashboard/agenda', tag: 'nueva_cita' })
-      })
-    } catch (e) { console.error('Push error:', e) }
-
     // Automations
     try {
       const { Client } = await import("@upstash/qstash");

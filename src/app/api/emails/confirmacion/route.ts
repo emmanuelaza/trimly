@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getResend } from '@/lib/resend';
+import { sendEmail } from '@/lib/email';
 import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
-    const resend = getResend();
     const body = await req.json();
     const { email, nombre, fecha, hora, servicio, barberia } = body;
 
@@ -23,14 +22,14 @@ export async function POST(req: Request) {
 
     const template = getBaseEmailTemplate('Cita Confirmada ✅', htmlBody);
 
-    const data = await resend.emails.send({
-      from: 'Trimly <onboarding@resend.dev>',
+    await sendEmail({
       to: email,
+      toName: nombre,
       subject: `Tu cita confirmada en ${barberia}`,
       html: template,
     });
 
-    return NextResponse.json(data);
+    return NextResponse.json({ ok: true });
   } catch (error: any) {
     console.error('Confirmation email POST fail', error);
     return NextResponse.json({ error: error.message }, { status: 500 });

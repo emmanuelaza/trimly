@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@getbrevo/brevo": "^5.0.4",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.2",
     "@upstash/qstash": "^2.10.1",
@@ -23,7 +24,6 @@
     "react-dom": "19.2.4",
     "react-hot-toast": "^2.6.0",
     "recharts": "^3.8.1",
-    "resend": "^6.12.2",
     "tailwind-merge": "^3.5.0",
     "web-push": "^3.6.7",
     "xlsx": "^0.18.5"
