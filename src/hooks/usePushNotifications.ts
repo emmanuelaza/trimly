@@ -45,7 +45,7 @@ export function usePushNotifications(barbershopId?: string, userId?: string) {
 
       const subJson = sub.toJSON()
 
-      await fetch('/api/push/subscribe', {
+      const res = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -55,6 +55,12 @@ export function usePushNotifications(barbershopId?: string, userId?: string) {
           barbershopId,
         }),
       })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        console.error('Push subscribe API error:', res.status, body)
+        return false
+      }
 
       setStatus('granted')
       return true

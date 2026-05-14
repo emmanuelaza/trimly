@@ -219,19 +219,17 @@ export async function confirmBooking(data: {
 
     // 5. Send push notification if automation is active
     try {
-      const { data: pushAuto } = await getAdminSupabase()
-        .from('automations')
-        .select('is_active')
-        .eq('barbershop_id', data.barbershopId)
-        .eq('type', 'push_nueva_cita')
-        .maybeSingle()
-
-      if (pushAuto?.is_active) {
-        const { sendPushToShop } = await import('@/lib/pushSend')
-        await sendPushToShop(data.barbershopId, {
-          title: '¡Nueva cita reservada! 💈',
-          body: `${data.clientName} reservó una cita`,
-          url: '/dashboard/agenda',
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+      if (appUrl) {
+        await fetch(`${appUrl}/api/push/send`, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            barbershopId: data.barbershopId,
+            title: '¡Nueva cita reservada! 💈',
+            body: `${data.clientName} reservó una cita`,
+            url: '/dashboard/agenda',
+          }),
         })
       }
     } catch (e) {
