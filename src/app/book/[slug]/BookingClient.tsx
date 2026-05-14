@@ -175,9 +175,9 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   // Realtime subscription
   useEffect(() => {
-    if (step !== 3) return;
+    if (step !== 3 || !selectedDate) return;
 
-    const channelName = selectedBarber 
+    const channelName = selectedBarber
       ? `slots-barber-${selectedBarber.id}-${selectedDate}`
       : `slots-shop-${barbershop.id}-${selectedDate}`;
 
@@ -185,24 +185,17 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
       ? `barber_id=eq.${selectedBarber.id}`
       : `barbershop_id=eq.${barbershop.id}`;
 
-    const channel = getSupabase()
+    // Use one client instance for both subscribe and cleanup
+    const client = getSupabase();
+    const channel = client
       .channel(channelName)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'appointments',
-          filter: filter
-        },
-        () => {
-          fetchBookedSlots();
-        }
-      )
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'appointments', filter }, () => {
+        fetchBookedSlots();
+      })
       .subscribe();
 
     return () => {
-      getSupabase().removeChannel(channel);
+      client.removeChannel(channel);
     };
   }, [step, barbershop.id, selectedBarber, selectedDate]);
 
