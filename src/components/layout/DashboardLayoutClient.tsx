@@ -8,12 +8,13 @@ import {
   LayoutDashboard, Calendar, Users, Scissors,
   ShoppingBag, Wallet, Tag, Star, BarChart3,
   TrendingUp, Gift, Settings, Link2,
-  Building2, ChevronRight, Menu, Bell,
+  Building2, ChevronRight, Menu,
   LogOut, Zap, CreditCard,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
 import { PushBanner } from '@/components/notifications/PushBanner'
+import { NotificationBell } from '@/components/notifications/NotificationBell'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
@@ -341,10 +342,7 @@ export function DashboardLayoutClient({
 
           {/* Topbar actions */}
           <div className="flex items-center gap-2">
-            <button className="relative flex items-center justify-center w-9 h-9 rounded-lg hover:bg-background-3 text-text-secondary hover:text-text-primary transition-colors">
-              <Bell size={16} />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full" />
-            </button>
+            <NotificationBell barbershopId={barbershopId} />
           </div>
         </header>
 

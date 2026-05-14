@@ -14,10 +14,33 @@ export function PushBanner({ barbershopId, userId }: Props) {
 
   useEffect(() => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return
+    if (Notification.permission === 'granted') {
+      // Silently re-register in case subscription was lost
+      silentSubscribe()
+      return
+    }
     if (Notification.permission !== 'default') return
     const dismissed = localStorage.getItem(`push_banner_${userId}`)
     if (!dismissed) setShow(true)
   }, [userId])
+
+  async function silentSubscribe() {
+    try {
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+      if (!vapidKey) return
+      const reg = await navigator.serviceWorker.register('/sw.js')
+      await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      })
+      await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subscription: sub.toJSON(), barbershopId, userId }),
+      })
+    } catch {}
+  }
 
   if (!show) return null
 

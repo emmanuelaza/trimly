@@ -6,15 +6,22 @@ self.addEventListener('push', e => {
   if (!e.data) return
   const data = e.data.json()
   e.waitUntil(
-    self.registration.showNotification(data.title, {
-      body: data.body,
-      icon: '/logo-icon.png',
-      badge: '/logo-icon.png',
-      vibrate: [100, 50, 100],
-      tag: data.tag || 'trimly',
-      renotify: true,
-      data: { url: data.url || '/dashboard' }
-    })
+    Promise.all([
+      self.registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/logo-icon.png',
+        badge: '/logo-icon.png',
+        vibrate: [200, 100, 200],
+        tag: data.tag || 'trimly',
+        renotify: true,
+        requireInteraction: false,
+        silent: false,
+        data: { url: data.url || '/dashboard' }
+      }),
+      clients.matchAll({ type: 'window' }).then(list => {
+        list.forEach(c => c.postMessage({ type: 'PUSH_RECEIVED', payload: data }))
+      })
+    ])
   )
 })
 
