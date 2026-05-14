@@ -44,7 +44,7 @@ export function PushBanner({ barbershopId, userId }: Props) {
         applicationServerKey: urlBase64ToUint8Array(vapidKey),
       })
 
-      await fetch('/api/push/subscribe', {
+      const response = await fetch('/api/push/subscribe', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -53,6 +53,8 @@ export function PushBanner({ barbershopId, userId }: Props) {
           userId,
         }),
       })
+      const result = await response.json()
+      console.log('Subscribe response:', response.status, result)
 
       setShow(false)
       new Notification('¡Notificaciones activadas! 🔔', {

@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
   const { subscription, barbershopId, userId } = await req.json()
+  console.log('Subscribe called with:', { userId, barbershopId })
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -22,6 +23,7 @@ export async function POST(req: Request) {
     { onConflict: 'user_id,endpoint' }
   )
 
+  console.log('Upsert result:', error || 'success')
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   return NextResponse.json({ success: true })
 }
