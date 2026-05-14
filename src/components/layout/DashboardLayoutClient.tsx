@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
+import { PushBanner } from '@/components/push/PushBanner'
 import miloImg from '@/assets/milo.png'
 
 const NAV_SECTIONS = [
@@ -345,6 +346,11 @@ export function DashboardLayoutClient({
             </button>
           </div>
         </header>
+
+        {/* PUSH BANNER */}
+        {barbershopId && userId && (
+          <PushBanner barbershopId={barbershopId} userId={userId} />
+        )}
 
         {/* PAGE CONTENT */}
         <main className="flex-1 overflow-y-auto">
