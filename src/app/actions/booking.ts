@@ -217,26 +217,7 @@ export async function confirmBooking(data: {
       }
     }
 
-    // 5. Send push notification if automation is active
-    try {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-      if (appUrl) {
-        await fetch(`${appUrl}/api/push/send`, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            barbershopId: data.barbershopId,
-            title: '¡Nueva cita reservada! 💈',
-            body: `${data.clientName} reservó una cita`,
-            url: '/dashboard/agenda',
-          }),
-        })
-      }
-    } catch (e) {
-      console.error('Push notification error:', e)
-    }
-
-    // 6. Trigger remaining Automations via QStash
+    // 5. Trigger remaining Automations via QStash
     try {
       const { Client } = await import("@upstash/qstash");
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });

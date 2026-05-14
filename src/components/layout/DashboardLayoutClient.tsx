@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -101,43 +101,9 @@ export function DashboardLayoutClient({
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [miloOpen, setMiloOpen] = useState(false)
-  const audioCtxRef = useRef<AudioContext | null>(null)
-
   useEffect(() => {
     setSidebarOpen(false)
   }, [pathname])
-
-  // Register SW and play sound when push arrives while app is open
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return
-
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
-
-    function playSound() {
-      try {
-        if (!audioCtxRef.current) audioCtxRef.current = new AudioContext()
-        const ctx = audioCtxRef.current
-        const osc = ctx.createOscillator()
-        const gain = ctx.createGain()
-        osc.connect(gain)
-        gain.connect(ctx.destination)
-        osc.type = 'sine'
-        osc.frequency.setValueAtTime(880, ctx.currentTime)
-        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15)
-        gain.gain.setValueAtTime(0.4, ctx.currentTime)
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
-        osc.start(ctx.currentTime)
-        osc.stop(ctx.currentTime + 0.4)
-      } catch {}
-    }
-
-    function onMessage(e: MessageEvent) {
-      if (e.data?.type === 'PUSH_RECEIVED') playSound()
-    }
-
-    navigator.serviceWorker.addEventListener('message', onMessage)
-    return () => navigator.serviceWorker.removeEventListener('message', onMessage)
-  }, [])
 
   const pageLabel = PAGE_LABELS[pathname] ??
     pathname.split('/').pop()?.replace(/-/g, ' ') ?? 'Dashboard'
