@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendConfirmationEmail } from '@/lib/emails';
-import { sendPushToShop } from '@/lib/push';
-import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 
 export async function POST(req: Request) {
   try {
@@ -118,39 +116,17 @@ export async function POST(req: Request) {
 
     console.log('Appointment created successfully:', appointment.id);
 
-    // 3b. Push notification to shop (gated by push_nueva_cita automation, default ON)
+    // 3b. Push notification to shop
     try {
-      const { data: pushAuto } = await getSupabaseAdmin()
-        .from('automations')
-        .select('is_active')
-        .eq('barbershop_id', barbershopId)
-        .eq('type', 'push_nueva_cita')
-        .maybeSingle()
-      const pushEnabled = pushAuto == null ? true : pushAuto.is_active
-      if (pushEnabled) {
-        const [{ data: svc }, { data: brb }] = await Promise.all([
-          supabase.from('services').select('name').eq('id', serviceId).maybeSingle(),
-          barberId
-            ? supabase.from('barbers').select('name').eq('id', barberId).maybeSingle()
-            : Promise.resolve({ data: null }),
-        ])
-        const fecha = new Date(scheduledAt).toLocaleDateString('es-CO', {
-          weekday: 'short', day: 'numeric', month: 'short',
-        })
-        const hora = new Date(scheduledAt).toLocaleTimeString('es-CO', {
-          hour: '2-digit', minute: '2-digit',
-        })
-        await sendPushToShop({
-          barbershopId,
-          title: '📅 Nueva cita agendada',
-          body: `${clientName} agendó ${svc?.name ?? 'un servicio'} el ${fecha} a las ${hora}${brb?.name ? ` con ${brb.name}` : ''}`,
-          url: '/dashboard/agenda',
-          tag: 'nueva_cita',
-        })
-      }
-    } catch (pushErr) {
-      console.error('Push notification error:', pushErr)
-    }
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app'
+      const fecha = new Date(scheduledAt).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' })
+      const hora = new Date(scheduledAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })
+      await fetch(`${baseUrl}/api/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barbershopId, title: '📅 Nueva cita agendada', body: `Nueva reserva el ${fecha} a las ${hora}`, url: '/dashboard/agenda', tag: 'nueva_cita' })
+      })
+    } catch (e) { console.error('Push error:', e) }
 
     // 3c. Register referral use and credit the referrer
     if (referralCode && referralClienteId && referralValor) {

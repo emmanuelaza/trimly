@@ -3,10 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
-import { getResend } from "@/lib/resend";
-import { getBaseEmailTemplate } from "@/lib/emailTemplates";
-import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
-import { sendPushToShop } from "@/lib/push";
 
 import { buildScheduledAt as buildLocalScheduledAt, getTodayString } from "@/lib/dateUtils";
 
@@ -86,39 +82,15 @@ export async function createAppointment(formData: FormData) {
 
     if (error) return { success: false, error: error.message };
 
-    // Push notification (gated by push_nueva_cita automation, default ON)
+    // Push notification
     try {
-      const { data: pushAuto } = await supabase
-        .from('automations')
-        .select('is_active')
-        .eq('barbershop_id', barbershopId)
-        .eq('type', 'push_nueva_cita')
-        .maybeSingle()
-      const pushEnabled = pushAuto == null ? true : pushAuto.is_active
-      if (pushEnabled) {
-        const [{ data: client }, { data: barber }] = await Promise.all([
-          supabase.from('clients').select('name').eq('id', client_id).maybeSingle(),
-          barber_id
-            ? supabase.from('barbers').select('name').eq('id', barber_id).maybeSingle()
-            : Promise.resolve({ data: null }),
-        ])
-        const fecha = new Date(scheduled_at).toLocaleDateString('es-CO', {
-          weekday: 'short', day: 'numeric', month: 'short',
-        })
-        const hora = new Date(scheduled_at).toLocaleTimeString('es-CO', {
-          hour: '2-digit', minute: '2-digit',
-        })
-        await sendPushToShop({
-          barbershopId,
-          title: '📅 Nueva cita agendada',
-          body: `${client?.name ?? 'Cliente'} agendó ${svc?.name ?? 'un servicio'} el ${fecha} a las ${hora}${barber?.name ? ` con ${barber.name}` : ''}`,
-          url: '/dashboard/agenda',
-          tag: 'nueva_cita',
-        })
-      }
-    } catch (pushErr) {
-      console.error('Push notification error:', pushErr)
-    }
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app'
+      await fetch(`${baseUrl}/api/push/send`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ barbershopId, title: '📅 Nueva cita creada', body: 'Cita agendada en el dashboard', url: '/dashboard/agenda', tag: 'nueva_cita' })
+      })
+    } catch (e) { console.error('Push error:', e) }
 
     // Automations
     try {
