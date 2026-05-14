@@ -295,7 +295,6 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
   }, [slots, selectedTime, finished, loading]);
 
   const [confirmedAppointment, setConfirmedAppointment] = useState<any>(null);
-  const [pushState, setPushState] = useState<'idle' | 'loading' | 'done' | 'denied'>('idle');
 
   const handleConfirm = async () => {
     if (!clientInfo.name || !clientInfo.phone) return;
@@ -355,36 +354,6 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
 
   const handleBack = () => setStep(prev => Math.max(1, prev - 1));
 
-  async function activateClientPush() {
-    if (!('Notification' in window) || !('serviceWorker' in navigator)) return
-    setPushState('loading')
-    try {
-      const reg = await navigator.serviceWorker.register('/sw.js')
-      await navigator.serviceWorker.ready
-      const permission = await Notification.requestPermission()
-      if (permission !== 'granted') { setPushState('denied'); return }
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
-      if (!vapidKey) return
-      const padding = '='.repeat((4 - (vapidKey.length % 4)) % 4)
-      const base64 = (vapidKey + padding).replace(/-/g, '+').replace(/_/g, '/')
-      const raw = window.atob(base64)
-      const buf = new ArrayBuffer(raw.length)
-      const view = new Uint8Array(buf)
-      for (let i = 0; i < raw.length; i++) view[i] = raw.charCodeAt(i)
-      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: buf })
-      await fetch('/api/push/subscribe-client', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          subscription: sub.toJSON(),
-          barbershopId: barbershop.id,
-          clientId: confirmedAppointment?.client_id,
-        }),
-      })
-      setPushState('done')
-    } catch { setPushState('idle') }
-  }
-
   if (finished) {
     return (
       <div className="max-w-md mx-auto px-4 py-12 text-center">
@@ -416,36 +385,9 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
             </div>
           </Card>
 
-          {/* Push opt-in */}
-          {pushState === 'idle' && confirmedAppointment?.client_id && (
-            <div className="mt-6 p-4 bg-primary/8 border border-primary/20 rounded-xl text-left flex items-start gap-3">
-              <span className="text-xl leading-none mt-0.5">🔔</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-text-primary mb-1">¿Quieres un recordatorio?</p>
-                <p className="text-xs text-text-secondary mb-3">Te avisamos 24h antes de tu cita para que no se te olvide.</p>
-                <button
-                  onClick={activateClientPush}
-                  className="w-full py-2 bg-primary text-white text-sm font-semibold rounded-lg hover:opacity-90 transition-opacity"
-                >
-                  Activar recordatorio
-                </button>
-              </div>
-            </div>
-          )}
-          {pushState === 'loading' && (
-            <div className="mt-6 p-4 bg-primary/8 border border-primary/20 rounded-xl text-center text-sm text-text-secondary">
-              Activando...
-            </div>
-          )}
-          {pushState === 'done' && (
-            <div className="mt-6 p-4 bg-success/10 border border-success/20 rounded-xl text-center text-sm font-semibold text-success">
-              ✓ Recordatorio activado
-            </div>
-          )}
-
           <Button
             variant="primary"
-            className="w-full h-12 font-medium mt-6 mb-4"
+            className="w-full h-12 font-medium mt-8 mb-4"
             onClick={() => {
               const [y, m, d] = selectedDate.split('-').map(Number);
               const [hh, mm] = (selectedTime || "00:00").split(':').map(Number);
