@@ -7,9 +7,7 @@ function initVapid() {
   const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || ''
   const privateKey = process.env.VAPID_PRIVATE_KEY || ''
 
-  if (!publicKey || !privateKey) {
-    throw new Error('VAPID keys not configured')
-  }
+  if (!publicKey || !privateKey) throw new Error('VAPID keys not configured')
 
   webpush.setVapidDetails(
     subject.startsWith('mailto:') ? subject : `mailto:${subject}`,
@@ -25,20 +23,6 @@ export async function POST(req: Request) {
 
     const supabase = getSupabaseAdmin()
 
-    // Check if automation is active
-    const { data: auto } = await supabase
-      .from('automations')
-      .select('is_active')
-      .eq('barbershop_id', barbershopId)
-      .eq('type', 'push_nueva_cita')
-      .maybeSingle()
-
-    if (!auto?.is_active) {
-      console.log(`[push/send] push_nueva_cita inactive or not found for ${barbershopId}`)
-      return NextResponse.json({ ok: true, sent: 0, reason: 'inactive' })
-    }
-
-    // Get subscriptions
     const { data: subs, error: subsError } = await supabase
       .from('push_subscriptions')
       .select('endpoint, keys_p256dh, keys_auth')
@@ -51,11 +35,8 @@ export async function POST(req: Request) {
     }
 
     if (!subs?.length) {
-      console.log(`[push/send] No subscriptions for barbershop ${barbershopId}`)
-      return NextResponse.json({ ok: true, sent: 0, reason: 'no_subscriptions' })
+      return NextResponse.json({ ok: true, sent: 0 })
     }
-
-    console.log(`[push/send] Found ${subs.length} subscription(s) for barbershop ${barbershopId}`)
 
     initVapid()
 
@@ -76,19 +57,15 @@ export async function POST(req: Request) {
             payload
           )
           sent++
-          console.log(`[push/send] Sent to endpoint: ${sub.endpoint.slice(0, 50)}...`)
         } catch (err: any) {
-          console.error(`[push/send] Failed to send push:`, err?.statusCode, err?.message)
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            stale.push(sub.endpoint)
-          }
+          console.error('[push/send] Failed:', err?.statusCode, err?.message)
+          if (err.statusCode === 410 || err.statusCode === 404) stale.push(sub.endpoint)
         }
       })
     )
 
     if (stale.length) {
       await supabase.from('push_subscriptions').delete().in('endpoint', stale)
-      console.log(`[push/send] Removed ${stale.length} stale subscription(s)`)
     }
 
     return NextResponse.json({ ok: true, sent })
