@@ -1,6 +1,6 @@
 "use client";
 
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { StatCard } from '@/components/ui/StatCard';
 import { toggleAutomation } from '@/app/actions/barbershops';
@@ -40,15 +40,23 @@ export default function AutomatizacionesClient({ initialAutomations, stats, barb
   const [isPending, startTransition] = useTransition();
   const { subscribe, unsubscribe, status: pushStatus } = usePushNotifications(barbershopId, userId);
 
-  const getIsActive = (type: string) =>
-    initialAutomations.find(a => a.type === type)?.is_active || false;
+  // Local optimistic state so the toggle reacts instantly
+  const [activeStates, setActiveStates] = useState<Record<string, boolean>>(
+    () => Object.fromEntries(
+      AUTOMATION_DEFS.map(def => [
+        def.type,
+        initialAutomations.find(a => a.type === def.type)?.is_active ?? false,
+      ])
+    )
+  );
+
+  const getIsActive = (type: string) => activeStates[type] ?? false;
 
   const handleToggle = (type: string, current: boolean) => {
     startTransition(async () => {
       try {
         if (type === 'push_nueva_cita') {
           if (!current) {
-            // Turning ON: request browser permission first
             if (!('Notification' in window) || !('serviceWorker' in navigator)) {
               toast.error('Tu navegador no soporta notificaciones push');
               return;
@@ -63,10 +71,15 @@ export default function AutomatizacionesClient({ initialAutomations, stats, barb
           }
         }
 
+        // Optimistic update — changes the toggle immediately
+        setActiveStates(prev => ({ ...prev, [type]: !current }));
+
         await toggleAutomation(type, !current);
         toast.success(current ? 'Desactivado correctamente' : 'Activado correctamente');
         router.refresh();
       } catch {
+        // Revert on error
+        setActiveStates(prev => ({ ...prev, [type]: current }));
         toast.error('Error al actualizar');
       }
     });
