@@ -247,11 +247,12 @@ export async function confirmBooking(data: {
       const delayMs = (appointmentTime - now) + (24 * 60 * 60 * 1000);
       const delaySeconds = Math.floor(delayMs / 1000);
 
-      if (delaySeconds > 0) {
-        await qstash.publishJSON({ 
-          url: `${appUrl}/api/jobs/post-visita`, 
+      const QSTASH_MAX_DELAY = 604800 // 7 days in seconds
+      if (delaySeconds > 0 && delaySeconds <= QSTASH_MAX_DELAY) {
+        await qstash.publishJSON({
+          url: `${appUrl}/api/jobs/post-visita`,
           body: { citaId: appointment.id },
-          delay: delaySeconds 
+          delay: delaySeconds
         });
       }
     } catch (e) {
