@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@getbrevo/brevo": "^5.0.4",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.2",
     "@upstash/qstash": "^2.10.1",
