@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendConfirmationEmail } from '@/lib/emails';
 import { sendPushToShop } from '@/lib/push';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 
 export async function POST(req: Request) {
   try {
@@ -119,7 +120,7 @@ export async function POST(req: Request) {
 
     // 3b. Push notification to shop (gated by push_nueva_cita automation, default ON)
     try {
-      const { data: pushAuto } = await supabase
+      const { data: pushAuto } = await getSupabaseAdmin()
         .from('automations')
         .select('is_active')
         .eq('barbershop_id', barbershopId)

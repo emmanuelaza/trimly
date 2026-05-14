@@ -1,5 +1,5 @@
 import webpush from 'web-push'
-import { createClient } from '@supabase/supabase-js'
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole'
 
 const vapidSubject = process.env.VAPID_SUBJECT ?? ''
 webpush.setVapidDetails(
@@ -7,13 +7,6 @@ webpush.setVapidDetails(
   process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
   process.env.VAPID_PRIVATE_KEY!
 )
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-}
 
 export interface PushPayload {
   barbershopId: string
@@ -24,7 +17,7 @@ export interface PushPayload {
 }
 
 export async function sendPushToShop(payload: PushPayload): Promise<number> {
-  const supabase = getSupabase()
+  const supabase = getSupabaseAdmin()
 
   const { data: subs } = await supabase
     .from('push_subscriptions')
