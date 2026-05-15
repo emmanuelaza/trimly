@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useTransition, useState } from 'react';
-import { StatCard, Card, Button, Badge } from '@/components/ui/RedesignComponents';
-import { Calendar, TrendingUp, CheckCircle2, Clock, ChevronDown, ChevronUp, Wallet } from 'lucide-react';
-import { completeAppointment } from '@/app/actions/barber-dashboard';
+import { useTransition, useState } from 'react';
+import { Calendar, CheckCircle2, Clock, Wallet, TrendingUp, UserX } from 'lucide-react';
+import { completeAppointment, markNoShow } from '@/app/actions/barber-dashboard';
 import type { BarberDashData, BarberAppt } from '@/app/actions/barber-dashboard';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
@@ -11,17 +10,33 @@ import { useRouter } from 'next/navigation';
 const cop = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
 
+const STATUS_COLORS: Record<string, string> = {
+  confirmed: 'bg-accent',
+  pending:   'bg-warning',
+  completed: 'bg-success',
+  no_show:   'bg-text-tertiary',
+  cancelled: 'bg-danger',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  confirmed: 'Confirmada',
+  pending:   'Pendiente',
+  completed: 'Completada',
+  no_show:   'No apareció',
+  cancelled: 'Cancelada',
+};
+
 function dayLabel(dateStr: string): string {
-  const apptDate = new Date(dateStr);
+  const d = new Date(dateStr);
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
-  if (apptDate.toDateString() === today.toDateString()) return 'Hoy';
-  if (apptDate.toDateString() === tomorrow.toDateString()) return 'Mañana';
-  return apptDate.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+  if (d.toDateString() === today.toDateString()) return 'Hoy';
+  if (d.toDateString() === tomorrow.toDateString()) return 'Mañana';
+  return d.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
 }
 
-function groupByDay(appts: BarberAppt[]): { label: string; items: BarberAppt[] }[] {
+function groupByDay(appts: BarberAppt[]) {
   const map = new Map<string, BarberAppt[]>();
   for (const a of appts) {
     const key = new Date(a.scheduled_at).toDateString();
@@ -34,19 +49,107 @@ function groupByDay(appts: BarberAppt[]): { label: string; items: BarberAppt[] }
   }));
 }
 
+function KpiCard({ label, value, icon: Icon, accent }: { label: string; value: string; icon: any; accent?: boolean }) {
+  return (
+    <div className="bg-background-secondary border border-border rounded-2xl p-5 flex items-center gap-4">
+      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accent ? 'bg-accent/15' : 'bg-background-tertiary'}`}>
+        <Icon size={20} className={accent ? 'text-accent' : 'text-text-secondary'} />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider truncate">{label}</p>
+        <p className={`text-xl font-black mt-0.5 ${accent ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function AppointmentRow({
+  appt,
+  showActions,
+  onComplete,
+  onNoShow,
+  loading,
+}: {
+  appt: BarberAppt;
+  showActions: boolean;
+  onComplete: (id: string) => void;
+  onNoShow: (id: string) => void;
+  loading: string | null;
+}) {
+  const timeStr = new Date(appt.scheduled_at).toLocaleTimeString('es-ES', {
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  });
+  const isConfirmed = appt.status === 'confirmed' || appt.status === 'pending';
+
+  return (
+    <div className="bg-background-secondary border border-border rounded-2xl p-4 flex flex-col gap-3">
+      <div className="flex items-start gap-3">
+        {/* Time block */}
+        <div className="w-14 h-14 bg-background-tertiary rounded-xl flex flex-col items-center justify-center border border-border shrink-0">
+          <span className="text-xs text-text-tertiary">
+            {new Date(appt.scheduled_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }).replace('.', '')}
+          </span>
+          <span className="text-sm font-black text-accent font-mono">{timeStr}</span>
+        </div>
+
+        {/* Info */}
+        <div className="flex-1 min-w-0">
+          <p className="text-base font-bold text-text-primary truncate">{appt.clientName}</p>
+          <p className="text-xs text-text-tertiary">{appt.serviceName} · {appt.serviceDuration} min</p>
+          {appt.notes && (
+            <p className="text-xs text-text-secondary italic mt-0.5 truncate">"{appt.notes}"</p>
+          )}
+        </div>
+
+        {/* Status + price */}
+        <div className="flex flex-col items-end gap-1.5 shrink-0">
+          <span className="text-sm font-bold text-text-primary">
+            {cop(appt.price_charged ?? appt.servicePrice)}
+          </span>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${STATUS_COLORS[appt.status] ?? 'bg-text-tertiary'}`}>
+            <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
+            {STATUS_LABELS[appt.status] ?? appt.status}
+          </span>
+        </div>
+      </div>
+
+      {/* Action buttons */}
+      {showActions && isConfirmed && (
+        <div className="flex gap-2 pt-1 border-t border-border/50">
+          <button
+            onClick={() => onComplete(appt.id)}
+            disabled={loading === appt.id}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-success/10 text-success text-xs font-bold hover:bg-success/20 disabled:opacity-50 transition-colors min-h-[44px]"
+          >
+            <CheckCircle2 size={14} />
+            {loading === appt.id ? '...' : 'Completar'}
+          </button>
+          <button
+            onClick={() => onNoShow(appt.id)}
+            disabled={loading === appt.id}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl bg-text-tertiary/10 text-text-secondary text-xs font-bold hover:bg-danger/10 hover:text-danger disabled:opacity-50 transition-colors min-h-[44px]"
+          >
+            <UserX size={14} />
+            {loading === appt.id ? '...' : 'No apareció'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function BarberDashboardClient({ data }: { data: BarberDashData }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-  const [completingId, setCompletingId] = useState<string | null>(null);
-  const [showAllCompleted, setShowAllCompleted] = useState(false);
+  const [, startTransition] = useTransition();
+  const [actionId, setActionId] = useState<string | null>(null);
 
   const handleComplete = (id: string) => {
-    setCompletingId(id);
+    setActionId(id);
     startTransition(async () => {
-      const result = await completeAppointment(id);
-      setCompletingId(null);
-      if (result.success) {
-        toast.success('Cita completada');
+      const res = await completeAppointment(id);
+      setActionId(null);
+      if (res.success) {
+        toast.success('Cita completada ✓');
         router.refresh();
       } else {
         toast.error('Error al completar');
@@ -54,162 +157,108 @@ export default function BarberDashboardClient({ data }: { data: BarberDashData }
     });
   };
 
-  const grupos = groupByDay(data.proximasCitas);
-  const completadasVisible = showAllCompleted ? data.citasCompletadas : data.citasCompletadas.slice(0, 5);
+  const handleNoShow = (id: string) => {
+    setActionId(id);
+    startTransition(async () => {
+      const res = await markNoShow(id);
+      setActionId(null);
+      if (res.success) {
+        toast.success('Marcada como no-show');
+        router.refresh();
+      } else {
+        toast.error('Error al actualizar');
+      }
+    });
+  };
+
+  const proximosGrupos = groupByDay(data.proximasCitas).slice(0, 5);
 
   return (
-    <div className="space-y-10">
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <StatCard label="Citas Hoy" value={data.stats.citasHoy} icon={Calendar} color="accent" />
-        <StatCard label="Próximas Citas" value={data.stats.proximasCitas} icon={Clock} color="accent" />
-        <StatCard label="Mis Ganancias (Mes)" value={cop(data.stats.misGananciasMes)} icon={TrendingUp} color="success" />
+    <div className="space-y-8">
+      {/* 4 KPI cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard label="Citas hoy"       value={String(data.stats.citasHoy)}        icon={Calendar}      />
+        <KpiCard label="Completadas hoy" value={String(data.stats.completadasHoy)}  icon={CheckCircle2}  />
+        <KpiCard label="Ganancias hoy"   value={cop(data.stats.gananciasHoy)}       icon={TrendingUp} accent />
+        <KpiCard label="Ganancias mes"   value={cop(data.stats.misGananciasMes)}    icon={Wallet}     accent />
       </div>
 
-      {/* Próximas Citas */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-          <Clock size={20} className="text-accent" />
-          Próximas citas
-        </h2>
+      {/* Citas de HOY */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Clock size={18} className="text-accent" />
+          <h2 className="text-base font-black text-text-primary uppercase tracking-wider">
+            Citas de hoy
+          </h2>
+          {data.stats.citasHoy > 0 && (
+            <span className="bg-accent text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+              {data.stats.citasHoy}
+            </span>
+          )}
+        </div>
 
-        {grupos.length === 0 ? (
-          <Card className="py-12 border-dashed flex flex-col items-center justify-center text-center opacity-60">
-            <Calendar size={40} className="mb-4 text-text-tertiary" />
-            <p className="text-sm font-medium text-text-secondary">No tienes citas próximas.</p>
-          </Card>
+        {data.citasHoy.length === 0 ? (
+          <div className="bg-background-secondary border border-dashed border-border rounded-2xl py-12 flex flex-col items-center text-center opacity-60">
+            <Calendar size={36} className="text-text-tertiary mb-3" />
+            <p className="text-sm font-medium text-text-secondary">No tienes citas hoy 🎉</p>
+          </div>
         ) : (
-          <div className="space-y-6">
-            {grupos.map(({ label, items }) => (
-              <div key={label} className="space-y-3">
-                <p className="text-xs font-black text-accent uppercase tracking-widest">{label}</p>
+          <div className="space-y-3">
+            {data.citasHoy.map((appt) => (
+              <AppointmentRow
+                key={appt.id}
+                appt={appt}
+                showActions
+                onComplete={handleComplete}
+                onNoShow={handleNoShow}
+                loading={actionId}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Próximas citas */}
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Calendar size={18} className="text-text-secondary" />
+          <h2 className="text-base font-black text-text-primary uppercase tracking-wider">
+            Próximas citas
+          </h2>
+          {data.stats.proximasCitas > 0 && (
+            <span className="bg-background-tertiary text-text-secondary text-[10px] font-black px-2 py-0.5 rounded-full">
+              {data.stats.proximasCitas}
+            </span>
+          )}
+        </div>
+
+        {proximosGrupos.length === 0 ? (
+          <div className="bg-background-secondary border border-dashed border-border rounded-2xl py-10 flex flex-col items-center text-center opacity-60">
+            <p className="text-sm text-text-secondary">Sin citas programadas esta semana</p>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            {proximosGrupos.map(({ label, items }) => (
+              <div key={label} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-black text-accent uppercase tracking-widest">{label}</p>
+                  <div className="flex-1 h-px bg-border" />
+                  <span className="text-xs text-text-tertiary">{items.length}</span>
+                </div>
                 {items.map((appt) => (
-                  <Card key={appt.id} className="hover:border-border-strong transition-all">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 bg-background-tertiary rounded-2xl flex flex-col items-center justify-center border border-border shrink-0">
-                          <span className="text-xs font-black text-accent">
-                            {new Date(appt.scheduled_at).toLocaleTimeString('es-ES', {
-                              hour: '2-digit', minute: '2-digit', hour12: false,
-                            })}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-base font-bold text-text-primary">{appt.clientName}</p>
-                          <p className="text-xs text-text-tertiary">{appt.serviceName} · {appt.serviceDuration} min</p>
-                          {appt.notes && (
-                            <p className="text-xs text-text-secondary italic mt-0.5">"{appt.notes}"</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="text-sm font-bold text-text-primary">
-                          {cop(appt.price_charged ?? appt.servicePrice)}
-                        </span>
-                        <Button
-                          size="sm"
-                          className="bg-accent hover:bg-accent/90 text-[11px] h-9 whitespace-nowrap"
-                          onClick={() => handleComplete(appt.id)}
-                          disabled={isPending && completingId === appt.id}
-                        >
-                          {completingId === appt.id ? '...' : 'Completada'}
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
+                  <AppointmentRow
+                    key={appt.id}
+                    appt={appt}
+                    showActions={false}
+                    onComplete={handleComplete}
+                    onNoShow={handleNoShow}
+                    loading={actionId}
+                  />
                 ))}
               </div>
             ))}
           </div>
         )}
-      </section>
-
-      {/* Citas realizadas */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-          <CheckCircle2 size={20} className="text-success" />
-          Citas realizadas
-        </h2>
-
-        {data.citasCompletadas.length === 0 ? (
-          <Card className="py-8 border-dashed flex flex-col items-center justify-center text-center opacity-60">
-            <p className="text-sm text-text-secondary">Aún no hay citas completadas.</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {completadasVisible.map((appt) => (
-              <Card key={appt.id} className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 bg-success/10 rounded-xl flex items-center justify-center shrink-0">
-                    <CheckCircle2 size={18} className="text-success" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-text-primary">{appt.clientName}</p>
-                    <p className="text-xs text-text-tertiary">
-                      {appt.serviceName} · {new Date(appt.scheduled_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-text-primary">
-                    {cop(appt.price_charged ?? appt.servicePrice)}
-                  </span>
-                  <Badge variant="success" className="gap-1 py-1 px-2.5 text-[11px]">
-                    <CheckCircle2 size={11} /> Completada
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-            {data.citasCompletadas.length > 5 && (
-              <button
-                onClick={() => setShowAllCompleted((v) => !v)}
-                className="w-full py-3 text-xs text-text-tertiary hover:text-accent flex items-center justify-center gap-1 transition-colors"
-              >
-                {showAllCompleted
-                  ? <><ChevronUp size={14} /> Ver menos</>
-                  : <><ChevronDown size={14} /> Ver todas ({data.citasCompletadas.length})</>}
-              </button>
-            )}
-          </div>
-        )}
-      </section>
-
-      {/* Mis Ganancias */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-          <Wallet size={20} className="text-accent" />
-          Mis ganancias
-        </h2>
-        <Card>
-          <div className="space-y-0 divide-y divide-border">
-            <div className="flex justify-between items-center py-4">
-              <p className="text-sm text-text-secondary">Total generado (mes)</p>
-              <p className="text-sm font-bold text-text-primary">{cop(data.stats.totalGeneradoMes)}</p>
-            </div>
-            {data.esquema?.type === 'percentage' && (
-              <div className="flex justify-between items-center py-4">
-                <p className="text-sm text-text-secondary">Tu parte ({data.esquema.percentage}%)</p>
-                <p className="text-base font-black text-accent">{cop(data.stats.misGananciasMes)}</p>
-              </div>
-            )}
-            {data.esquema?.type === 'fixed_monthly' && (
-              <div className="flex justify-between items-center py-4">
-                <p className="text-sm text-text-secondary">Tu salario fijo mensual</p>
-                <p className="text-base font-black text-accent">{cop(data.stats.misGananciasMes)}</p>
-              </div>
-            )}
-            {!data.esquema && (
-              <div className="flex justify-between items-center py-4">
-                <p className="text-sm text-text-secondary">Tus ganancias</p>
-                <p className="text-base font-black text-accent">{cop(data.stats.misGananciasMes)}</p>
-              </div>
-            )}
-            <div className="flex justify-between items-center pt-4">
-              <p className="text-sm font-semibold text-text-primary">Este mes</p>
-              <p className="text-xl font-black text-accent">{cop(data.stats.misGananciasMes)}</p>
-            </div>
-          </div>
-        </Card>
       </section>
     </div>
   );
