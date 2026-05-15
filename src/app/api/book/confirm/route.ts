@@ -191,16 +191,16 @@ export async function POST(req: Request) {
         timeZone: 'America/Bogota',
       });
 
-      // Email to client — only if automation active
-      if (clientEmail) {
-        const { data: confirmAuto } = await admin
-          .from('automations')
-          .select('is_active')
-          .eq('barbershop_id', barbershopId)
-          .eq('type', 'confirmation')
-          .maybeSingle();
+      // Emails — only if confirmation automation active
+      const { data: confirmAuto } = await admin
+        .from('automations')
+        .select('is_active')
+        .eq('barbershop_id', barbershopId)
+        .eq('type', 'confirmation')
+        .maybeSingle();
 
-        if (confirmAuto?.is_active) {
+      if (confirmAuto?.is_active) {
+        if (clientEmail) {
           await sendConfirmationEmail({
             to: clientEmail,
             clientName,
@@ -211,25 +211,24 @@ export async function POST(req: Request) {
             phone: shop?.whatsapp || '',
           });
         }
-      }
 
-      // Email to owner — always
-      if (shop?.owner_id) {
-        const { data: { user: owner } } = await admin.auth.admin.getUserById(shop.owner_id);
-        if (owner?.email) {
-          await sendEmail({
-            to: owner.email,
-            subject: `Nueva cita — ${shop.name}`,
-            html: ownerNotificationHtml({
-              shopName: shop.name,
-              clientName,
-              clientPhone,
-              serviceName: service?.name || 'Servicio',
-              barberName: barber?.name || 'Sin preferencia',
-              fecha,
-              hora,
-            }),
-          });
+        if (shop?.owner_id) {
+          const { data: { user: owner } } = await admin.auth.admin.getUserById(shop.owner_id);
+          if (owner?.email) {
+            await sendEmail({
+              to: owner.email,
+              subject: `Nueva cita — ${shop.name}`,
+              html: ownerNotificationHtml({
+                shopName: shop.name,
+                clientName,
+                clientPhone,
+                serviceName: service?.name || 'Servicio',
+                barberName: barber?.name || 'Sin preferencia',
+                fecha,
+                hora,
+              }),
+            });
+          }
         }
       }
     } catch (notifErr) {

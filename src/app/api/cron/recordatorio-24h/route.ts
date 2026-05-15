@@ -40,14 +40,12 @@ export async function GET(req: Request) {
     let sentCount = 0;
 
     for (const app of appointments) {
-      const { data: automation } = await supabase
-        .from('automations')
-        .select('is_active')
-        .eq('barbershop_id', app.barbershop_id)
-        .eq('type', 'reminder_24h')
-        .maybeSingle();
+      const [{ data: automation }, { data: confirmAuto }] = await Promise.all([
+        supabase.from('automations').select('is_active').eq('barbershop_id', app.barbershop_id).eq('type', 'reminder_24h').maybeSingle(),
+        supabase.from('automations').select('is_active').eq('barbershop_id', app.barbershop_id).eq('type', 'confirmation').maybeSingle(),
+      ]);
 
-      if (!automation?.is_active) continue;
+      if (!automation?.is_active || !confirmAuto?.is_active) continue;
 
       const client = app.client as any;
       const service = app.service as any;

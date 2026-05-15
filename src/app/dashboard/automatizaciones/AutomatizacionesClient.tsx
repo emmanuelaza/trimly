@@ -60,6 +60,10 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
     });
   };
 
+  // reminder_24h requires confirmation to collect the email
+  const isLocked = (type: string) =>
+    type === 'reminder_24h' && !getIsActive('confirmation');
+
   const grouped = AUTOMATION_DEFS.reduce((acc: Record<string, AutomationDef[]>, curr) => {
     if (!acc[curr.group]) acc[curr.group] = [];
     acc[curr.group].push(curr);
@@ -90,14 +94,15 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
             <div className="grid gap-3">
               {items.map(item => {
                 const isActive = getIsActive(item.type);
+                const locked = isLocked(item.type);
                 return (
                   <Card
                     key={item.id}
                     className={`p-5 flex items-start sm:items-center justify-between gap-4 border-border-strong transition-all ${
-                      isActive ? 'border-accent/30 bg-accent-muted/5' : 'hover:border-border-stronger'
+                      isActive && !locked ? 'border-accent/30 bg-accent-muted/5' : 'hover:border-border-stronger'
                     }`}
                   >
-                    <div className="flex items-start gap-4 flex-1">
+                    <div className={`flex items-start gap-4 flex-1 transition-opacity ${!isActive || locked ? 'opacity-40' : ''}`}>
                       <span className="text-2xl leading-none mt-1">{item.emoji}</span>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
@@ -109,21 +114,26 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
                           )}
                         </div>
                         <p className="text-sm text-text-secondary">{item.desc}</p>
+                        {locked && (
+                          <p className="text-xs text-text-tertiary mt-1">
+                            Requiere activar "Confirmación al agendar"
+                          </p>
+                        )}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <label className={`relative inline-flex items-center ${isPending ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
+                      <label className={`relative inline-flex items-center ${isPending || locked ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
                         <input
                           type="checkbox"
                           className="sr-only peer"
-                          checked={isActive}
+                          checked={isActive && !locked}
                           onChange={() => handleToggle(item.type, isActive)}
-                          disabled={isPending}
+                          disabled={isPending || locked}
                         />
                         <div className="w-12 h-6 bg-border-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent peer-checked:after:bg-background-primary mr-2" />
                         <span className="text-xs font-medium text-text-tertiary w-14 text-right">
-                          {isActive ? 'Activo' : 'Pausado'}
+                          {isActive && !locked ? 'Activo' : 'Pausado'}
                         </span>
                       </label>
                     </div>

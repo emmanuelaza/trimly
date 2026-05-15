@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 import { revalidatePath } from "next/cache";
 import { getBarbershopId } from "./utils";
 import { slugify } from "@/lib/utils";
@@ -105,26 +106,21 @@ export async function getAutomations() {
 }
 
 export async function toggleAutomation(type: string, is_active: boolean) {
-  try {
-    const barbershopId = await getBarbershopId();
-    if (!barbershopId) return;
+  const barbershopId = await getBarbershopId();
+  if (!barbershopId) throw new Error('No barbershop found');
 
-    const supabase = await createClient();
-    
-    const { error } = await supabase.from("automations").upsert({
-      barbershop_id: barbershopId,
-      type,
-      is_active
-    }, { onConflict: 'barbershop_id, type' });
+  const admin = getSupabaseAdmin();
 
-    if (error) {
-      console.error("Error toggling automation:", error);
-    } else {
-      revalidatePath("/dashboard/automatizaciones");
-    }
-  } catch (error) {
-    console.error("Critical error in toggleAutomation:", error);
-  }
+  const { error } = await admin
+    .from('automations')
+    .upsert(
+      { barbershop_id: barbershopId, type, is_active, config: {} },
+      { onConflict: 'barbershop_id,type' }
+    );
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath('/dashboard/automatizaciones');
 }
 
 export async function initializeAutomations(barbershopId: string) {
