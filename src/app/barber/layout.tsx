@@ -68,18 +68,20 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
       .select('subscription_status, trial_ends_at, name')
       .eq('id', session.barbershopId)
       .maybeSingle()
-      .then(({ data }) => {
-        setBlockedBarbershopName(data?.name ?? '');
-        const trialVencido = data?.trial_ends_at
-          ? new Date(data.trial_ends_at) < new Date()
-          : false;
-        const bloqueado =
-          data?.subscription_status === 'expired' ||
-          ((data?.subscription_status === 'trial' || data?.subscription_status === 'trialing') &&
-            trialVencido);
-        setSubStatus(bloqueado ? 'blocked' : 'ok');
-      })
-      .catch(() => setSubStatus('ok'));
+      .then(
+        ({ data }) => {
+          setBlockedBarbershopName(data?.name ?? '');
+          const trialVencido = data?.trial_ends_at
+            ? new Date(data.trial_ends_at) < new Date()
+            : false;
+          const bloqueado =
+            data?.subscription_status === 'expired' ||
+            ((data?.subscription_status === 'trial' || data?.subscription_status === 'trialing') &&
+              trialVencido);
+          setSubStatus(bloqueado ? 'blocked' : 'ok');
+        },
+        () => setSubStatus('ok'),
+      );
   }, [isAccessPage]);
 
   // Access pages — full screen, no shell

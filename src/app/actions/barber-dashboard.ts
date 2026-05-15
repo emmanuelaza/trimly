@@ -140,10 +140,10 @@ export async function getBarberDashboardDataByToken(
       .gte("scheduled_at", mesStart),
   ]);
 
-  const citasHoyMapped = (citasHoyRaw ?? []).map(mapAppt);
-  const completadasHoy = citasHoyMapped.filter((a) => a.status === "completed");
+  const citasHoyMapped: BarberAppt[] = (citasHoyRaw ?? []).map(mapAppt);
+  const completadasHoy: BarberAppt[] = citasHoyMapped.filter((a) => a.status === "completed");
   const gananciasHoy = completadasHoy.reduce(
-    (s, a) => s + (a.price_charged ?? a.servicePrice),
+    (s: number, a: BarberAppt) => s + (a.price_charged ?? a.servicePrice),
     0,
   );
 
@@ -230,9 +230,9 @@ export async function getBarberGanancias(
       .maybeSingle(),
   ]);
 
-  const citas = (citasRaw ?? []).map(mapAppt);
+  const citas: BarberAppt[] = (citasRaw ?? []).map(mapAppt);
   const totalGenerado = citas.reduce(
-    (s, a) => s + (a.price_charged ?? a.servicePrice),
+    (s: number, a: BarberAppt) => s + (a.price_charged ?? a.servicePrice),
     0,
   );
 

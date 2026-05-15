@@ -18,7 +18,10 @@
       "Bash(git push *)",
       "Bash(find c:\\\\\\\\trimly\\\\\\\\src -type d -name milo)",
       "Bash(find c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app -type d -name \"*milo*\" -o -type f -name \"*milo*\")",
-      "Bash(ls -la c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app\\\\\\\\api\\\\\\\\)"
+      "Bash(ls -la c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app\\\\\\\\api\\\\\\\\)",
+      "Bash(npx next *)",
+      "Bash(sed -n '140,155p' c:/trimly/src/app/actions/barber-dashboard.ts)",
+      "Bash(sed -n '230,240p' c:/trimly/src/app/actions/barber-dashboard.ts)"
     ]
   }
 }
