@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Save, Building2, Clock, Bell, User2, Scissors, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle, DollarSign } from 'lucide-react';
+import Link from 'next/link';
+import { Save, Building2, Clock, Bell, User2, Scissors, ChevronDown, Smartphone, Copy, ExternalLink, MessageCircle, DollarSign, CreditCard, Check, Crown, Zap, Flame } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Avatar } from '@/components/ui/Avatar';
@@ -19,11 +20,12 @@ interface ConfigTab {
 }
 
 const TABS: ConfigTab[] = [
-  { id: 'negocio', label: 'Mi Negocio', icon: Building2 },
-  { id: 'servicios', label: 'Servicios', icon: Scissors },
-  { id: 'barberos', label: 'Barberos', icon: User2 },
-  { id: 'notificaciones', label: 'Notificaciones', icon: Bell },
-  { id: 'cuenta', label: 'Mi Cuenta', icon: User2 },
+  { id: 'negocio',        label: 'Mi Negocio',   icon: Building2  },
+  { id: 'servicios',      label: 'Servicios',    icon: Scissors   },
+  { id: 'barberos',       label: 'Barberos',     icon: User2      },
+  { id: 'planes',         label: 'Mis planes',   icon: CreditCard },
+  { id: 'notificaciones', label: 'Notificaciones', icon: Bell     },
+  { id: 'cuenta',         label: 'Mi Cuenta',    icon: User2      },
 ];
 
 // Country → currency mapping
@@ -341,6 +343,86 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
     );
   }
 
+  function TabPlanes() {
+    const plan   = barbershop?.plan ?? 'basico';
+    const status = barbershop?.subscription_status ?? null;
+    const trialEnd = barbershop?.trial_ends_at ?? null;
+    const isTrial = status === 'trial' || status === 'trialing';
+
+    const PLAN_META = {
+      basico:   { label: 'Plan Básico',   icon: <Zap size={18} />,   precio: '$29.900/mes', cls: 'bg-background-tertiary text-text-secondary' },
+      pro:      { label: 'Plan Filo Pro', icon: <Crown size={18} />, precio: '$79.900/mes', cls: 'bg-accent/10 text-accent' },
+      lifetime: { label: 'Plan Lifetime', icon: <Flame size={18} />, precio: 'Pago único',  cls: 'bg-yellow-500/10 text-yellow-600' },
+    };
+    const metaKey = (plan in PLAN_META ? plan : 'basico') as keyof typeof PLAN_META;
+    const planMeta = PLAN_META[metaKey];
+
+    const features: Record<string, string[]> = {
+      basico:   ['1 barbero', 'Agenda online', 'Link de reservas', 'Recordatorios automáticos', 'Hasta 100 citas/mes'],
+      pro:      ['Barberos ilimitados', 'Citas ilimitadas', 'Reportes avanzados', 'Automatizaciones completas', 'Nómina y comisiones', 'Soporte prioritario'],
+      lifetime: ['Todo el plan Filo Pro', 'Sin mensualidades nunca', 'Funciones futuras incluidas'],
+    };
+    const planKey = (plan in features ? plan : 'basico') as keyof typeof features;
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-sm font-bold text-text-primary uppercase tracking-widest flex items-center gap-2 mb-1">
+            <CreditCard size={16} className="text-accent" /> Mis planes
+          </h2>
+          <p className="text-xs text-text-secondary">Tu suscripción actual y opciones de actualización.</p>
+        </div>
+
+        {/* Trial banner */}
+        {isTrial && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-warning/5 border border-warning/20">
+            <span className="text-xl shrink-0">⏳</span>
+            <div>
+              <p className="text-sm font-bold text-warning">Período de prueba activo</p>
+              {trialEnd && (
+                <p className="text-xs text-text-secondary mt-0.5">
+                  Vence el{' '}
+                  {new Date(trialEnd).toLocaleDateString('es-CO', {
+                    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+                  })}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Current plan card */}
+        <Card className="p-5">
+          <p className="text-[10px] font-black text-text-tertiary uppercase tracking-widest mb-4">Plan actual</p>
+          <div className="flex items-center gap-3 mb-5">
+            <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center', planMeta.cls)}>
+              {planMeta.icon}
+            </div>
+            <div>
+              <p className="text-base font-black text-text-primary">{planMeta.label}</p>
+              <p className="text-xs text-text-tertiary">{planMeta.precio}</p>
+            </div>
+          </div>
+
+          <ul className="space-y-2 mb-5">
+            {features[planKey].map(f => (
+              <li key={f} className="flex items-center gap-2 text-sm text-text-secondary">
+                <Check size={14} className="text-success shrink-0" />
+                {f}
+              </li>
+            ))}
+          </ul>
+
+          <Link href="/dashboard/billing">
+            <button className="w-full py-2.5 rounded-xl border border-accent text-accent text-sm font-bold hover:bg-accent hover:text-white transition-all">
+              {plan === 'lifetime' ? 'Ver detalles del plan' : 'Mejorar o cambiar plan →'}
+            </button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+
   function TabNotificaciones() {
     return <div className="space-y-5"><p className="text-sm text-text-secondary">Las notificaciones del sistema están ahora automatizadas por Cron Jobs y están siempre pre-configuradas para dispararse según los registros de la agenda.</p></div>;
   }
@@ -350,11 +432,12 @@ export default function ConfigTabs({ data }: { data: { barbershop: any, services
   }
 
   const TAB_CONTENT: Record<string, React.ReactNode> = {
-    negocio: <TabNegocio />,
-    servicios: <TabServicios />,
-    barberos: <TabBarberos />,
+    negocio:        <TabNegocio />,
+    servicios:      <TabServicios />,
+    barberos:       <TabBarberos />,
+    planes:         <TabPlanes />,
     notificaciones: <TabNotificaciones />,
-    cuenta: <TabCuenta />,
+    cuenta:         <TabCuenta />,
   };
 
   return (
