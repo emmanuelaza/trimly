@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 
 export interface BarberAppt {
   id: string;
@@ -62,7 +62,7 @@ export async function getBarberDashboardDataByToken(
   barberId: string,
   token: string,
 ): Promise<BarberDashData | null> {
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
 
   const { data: tokenValid } = await supabase
     .from("barber_tokens")
@@ -194,7 +194,7 @@ export async function getBarberGanancias(
   periodStart: string,
   periodEnd: string,
 ): Promise<BarberGananciasData | null> {
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
 
   const { data: tokenValid } = await supabase
     .from("barber_tokens")
@@ -268,7 +268,7 @@ export async function getBarberGanancias(
 }
 
 export async function completeAppointment(id: string) {
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase
     .from("appointments")
     .update({ status: "completed" })
@@ -278,11 +278,152 @@ export async function completeAppointment(id: string) {
 }
 
 export async function markNoShow(id: string) {
-  const supabase = await createClient();
+  const supabase = getSupabaseAdmin();
   const { error } = await supabase
     .from("appointments")
     .update({ status: "no_show" })
     .eq("id", id);
   if (error) return { success: false, error: error.message };
   return { success: true };
+}
+
+export async function cancelAppointment(id: string) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("appointments")
+    .update({ status: "cancelled" })
+    .eq("id", id);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
+
+export async function getBarberAgenda(
+  barberId: string,
+  token: string,
+  weekStart: string,
+  weekEnd: string,
+): Promise<BarberAppt[] | null> {
+  const supabase = getSupabaseAdmin();
+
+  const { data: tokenValid } = await supabase
+    .from("barber_tokens")
+    .select("id")
+    .eq("barber_id", barberId)
+    .eq("token", token)
+    .eq("is_active", true)
+    .gte("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (!tokenValid) return null;
+
+  const { data } = await supabase
+    .from("appointments")
+    .select("id, scheduled_at, status, notes, price_charged, clients(name, phone), services(name, price, duration_minutes)")
+    .eq("barber_id", barberId)
+    .gte("scheduled_at", weekStart)
+    .lte("scheduled_at", weekEnd)
+    .order("scheduled_at", { ascending: true });
+
+  return (data ?? []).map(mapAppt);
+}
+
+export async function getBarberServices(barbershopId: string) {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("services")
+    .select("id, name, price, duration_minutes")
+    .eq("barbershop_id", barbershopId)
+    .eq("is_active", true)
+    .order("name");
+  return (data ?? []) as { id: string; name: string; price: number; duration_minutes: number }[];
+}
+
+export async function searchBarberClients(barbershopId: string, query: string) {
+  const supabase = getSupabaseAdmin();
+  const { data } = await supabase
+    .from("clients")
+    .select("id, name, phone")
+    .eq("barbershop_id", barbershopId)
+    .ilike("name", `%${query}%`)
+    .limit(6);
+  return (data ?? []) as { id: string; name: string; phone: string | null }[];
+}
+
+export async function createBarberClient(
+  barbershopId: string,
+  barberId: string,
+  token: string,
+  name: string,
+  phone: string | null,
+) {
+  const supabase = getSupabaseAdmin();
+  const { data: tokenValid } = await supabase
+    .from("barber_tokens")
+    .select("id")
+    .eq("barber_id", barberId)
+    .eq("token", token)
+    .eq("is_active", true)
+    .gte("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (!tokenValid) return { success: false as const, error: "No autorizado" };
+
+  const { data, error } = await supabase
+    .from("clients")
+    .insert({ barbershop_id: barbershopId, name: name.trim(), phone: phone?.trim() || null })
+    .select("id, name, phone")
+    .single();
+  if (error) return { success: false as const, error: error.message };
+  return { success: true as const, client: data as { id: string; name: string; phone: string | null } };
+}
+
+export async function createBarberAppointment(
+  barbershopId: string,
+  barberId: string,
+  token: string,
+  payload: {
+    clientId: string;
+    serviceId: string;
+    scheduledAt: string;
+    notes: string | null;
+    price: number;
+    durationMinutes: number;
+  },
+) {
+  const supabase = getSupabaseAdmin();
+  const { data: tokenValid } = await supabase
+    .from("barber_tokens")
+    .select("id")
+    .eq("barber_id", barberId)
+    .eq("token", token)
+    .eq("is_active", true)
+    .gte("expires_at", new Date().toISOString())
+    .maybeSingle();
+  if (!tokenValid) return { success: false as const, error: "No autorizado" };
+
+  const inicio = new Date(payload.scheduledAt);
+  const fin = new Date(inicio.getTime() + payload.durationMinutes * 60000);
+
+  const { data: conflict } = await supabase
+    .from("appointments")
+    .select("id")
+    .eq("barber_id", barberId)
+    .in("status", ["confirmed", "pending"])
+    .gte("scheduled_at", inicio.toISOString())
+    .lt("scheduled_at", fin.toISOString())
+    .maybeSingle();
+
+  if (conflict) return { success: false as const, error: "slot_taken" };
+
+  const { error } = await supabase.from("appointments").insert({
+    barbershop_id: barbershopId,
+    barber_id: barberId,
+    client_id: payload.clientId,
+    service_id: payload.serviceId,
+    scheduled_at: payload.scheduledAt,
+    status: "confirmed",
+    notes: payload.notes,
+    price_charged: payload.price,
+  });
+  if (error) return { success: false as const, error: error.message };
+  return { success: true as const };
 }

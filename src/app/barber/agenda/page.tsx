@@ -1,9 +1,12 @@
 'use client'
 
 import { useEffect, useState, useTransition, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { useBarberSession } from '@/hooks/useBarberSession';
 import { NuevaCitaModal } from '@/app/barber/dashboard/NuevaCitaModal';
+import {
+  getBarberAgenda, completeAppointment, markNoShow, cancelAppointment,
+} from '@/app/actions/barber-dashboard';
+import type { BarberAppt } from '@/app/actions/barber-dashboard';
 import {
   ChevronLeft, ChevronRight, Calendar,
   CheckCircle2, UserX, Plus,
@@ -11,18 +14,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-interface Appt {
-  id: string;
-  scheduled_at: string;
-  status: string;
-  notes: string | null;
-  price_charged: number | null;
-  clientName: string;
-  clientPhone: string | null;
-  serviceName: string;
-  servicePrice: number;
-  serviceDuration: number;
-}
+type Appt = BarberAppt;
 
 const STATUS_COLORS: Record<string, string> = {
   confirmed: 'bg-accent',
@@ -41,13 +33,6 @@ const STATUS_LABELS: Record<string, string> = {
 
 const cop = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-  );
-}
 
 function weekBounds(offset: number) {
   const now = new Date();
@@ -108,27 +93,9 @@ export default function BarberAgendaPage() {
     if (!session) return;
     const { monday: start, sunday: end } = weekBounds(weekOffset);
     setIsFetching(true);
-    getSupabase()
-      .from('appointments')
-      .select('id, scheduled_at, status, notes, price_charged, clients(name, phone), services(name, price, duration_minutes)')
-      .eq('barber_id', session.barberId)
-      .gte('scheduled_at', start.toISOString())
-      .lte('scheduled_at', end.toISOString())
-      .order('scheduled_at', { ascending: true })
-      .then(({ data }) => {
-        const mapped: Appt[] = (data ?? []).map((a: any) => ({
-          id: a.id,
-          scheduled_at: a.scheduled_at,
-          status: a.status,
-          notes: a.notes ?? null,
-          price_charged: a.price_charged ?? null,
-          clientName: a.clients?.name ?? 'Cliente',
-          clientPhone: a.clients?.phone ?? null,
-          serviceName: a.services?.name ?? 'Servicio',
-          servicePrice: Number(a.services?.price ?? 0),
-          serviceDuration: Number(a.services?.duration_minutes ?? 30),
-        }));
-        setAppts(mapped);
+    getBarberAgenda(session.barberId, session.token, start.toISOString(), end.toISOString())
+      .then((data) => {
+        setAppts(data ?? []);
         setIsFetching(false);
       });
   }, [session, weekOffset]);
@@ -138,13 +105,12 @@ export default function BarberAgendaPage() {
   const updateStatus = (id: string, status: 'completed' | 'no_show' | 'cancelled') => {
     setActionId(id);
     startTransition(async () => {
-      const supabase = getSupabase();
-      const { error } = await supabase
-        .from('appointments')
-        .update({ status })
-        .eq('id', id);
+      const action = status === 'completed' ? completeAppointment
+        : status === 'no_show' ? markNoShow
+        : cancelAppointment;
+      const res = await action(id);
       setActionId(null);
-      if (error) { toast.error('Error al actualizar'); return; }
+      if (!res.success) { toast.error('Error al actualizar'); return; }
       const labels: Record<string, string> = { completed: 'Cita completada ✓', no_show: 'Marcada como no-show', cancelled: 'Cita cancelada' };
       toast.success(labels[status]);
       setDetailAppt(null);
