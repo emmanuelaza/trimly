@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { createProduct, updateProduct } from '@/app/actions/productos';
 
-const CATEGORIAS = ['Cuidado del cabello', 'Barba', 'Cuidado de la piel', 'Accesorios', 'Otros'];
+const CATEGORIAS = ['Pomadas', 'Shampoo', 'Aceites', 'Cuchillas', 'Accesorios', 'Cuidado de barba', 'Otro'];
 
 interface Product {
   id: string;
