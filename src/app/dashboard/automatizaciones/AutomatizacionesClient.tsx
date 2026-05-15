@@ -26,9 +26,20 @@ const AUTOMATION_DEFS: AutomationDef[] = [
   { id: "6", type: "birthday",        group: "RETENCIÓN DE CLIENTES",  emoji: "🎂", title: "Felicitación de cumpleaños", desc: "Envía un descuento sorpresa en el día especial del cliente." },
 ];
 
+interface Stats {
+  totalEnviados: number;
+  recordadas: number;
+  confirmaciones: number;
+  postVisita: number;
+  cumpleanos: number;
+  reportes: number;
+  recuperados: number;
+  porTipo: Record<string, number>;
+}
+
 interface Props {
   initialAutomations: any[];
-  stats: any;
+  stats: Stats;
 }
 
 export default function AutomatizacionesClient({ initialAutomations, stats }: Props) {
@@ -80,9 +91,9 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <StatCard label="CITAS RECORDADAS"     value={stats.recordadas}  sub="este mes"   color="success" />
-        <StatCard label="CLIENTES RECUPERADOS" value={stats.recuperados} sub="último mes" color="accent" />
-        <StatCard label="NO-SHOWS EVITADOS"    value={stats.evitados}    sub="estimados"  color="info" />
+        <StatCard label="EMAILS ENVIADOS"      value={stats.totalEnviados} sub="este mes"  color="accent" />
+        <StatCard label="RECORDATORIOS"        value={stats.recordadas}    sub="este mes"  color="success" />
+        <StatCard label="CLIENTES RECUPERADOS" value={stats.recuperados}   sub="este mes"  color="info" />
       </div>
 
       <div className="max-w-4xl space-y-10">
@@ -118,6 +129,14 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
                           <p className="text-xs text-text-tertiary mt-1">
                             Requiere activar "Confirmación al agendar"
                           </p>
+                        )}
+                        {!locked && (stats.porTipo[item.type] ?? 0) > 0 && (
+                          <p className="text-xs text-accent font-medium mt-1.5">
+                            {stats.porTipo[item.type]} {stats.porTipo[item.type] === 1 ? 'email enviado' : 'emails enviados'} este mes
+                          </p>
+                        )}
+                        {!locked && isActive && (stats.porTipo[item.type] ?? 0) === 0 && (
+                          <p className="text-xs text-text-tertiary mt-1.5">Sin actividad este mes</p>
                         )}
                       </div>
                     </div>

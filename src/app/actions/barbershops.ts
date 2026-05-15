@@ -147,80 +147,57 @@ export async function getAutomationStats() {
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
-    const { count: recordadas, error: err1 } = await supabase
-      .from("automation_logs")
-      .select("*", { count: 'exact', head: true })
-      .eq("barbershop_id", barbershopId)
-      .eq("automation_type", "reminder_24h")
-      .gte("sent_at", startOfMonth);
+    // Single query — all logs this month
+    const { data: logs } = await supabase
+      .from('automation_logs')
+      .select('automation_type, client_id, appointment_id, sent_at')
+      .eq('barbershop_id', barbershopId)
+      .gte('sent_at', startOfMonth);
 
-    if (err1) console.error("Stats Error 1:", err1);
+    const allLogs = logs || [];
 
-    const { data: logsRecuperacion, error: err2 } = await supabase
-      .from("automation_logs")
-      .select("client_id, sent_at")
-      .eq("barbershop_id", barbershopId)
-      .eq("automation_type", "recover_inactive")
-      .gte("sent_at", startOfMonth);
+    // Counts per type
+    const porTipo: Record<string, number> = {};
+    for (const log of allLogs) {
+      porTipo[log.automation_type] = (porTipo[log.automation_type] || 0) + 1;
+    }
 
-    if (err2) console.error("Stats Error 2:", err2);
+    // Recovered clients: sent recover_inactive AND booked a completed appointment after
+    const recoverLogs = allLogs.filter((l: any) => l.automation_type === 'recover_inactive');
+    let recuperados = 0;
+    if (recoverLogs.length > 0) {
+      const clientIds = [...new Set(recoverLogs.map((l: any) => l.client_id as string))];
+      const { data: recentApps } = await supabase
+        .from('appointments')
+        .select('client_id, scheduled_at')
+        .in('client_id', clientIds)
+        .eq('status', 'completed')
+        .gte('scheduled_at', startOfMonth);
 
-    let recuperadosCount = 0;
-    if (logsRecuperacion && logsRecuperacion.length > 0) {
-      const clientIds = Array.from(new Set(logsRecuperacion.map((l: any) => l.client_id)));
-      
-      const { data: recentApps, error: err3 } = await supabase
-        .from("appointments")
-        .select("client_id, scheduled_at")
-        .in("client_id", clientIds)
-        .eq("status", "completed")
-        .gte("scheduled_at", startOfMonth);
-
-      if (err3) console.error("Stats Error 3:", err3);
-
-      if (recentApps) {
+      if (recentApps?.length) {
         const recoveredSet = new Set<string>();
-        logsRecuperacion.forEach((log: any) => {
-          const hasAppAfter = recentApps.some((app: any) => 
-            app.client_id === log.client_id && 
+        recoverLogs.forEach((log: any) => {
+          if (recentApps.some((app: any) =>
+            app.client_id === log.client_id &&
             new Date(app.scheduled_at) > new Date(log.sent_at)
-          );
-          if (hasAppAfter) recoveredSet.add(log.client_id);
+          )) recoveredSet.add(log.client_id);
         });
-        recuperadosCount = recoveredSet.size;
+        recuperados = recoveredSet.size;
       }
     }
 
-    const { data: remindedApps, error: err4 } = await supabase
-      .from("automation_logs")
-      .select("appointment_id")
-      .eq("barbershop_id", barbershopId)
-      .eq("automation_type", "reminder_24h")
-      .gte("sent_at", startOfMonth);
-
-    if (err4) console.error("Stats Error 4:", err4);
-    
-    let realEvitados = 0;
-    if (remindedApps && remindedApps.length > 0) {
-       const ids = remindedApps.map((r: any) => r.appointment_id).filter(Boolean);
-       if (ids.length > 0) {
-          const { count, error: err5 } = await supabase
-            .from("appointments")
-            .select("*", { count: 'exact', head: true })
-            .in("id", ids)
-            .eq("status", "completed");
-          if (err5) console.error("Stats Error 5:", err5);
-          realEvitados = count || 0;
-       }
-    }
-
     return {
-      recordadas: recordadas || 0,
-      recuperados: recuperadosCount,
-      evitados: realEvitados
+      totalEnviados: allLogs.length,
+      recordadas: porTipo['reminder_24h'] || 0,
+      confirmaciones: porTipo['confirmation'] || 0,
+      postVisita: porTipo['post_visit'] || 0,
+      cumpleanos: porTipo['birthday'] || 0,
+      reportes: porTipo['daily_report'] || 0,
+      recuperados,
+      porTipo,
     };
   } catch (error) {
-    console.error("Critical error in getAutomationStats:", error);
+    console.error('Critical error in getAutomationStats:', error);
     return null;
   }
 }

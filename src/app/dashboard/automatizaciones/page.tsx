@@ -14,7 +14,7 @@ export default async function AutomatizacionesPage() {
     return (
       <AutomatizacionesClient
         initialAutomations={automations || []}
-        stats={stats || { recordadas: 0, recuperados: 0, evitados: 0 }}
+        stats={stats || { totalEnviados: 0, recordadas: 0, confirmaciones: 0, postVisita: 0, cumpleanos: 0, reportes: 0, recuperados: 0, porTipo: {} }}
       />
     );
   } catch (error) {
