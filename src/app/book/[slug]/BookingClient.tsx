@@ -40,9 +40,11 @@ interface BookingClientProps {
   barbershop: any;
   services: any[];
   barbers: any[];
+  confirmationActive: boolean;
+  reminder24hActive: boolean;
 }
 
-export default function BookingClient({ barbershop, services, barbers }: BookingClientProps) {
+export default function BookingClient({ barbershop, services, barbers, confirmationActive, reminder24hActive }: BookingClientProps) {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [finished, setFinished] = useState(false);
@@ -586,16 +588,18 @@ export default function BookingClient({ barbershop, services, barbers }: Booking
                     </div>
                   </div>
                 )}
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Email (opcional)</label>
-                  <Input 
-                    placeholder="tu@email.com" 
-                    value={clientInfo.email}
-                    onChange={e => setClientInfo(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
+                {confirmationActive && (
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-text-secondary uppercase tracking-widest px-1">Email (opcional)</label>
+                    <Input
+                      placeholder="tu@email.com"
+                      value={clientInfo.email}
+                      onChange={e => setClientInfo(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                  </div>
+                )}
 
-                {clientInfo.email && (
+                {reminder24hActive && clientInfo.email && (
                   <label className="flex items-center gap-3 p-2 cursor-pointer">
                     <input
                       type="checkbox"

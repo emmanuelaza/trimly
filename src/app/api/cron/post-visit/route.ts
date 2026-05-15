@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 import { sendEmail } from '@/lib/email';
-import { getBaseEmailTemplate } from '@/lib/emailTemplates';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,6 +22,7 @@ export async function GET(req: Request) {
       .from('appointments')
       .select(`
         id,
+        client_id,
         barbershop_id,
         client:clients(name, email),
         service:services(name),
@@ -35,6 +35,7 @@ export async function GET(req: Request) {
     if (error) throw error;
     if (!appointments?.length) return NextResponse.json({ sent: 0 });
 
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app';
     let sentCount = 0;
 
     for (const app of appointments) {
@@ -53,16 +54,48 @@ export async function GET(req: Request) {
 
       if (!client?.email) continue;
 
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app';
-      const linkReserva = shop?.slug ? `${appUrl}/book/${shop.slug}` : appUrl;
+      // Generate unique review code and store it
+      const reviewCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      const html = getBaseEmailTemplate(
-        '¿Cómo estuvo tu visita? ⭐',
-        `<p>Hola <strong>${client.name}</strong>, gracias por visitarnos en <strong>${shop?.name || 'la barbería'}</strong> para tu <strong>${service?.name}</strong>.</p>
-         <p>Nos encantaría saber tu opinión. ¿Nos regalas un momento?</p>`,
-        'Volver a reservar ✂️',
-        linkReserva
-      );
+      try {
+        await supabase.from('reviews').insert({
+          appointment_id: app.id,
+          client_id: app.client_id,
+          barbershop_id: app.barbershop_id,
+          codigo_unico: reviewCode,
+        });
+      } catch {
+        // reviews table may not exist — continue with generic booking link
+      }
+
+      const reviewLink = `${appUrl}/review/${reviewCode}`;
+      const bookingLink = shop?.slug ? `${appUrl}/book/${shop.slug}` : appUrl;
+
+      const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <style>
+        body{background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px}
+        .card{background:#fff;max-width:520px;margin:0 auto;border-radius:12px;padding:32px;border:1px solid #e5e5e5}
+        h2{color:#111;font-size:20px;margin:0 0 8px}
+        p{color:#444;font-size:14px;line-height:1.6;margin:0 0 16px}
+        .stars{font-size:28px;text-align:center;margin:24px 0 8px;letter-spacing:4px}
+        .btn{display:inline-block;background:#111;color:#fff;font-weight:600;font-size:14px;padding:14px 28px;border-radius:8px;text-decoration:none;margin:8px 4px}
+        .btn-secondary{background:#f5f5f5;color:#111;border:1px solid #ddd}
+        .actions{text-align:center;margin:24px 0}
+        .footer{color:#aaa;font-size:12px;text-align:center;margin-top:24px}
+      </style></head><body>
+      <div class="card">
+        <h2>¿Cómo estuvo tu visita? ⭐</h2>
+        <p>Hola <strong>${client.name}</strong>, gracias por visitarnos en <strong>${shop?.name || 'la barbería'}</strong> para tu <strong>${service?.name}</strong>.</p>
+        <p>Tu opinión nos ayuda a mejorar. ¿Nos regalas un momento?</p>
+        <div class="stars">⭐⭐⭐⭐⭐</div>
+        <div class="actions">
+          <a href="${reviewLink}" class="btn">Dejar mi reseña</a>
+        </div>
+        <p style="text-align:center;margin-top:16px">¿Te gustaría volver?
+          <a href="${bookingLink}" style="color:#111;font-weight:600">Reservar mi próxima cita ✂️</a>
+        </p>
+        <p class="footer">Trimly · Sistema de gestión para barberías</p>
+      </div></body></html>`;
 
       await sendEmail({
         to: client.email,
@@ -74,7 +107,7 @@ export async function GET(req: Request) {
       await supabase.from('automation_logs').insert({
         automation_type: 'post_visit',
         appointment_id: app.id,
-        client_id: (app as any).client_id,
+        client_id: app.client_id,
         channel: 'email',
         barbershop_id: app.barbershop_id,
       });

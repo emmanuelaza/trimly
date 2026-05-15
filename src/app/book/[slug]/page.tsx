@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getBarbershopBySlug, getServicesByBarbershop, getBarbersByBarbershop } from '@/app/actions/booking';
 import BookingClient from './BookingClient';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -38,11 +39,21 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
     );
   }
 
-  // getServicesByBarbershop y getBarbersByBarbershop retornan [] si fallan, no lanzan
   const [services, barbers] = await Promise.all([
     getServicesByBarbershop(barbershop.id),
     getBarbersByBarbershop(barbershop.id),
   ]);
+
+  // Fetch automation status for this barbershop
+  const admin = getSupabaseAdmin();
+  const { data: automations } = await admin
+    .from('automations')
+    .select('type, is_active')
+    .eq('barbershop_id', barbershop.id)
+    .in('type', ['confirmation', 'reminder_24h']);
+
+  const isActive = (type: string) =>
+    automations?.find(a => a.type === type)?.is_active ?? false;
 
   return (
     <div className="min-h-screen bg-background-primary">
@@ -50,6 +61,8 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
         barbershop={barbershop}
         services={services}
         barbers={barbers}
+        confirmationActive={isActive('confirmation')}
+        reminder24hActive={isActive('reminder_24h')}
       />
     </div>
   );

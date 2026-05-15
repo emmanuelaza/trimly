@@ -1,11 +1,45 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin } from '@/lib/supabase/serviceRole';
 import { sendConfirmationEmail } from '@/lib/emails';
+import { sendEmail } from '@/lib/email';
+
+const QSTASH_MAX_DELAY = 604800;
+
+function ownerNotificationHtml(d: {
+  shopName: string; clientName: string; clientPhone: string;
+  serviceName: string; barberName: string; fecha: string; hora: string;
+}) {
+  return `<!DOCTYPE html><html><head><meta charset="utf-8">
+  <style>
+    body{background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:40px 20px}
+    .card{background:#fff;max-width:520px;margin:0 auto;border-radius:12px;padding:32px;border:1px solid #e5e5e5}
+    h2{color:#111;font-size:20px;margin:0 0 8px}
+    p{color:#444;font-size:14px;line-height:1.6;margin:0 0 16px}
+    .info{background:#fafafa;border-radius:8px;padding:16px;margin:20px 0}
+    .row{margin-bottom:10px}
+    .lbl{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:2px}
+    .val{font-size:14px;font-weight:600;color:#111}
+    .footer{color:#aaa;font-size:12px;text-align:center;margin-top:24px}
+  </style></head><body>
+  <div class="card">
+    <h2>Nueva cita ✂️</h2>
+    <p>Se acaba de reservar una cita en <strong>${d.shopName}</strong>.</p>
+    <div class="info">
+      <div class="row"><span class="lbl">Cliente</span><span class="val">${d.clientName}</span></div>
+      <div class="row"><span class="lbl">Celular</span><span class="val">${d.clientPhone}</span></div>
+      <div class="row"><span class="lbl">Servicio</span><span class="val">${d.serviceName}</span></div>
+      <div class="row"><span class="lbl">Barbero</span><span class="val">${d.barberName}</span></div>
+      <div class="row"><span class="lbl">Fecha</span><span class="val">${d.fecha}</span></div>
+      <div class="row"><span class="lbl">Hora</span><span class="val">${d.hora}</span></div>
+    </div>
+    <p class="footer">Trimly · Sistema de gestión para barberías</p>
+  </div></body></html>`;
+}
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    console.log('Booking request:', body);
 
     const {
       barbershopId,
@@ -21,52 +55,46 @@ export async function POST(req: Request) {
       referralValor,
       referralTipo,
     } = body;
-    
-    console.log('Processed fields:', { barbershopId, barberId, serviceId, scheduledAt, clientName, clientPhone });
 
     if (!barbershopId || !serviceId || !scheduledAt || !clientName || !clientPhone) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder'
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
     // 1. Find or create client
     const { data: existingClient } = await supabase
-      .from("clients")
-      .select("id")
-      .eq("barbershop_id", barbershopId)
-      .eq("phone", clientPhone)
+      .from('clients')
+      .select('id')
+      .eq('barbershop_id', barbershopId)
+      .eq('phone', clientPhone)
       .maybeSingle();
 
     let clientId;
     if (existingClient) {
       clientId = existingClient.id;
       await supabase
-        .from("clients")
+        .from('clients')
         .update({ last_visit: new Date().toISOString(), email: clientEmail || null })
-        .eq("id", clientId);
+        .eq('id', clientId);
     } else {
       const { data: newClient, error: clientErr } = await supabase
-        .from("clients")
+        .from('clients')
         .insert({
           barbershop_id: barbershopId,
           name: clientName,
           phone: clientPhone,
           email: clientEmail || null,
-          last_visit: new Date().toISOString()
+          last_visit: new Date().toISOString(),
         })
-        .select("id")
+        .select('id')
         .single();
-      
-      if (clientErr) {
-        console.error('Supabase client insert error:', clientErr);
-        throw clientErr;
-      }
+
+      if (clientErr) throw clientErr;
       clientId = newClient.id;
-      console.log('Client resolved:', clientId);
     }
 
     // 2. Conflict check
@@ -79,11 +107,10 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (conflict) {
-      console.log('Conflict detected for slot:', scheduledAt);
       return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
     }
 
-    // 3. Create Appointment
+    // 3. Create appointment
     const descuento = referralCode && referralValor
       ? (referralTipo === 'porcentaje'
           ? Math.round((priceCharged * referralValor) / 100)
@@ -91,14 +118,14 @@ export async function POST(req: Request) {
       : 0;
 
     const { data: appointment, error: appErr } = await supabase
-      .from("appointments")
+      .from('appointments')
       .insert({
         barbershop_id: barbershopId,
         client_id: clientId,
         service_id: serviceId,
         barber_id: barberId,
         scheduled_at: scheduledAt,
-        status: "confirmed",
+        status: 'confirmed',
         price_charged: priceCharged,
         referral_code_usado: referralCode || null,
         descuento_referido: descuento,
@@ -107,16 +134,13 @@ export async function POST(req: Request) {
       .single();
 
     if (appErr) {
-      console.error('Supabase appointment insert error:', appErr);
       if (appErr.code === '23505') {
         return NextResponse.json({ error: 'slot_taken' }, { status: 409 });
       }
       return NextResponse.json({ error: appErr.message }, { status: 400 });
     }
 
-    console.log('Appointment created successfully:', appointment.id);
-
-    // 3b. Register referral use and credit the referrer
+    // 3b. Register referral
     if (referralCode && referralClienteId && referralValor) {
       try {
         const creditAmount = referralTipo === 'porcentaje'
@@ -144,61 +168,99 @@ export async function POST(req: Request) {
       }
     }
 
-    // 4. Send Confirmation Email Directly
-    if (clientEmail) {
-      try {
-        // Fetch details for the email
-        const [{ data: shop }, { data: service }, { data: barber }] = await Promise.all([
-          supabase.from('barbershops').select('name, whatsapp').eq('id', barbershopId).single(),
-          supabase.from('services').select('name').eq('id', serviceId).single(),
-          barberId 
-            ? supabase.from('barbers').select('name').eq('id', barberId).single() 
-            : Promise.resolve({ data: { name: 'Cualquier barbero' } })
-        ]);
+    // 4. Notifications
+    try {
+      const admin = getSupabaseAdmin();
 
-        console.log('Sending direct confirmation email...');
-        await sendConfirmationEmail({
-          to: clientEmail,
-          clientName,
-          barbershopName: shop?.name || 'La Barbería',
-          serviceName: service?.name || 'Servicio',
-          barberName: barber?.name || 'Cualquier barbero',
-          date: scheduledAt,
-          phone: shop?.whatsapp || ''
-        });
-        console.log('Direct email sent successfully');
-      } catch (emailErr) {
-        console.error('Error sending direct confirmation email:', emailErr);
-        // We don't throw here to avoid failing the whole booking if only the email fails
+      const [{ data: shop }, { data: service }, barberRes] = await Promise.all([
+        admin.from('barbershops').select('name, whatsapp, owner_id').eq('id', barbershopId).single(),
+        admin.from('services').select('name').eq('id', serviceId).single(),
+        barberId
+          ? admin.from('barbers').select('name').eq('id', barberId).single()
+          : Promise.resolve({ data: { name: 'Sin preferencia' } }),
+      ]);
+
+      const barber = (barberRes as any).data;
+      const scheduledDate = new Date(scheduledAt);
+      const fecha = scheduledDate.toLocaleDateString('es-CO', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        timeZone: 'America/Bogota',
+      });
+      const hora = scheduledDate.toLocaleTimeString('es-CO', {
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'America/Bogota',
+      });
+
+      // Email to client — only if automation active
+      if (clientEmail) {
+        const { data: confirmAuto } = await admin
+          .from('automations')
+          .select('is_active')
+          .eq('barbershop_id', barbershopId)
+          .eq('type', 'confirmation')
+          .maybeSingle();
+
+        if (confirmAuto?.is_active) {
+          await sendConfirmationEmail({
+            to: clientEmail,
+            clientName,
+            barbershopName: shop?.name || 'La Barbería',
+            serviceName: service?.name || 'Servicio',
+            barberName: barber?.name || 'Sin preferencia',
+            date: scheduledAt,
+            phone: shop?.whatsapp || '',
+          });
+        }
       }
+
+      // Email to owner — always
+      if (shop?.owner_id) {
+        const { data: { user: owner } } = await admin.auth.admin.getUserById(shop.owner_id);
+        if (owner?.email) {
+          await sendEmail({
+            to: owner.email,
+            subject: `Nueva cita — ${shop.name}`,
+            html: ownerNotificationHtml({
+              shopName: shop.name,
+              clientName,
+              clientPhone,
+              serviceName: service?.name || 'Servicio',
+              barberName: barber?.name || 'Sin preferencia',
+              fecha,
+              hora,
+            }),
+          });
+        }
+      }
+    } catch (notifErr) {
+      console.error('Notification error:', notifErr);
     }
 
-    // 5. Trigger remaining Automations via QStash (only post-visit)
+    // 5. Schedule post-visit via QStash
     try {
-      const { Client } = await import("@upstash/qstash");
+      const { Client } = await import('@upstash/qstash');
       const qstash = new Client({ token: process.env.QSTASH_TOKEN! });
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL;
-      
+
       const appointmentTime = new Date(scheduledAt).getTime();
-      const now = Date.now();
-      const delayMs = (appointmentTime - now) + (24 * 60 * 60 * 1000);
+      const delayMs = (appointmentTime - Date.now()) + 24 * 60 * 60 * 1000;
       const delaySeconds = Math.floor(delayMs / 1000);
 
-      if (delaySeconds > 0) {
-        await qstash.publishJSON({ 
-          url: `${appUrl}/api/jobs/post-visita`, 
+      if (delaySeconds > 0 && delaySeconds <= QSTASH_MAX_DELAY) {
+        await qstash.publishJSON({
+          url: `${appUrl}/api/jobs/post-visita`,
           body: { citaId: appointment.id },
-          delay: delaySeconds 
+          delay: delaySeconds,
         });
       }
     } catch (e) {
-      console.error("QStash automation error:", e);
+      console.error('QStash error:', e);
     }
 
     return NextResponse.json(appointment, { status: 200 });
 
   } catch (error: any) {
-    console.error('General confirmation error:', error);
+    console.error('Confirmation error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
