@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { createPlan, updatePlan, type Plan } from '@/app/actions/pases'
 import toast from 'react-hot-toast'
 import { Loader2 } from 'lucide-react'
@@ -127,16 +128,12 @@ export function CrearPlanModal({ isOpen, onClose, plan, servicios }: Props) {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Precio (COP)</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-sm">$</span>
-              <input
-                type="number"
-                value={price}
-                onChange={e => setPrice(e.target.value)}
-                placeholder="80000"
-                className="w-full h-10 pl-7 pr-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
-              />
-            </div>
+            <MoneyInput
+              value={price ? Number(price) : undefined}
+              onChange={v => setPrice(String(v))}
+              placeholder="80.000"
+              className="w-full h-10 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
           </div>
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Duración (días)</label>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { cn } from '@/lib/utils'
 import { markAsPaid, updateBarberPaymentScheme, updateBarberServiceRate } from '@/app/actions/nomina'
 import toast from 'react-hot-toast'
@@ -387,11 +388,10 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest block mb-2">Monto a pagar</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
-                <input
-                  type="number"
+                <MoneyInput
                   value={monto}
-                  onChange={e => setMonto(Number(e.target.value))}
-                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border bg-background-tertiary/30 text-2xl font-black text-accent tabular-nums focus:outline-none focus:ring-2 focus:ring-accent/30"
+                  onChange={setMonto}
+                  className="w-full h-14 pl-8 pr-4 rounded-xl border border-border bg-background-tertiary/30 text-2xl font-black text-accent focus:outline-none focus:ring-2 focus:ring-accent/30"
                 />
               </div>
               <p className="text-xs text-text-tertiary mt-1 text-right">{period.start} — {period.end}</p>
@@ -496,10 +496,9 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
                 <label className="text-xs font-bold text-text-secondary block mb-2">Monto fijo mensual</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
-                  <input
-                    type="number" min={0} step={10000}
-                    value={schemeFixed} onChange={e => setSchemeFixed(Number(e.target.value))}
-                    placeholder="1000000"
+                  <MoneyInput
+                    value={schemeFixed} onChange={setSchemeFixed}
+                    placeholder="1.000.000"
                     className="w-full h-12 pl-8 pr-4 rounded-xl border border-border bg-background-secondary text-lg font-bold text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
                   />
                 </div>
@@ -514,10 +513,9 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
                     <span className="text-sm text-text-primary flex-1 truncate">{svc.name}</span>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary text-xs font-bold">$</span>
-                      <input
-                        type="number" min={0} step={1000}
+                      <MoneyInput
                         value={serviceRates[svc.id] ?? 0}
-                        onChange={e => setServiceRates(prev => ({ ...prev, [svc.id]: Number(e.target.value) }))}
+                        onChange={v => setServiceRates(prev => ({ ...prev, [svc.id]: v }))}
                         className="w-36 h-9 pl-6 pr-3 rounded-lg border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
                       />
                     </div>

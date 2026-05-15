@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Modal } from '@/components/ui/Modal'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { activarPase, type Plan } from '@/app/actions/pases'
 import toast from 'react-hot-toast'
 import { Search, Check, Loader2, CreditCard, Banknote, Smartphone, ArrowRightLeft } from 'lucide-react'
@@ -191,15 +192,12 @@ export function ActivarPaseModal({ isOpen, onClose, planes, clientes }: Props) {
 
           <div className="space-y-1.5">
             <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Precio cobrado (COP)</label>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary">$</span>
-              <input
-                type="number"
-                value={pricePaid}
-                onChange={e => setPricePaid(e.target.value)}
-                className="w-full h-10 pl-7 pr-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
-              />
-            </div>
+            <MoneyInput
+              value={pricePaid ? Number(pricePaid) : undefined}
+              onChange={v => setPricePaid(String(v))}
+              placeholder="80.000"
+              className="w-full h-10 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent/30"
+            />
           </div>
 
           <div className="space-y-2">

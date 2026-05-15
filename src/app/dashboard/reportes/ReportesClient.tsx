@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button'
 import { Modal } from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { cn } from '@/lib/utils'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import {
   createExpense, updateExpense, deleteExpense,
   type Expense, type ExpenseCategoria, type ResumenFinanciero,
@@ -340,10 +341,9 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-text-tertiary uppercase tracking-widest">Monto (COP) *</label>
-              <input
-                type="number"
-                value={form.monto}
-                onChange={e => setForm(f => ({ ...f, monto: e.target.value }))}
+              <MoneyInput
+                value={form.monto ? Number(form.monto) : undefined}
+                onChange={v => setForm(f => ({ ...f, monto: String(v) }))}
                 placeholder="0"
                 className="w-full h-11 px-4 rounded-xl border border-border bg-background-secondary text-sm text-text-primary placeholder:text-text-tertiary focus:outline-none focus:ring-2 focus:ring-accent/30"
               />

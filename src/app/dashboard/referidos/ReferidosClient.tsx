@@ -14,6 +14,7 @@ import {
 } from '@/app/actions/referidos'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 
 const COP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n)
@@ -159,19 +160,26 @@ export function ReferidosClient({ program, activity, topReferrers, pendingCredit
                 <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
                   Valor del beneficio
                 </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-text-muted font-bold">
-                    {form.tipo_beneficio === 'porcentaje' ? '%' : '$'}
-                  </span>
-                  <input
-                    type="number"
-                    min="1"
-                    max={form.tipo_beneficio === 'porcentaje' ? '50' : undefined}
-                    value={form.valor_beneficio}
-                    onChange={(e) => setForm({ ...form, valor_beneficio: e.target.value })}
-                    className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                {form.tipo_beneficio === 'monto' ? (
+                  <MoneyInput
+                    value={form.valor_beneficio ? Number(form.valor_beneficio) : undefined}
+                    onChange={v => setForm({ ...form, valor_beneficio: String(v) })}
+                    placeholder="10.000"
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
                   />
-                </div>
+                ) : (
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-text-muted font-bold">%</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="50"
+                      value={form.valor_beneficio}
+                      onChange={(e) => setForm({ ...form, valor_beneficio: e.target.value })}
+                      className="w-full pl-8 pr-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                )}
                 <p className="text-xs text-primary mt-1 font-medium">{previewBeneficio}</p>
               </div>
               <div>

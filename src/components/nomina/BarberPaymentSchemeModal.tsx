@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button, Input, Card, Badge } from '@/components/ui/RedesignComponents';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { Wallet, Percent, Calendar, Briefcase, Save, Loader2 } from 'lucide-react';
 import { updateBarberPaymentScheme, updateBarberServiceRate } from '@/app/actions/nomina';
 import toast from 'react-hot-toast';
@@ -158,16 +159,12 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
           {type === 'fixed_monthly' && (
             <div className="space-y-4">
               <label className="text-xs font-bold text-text-tertiary uppercase tracking-wider">Monto Fijo Mensual (COP)</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-text-tertiary font-bold">$</span>
-                <Input 
-                  type="number" 
-                  className="pl-8" 
-                  placeholder="0.000" 
-                  value={fixedAmount}
-                  onChange={(e) => setFixedAmount(Number(e.target.value))}
-                />
-              </div>
+              <MoneyInput
+                value={fixedAmount}
+                onChange={v => setFixedAmount(v)}
+                placeholder="1.000.000"
+                className="w-full px-3 py-2 border border-border rounded-lg bg-background-secondary text-sm text-text-primary focus:outline-none focus:border-accent"
+              />
             </div>
           )}
 
@@ -189,13 +186,12 @@ export function BarberPaymentSchemeModal({ isOpen, onClose, barber, initialSchem
                         <td className="px-4 py-3 font-medium text-text-primary">{service.name}</td>
                         <td className="px-4 py-3 text-text-tertiary">${Number(service.price).toLocaleString()}</td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-text-tertiary font-bold">$</span>
-                            <input 
-                              type="number" 
-                              className="w-24 bg-background-primary border border-border rounded-md px-2 py-1 text-right focus:border-accent focus:ring-1 focus:ring-accent outline-none"
+                          <div className="flex items-center justify-end">
+                            <MoneyInput
                               value={serviceRates[service.id] || 0}
-                              onChange={(e) => setServiceRates(prev => ({ ...prev, [service.id]: Number(e.target.value) }))}
+                              onChange={v => setServiceRates(prev => ({ ...prev, [service.id]: v }))}
+                              placeholder="0"
+                              className="w-28 bg-background-primary border border-border rounded-md px-2 py-1 text-right focus:border-accent focus:ring-1 focus:ring-accent outline-none text-sm"
                             />
                           </div>
                         </td>

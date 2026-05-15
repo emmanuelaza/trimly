@@ -3,6 +3,7 @@
 import React, { useTransition } from 'react';
 import { Plus, Trash2, Scissors } from 'lucide-react';
 import { Card, Input, Button, Badge } from '@/components/ui/RedesignComponents';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { createService, deleteService } from '@/app/actions/services';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
@@ -56,7 +57,7 @@ export default function ServiciosClient({ initialServices }: { initialServices: 
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Precio (COP)</label>
-            <Input name="precio" type="number" placeholder="35000" required />
+            <MoneyInput name="precio" placeholder="35.000" required className="w-full h-10 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:border-accent" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-bold text-text-tertiary uppercase ml-1">Duración (min)</label>

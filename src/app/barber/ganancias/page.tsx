@@ -40,14 +40,14 @@ function KpiCard({ label, value, icon: Icon, accent }: {
   label: string; value: string; icon: React.ElementType; accent?: boolean;
 }) {
   return (
-    <div className="bg-background-secondary border border-border rounded-2xl p-5 flex items-center gap-4">
-      <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${accent ? 'bg-accent/15' : 'bg-background-tertiary'}`}>
-        <Icon size={20} className={accent ? 'text-accent' : 'text-text-secondary'} />
+    <div className={`rounded-2xl p-4 flex flex-col gap-2 border ${accent ? 'bg-accent/5 border-accent/20' : 'bg-background-secondary border-border'}`}>
+      <div className="flex items-start justify-between gap-1">
+        <p className="text-[9px] font-bold text-text-tertiary uppercase tracking-wider leading-tight line-clamp-2">{label}</p>
+        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${accent ? 'bg-accent/15' : 'bg-background-tertiary'}`}>
+          <Icon size={14} className={accent ? 'text-accent' : 'text-text-secondary'} />
+        </div>
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold text-text-tertiary uppercase tracking-wider truncate">{label}</p>
-        <p className={`text-xl font-black mt-0.5 ${accent ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
-      </div>
+      <p className={`text-base font-black leading-tight tabular-nums break-all ${accent ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }

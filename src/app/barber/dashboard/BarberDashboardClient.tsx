@@ -51,13 +51,13 @@ function groupByDay(appts: BarberAppt[]) {
 function KpiCard({ label, value, icon: Icon, accent }: { label: string; value: string; icon: any; accent?: boolean }) {
   return (
     <div className={`rounded-2xl p-4 flex flex-col gap-2 border ${accent ? 'bg-accent/5 border-accent/20' : 'bg-background-secondary border-border'}`}>
-      <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold text-text-tertiary uppercase tracking-wider leading-none">{label}</p>
+      <div className="flex items-start justify-between gap-1">
+        <p className="text-[9px] font-bold text-text-tertiary uppercase tracking-wider leading-tight line-clamp-2">{label}</p>
         <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${accent ? 'bg-accent/15' : 'bg-background-tertiary'}`}>
           <Icon size={14} className={accent ? 'text-accent' : 'text-text-secondary'} />
         </div>
       </div>
-      <p className={`text-xl font-black leading-none tabular-nums ${accent ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
+      <p className={`text-base font-black leading-tight tabular-nums break-all ${accent ? 'text-accent' : 'text-text-primary'}`}>{value}</p>
     </div>
   );
 }

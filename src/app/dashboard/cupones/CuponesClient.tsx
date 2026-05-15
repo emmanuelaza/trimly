@@ -8,6 +8,7 @@ import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { ActionMenu } from '@/components/ui/ActionMenu'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { MoneyInput } from '@/components/ui/MoneyInput'
 import { createCupon, toggleCupon, deleteCupon, type Cupon } from '@/app/actions/cupones'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
@@ -287,15 +288,26 @@ export function CuponesClient({ cupones }: CuponesClientProps) {
               <label className="text-xs font-bold text-text-secondary uppercase tracking-wider block mb-1.5">
                 Valor *
               </label>
-              <input
-                required
-                type="number"
-                min="1"
-                value={form.valor}
-                onChange={(e) => setForm({ ...form, valor: e.target.value })}
-                placeholder={form.tipo === 'porcentaje' ? '20' : '10000'}
-                className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
-              />
+              {form.tipo === 'monto_fijo' ? (
+                <MoneyInput
+                  required
+                  value={form.valor ? Number(form.valor) : undefined}
+                  onChange={v => setForm({ ...form, valor: String(v) })}
+                  placeholder="10.000"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                />
+              ) : (
+                <input
+                  required
+                  type="number"
+                  min="1"
+                  max="100"
+                  value={form.valor}
+                  onChange={(e) => setForm({ ...form, valor: e.target.value })}
+                  placeholder="20"
+                  className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:border-primary"
+                />
+              )}
             </div>
           </div>
 

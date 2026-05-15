@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
+import { MoneyInput } from '@/components/ui/MoneyInput';
 import { Button } from '@/components/ui/Button';
 import { createProduct, updateProduct } from '@/app/actions/productos';
 
@@ -88,11 +89,11 @@ export function CrearProductoModal({ onClose, product }: CrearProductoModalProps
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">Precio de venta *</label>
-            <Input name="precio_venta" type="number" min="0" step="100" required defaultValue={product?.precio_venta} placeholder="25000" />
+            <MoneyInput name="precio_venta" required defaultValue={product?.precio_venta} placeholder="25.000" className="w-full h-10 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:border-accent" />
           </div>
           <div>
             <label className="block text-xs font-semibold text-text-secondary mb-1.5">Precio de costo</label>
-            <Input name="precio_costo" type="number" min="0" step="100" defaultValue={product?.precio_costo} placeholder="12000" />
+            <MoneyInput name="precio_costo" defaultValue={product?.precio_costo} placeholder="12.000" className="w-full h-10 px-3 rounded-xl border border-border bg-background-secondary text-sm text-text-primary focus:outline-none focus:border-accent" />
           </div>
         </div>
 
