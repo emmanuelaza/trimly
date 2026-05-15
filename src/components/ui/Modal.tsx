@@ -20,7 +20,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
         className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm transition-opacity page-fade"
         onClick={onClose}
       />
-      <div className="fixed inset-x-0 bottom-0 z-[200] md:inset-0 md:flex md:items-center md:justify-center pointer-events-none">
+      <div className="fixed inset-x-0 bottom-16 z-[200] md:inset-0 md:flex md:items-center md:justify-center pointer-events-none">
 
         {/* Modal Container */}
         <div
@@ -56,10 +56,7 @@ export function Modal({ isOpen, onClose, title, children, footer, className }: M
 
           {/* Sticky footer for action buttons */}
           {footer && (
-            <div
-              className="flex-shrink-0 px-5 pt-4 border-t border-border/50"
-              style={{ paddingBottom: 'max(1.25rem, env(safe-area-inset-bottom))' }}
-            >
+            <div className="flex-shrink-0 px-5 py-4 border-t border-border/50">
               {footer}
             </div>
           )}
