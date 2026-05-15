@@ -15,7 +15,10 @@
       "Bash(npm install *)",
       "Bash(git add *)",
       "Bash(git commit *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(find c:\\\\\\\\trimly\\\\\\\\src -type d -name milo)",
+      "Bash(find c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app -type d -name \"*milo*\" -o -type f -name \"*milo*\")",
+      "Bash(ls -la c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app\\\\\\\\api\\\\\\\\)"
     ]
   }
 }
