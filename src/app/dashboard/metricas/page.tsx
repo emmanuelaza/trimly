@@ -1,6 +1,7 @@
 import { getMetricasData } from '@/app/actions/metricas'
 import { TrendingUp, Users, Star, BarChart3, Clock, Target, ArrowUp, ArrowDown, Minus } from 'lucide-react'
 import Link from 'next/link'
+import { MetricasGate } from './MetricasGate'
 
 export const metadata = { title: 'Métricas | Trimly' }
 export const dynamic = 'force-dynamic'
@@ -29,6 +30,7 @@ export default async function MetricasPage() {
   if (data.diasDeData < MIN_DIAS) {
     const pct = Math.min(100, Math.round((data.diasDeData / MIN_DIAS) * 100))
     return (
+      <MetricasGate>
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-display font-bold text-text-primary tracking-tight">Métricas</h1>
@@ -64,6 +66,7 @@ export default async function MetricasPage() {
           </Link>
         </div>
       </div>
+      </MetricasGate>
     )
   }
 
@@ -71,6 +74,7 @@ export default async function MetricasPage() {
   const maxDia = data.ingresosPorDia.length > 0 ? Math.max(...data.ingresosPorDia.map((d) => d.ingresos)) : 1
 
   return (
+    <MetricasGate>
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-display font-bold text-text-primary tracking-tight">Métricas</h1>
@@ -243,5 +247,6 @@ export default async function MetricasPage() {
         ))}
       </div>
     </div>
+    </MetricasGate>
   )
 }

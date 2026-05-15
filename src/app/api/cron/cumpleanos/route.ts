@@ -36,6 +36,19 @@ export async function GET(req: Request) {
 
     for (const auto of automations) {
       const bsId = auto.barbershop_id;
+
+      const { data: bsData } = await supabase
+        .from('barbershops')
+        .select('plan, subscription_status')
+        .eq('id', bsId)
+        .maybeSingle();
+      const planOk =
+        bsData?.plan === 'pro' ||
+        bsData?.plan === 'lifetime' ||
+        bsData?.subscription_status === 'trialing' ||
+        bsData?.subscription_status === 'trial';
+      if (!planOk) continue;
+
       const descuento: number = (auto.config as any)?.descuento || 20;
 
       const [{ data: clients }, { data: shop }] = await Promise.all([

@@ -15,6 +15,8 @@ import {
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 import { MoneyInput } from '@/components/ui/MoneyInput'
+import { usePlan } from '@/hooks/usePlan'
+import { ProFeature } from '@/components/ui/ProFeature'
 
 const COP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n)
@@ -36,6 +38,7 @@ const TABS = [
 type Tab = typeof TABS[number]['id']
 
 export function ReferidosClient({ program, activity, topReferrers, pendingCredits, stats, barbershopName }: Props) {
+  const { features } = usePlan()
   const [loading, setLoading] = useState(false)
   const [tab, setTab] = useState<Tab>('actividad')
   const [copiedId, setCopiedId] = useState<string | null>(null)
@@ -97,6 +100,7 @@ export function ReferidosClient({ program, activity, topReferrers, pendingCredit
   }
 
   return (
+    <ProFeature available={features.referidos} featureName="Programa de referidos">
     <>
       <PageHeader
         title="Referidos"
@@ -433,5 +437,6 @@ export function ReferidosClient({ program, activity, topReferrers, pendingCredit
         )}
       </div>
     </>
+    </ProFeature>
   )
 }

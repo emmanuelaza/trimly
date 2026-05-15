@@ -15,6 +15,7 @@ import {
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { BarberPaymentSchemeModal } from '@/components/nomina/BarberPaymentSchemeModal';
+import { usePlan } from '@/hooks/usePlan';
 import { MagicLinkModal } from '@/components/equipo/MagicLinkModal';
 import { Modal } from '@/components/ui/Modal';
 import Image from 'next/image';
@@ -41,6 +42,7 @@ interface EditState {
 export default function BarberosClient({ initialBarberos, services }: { initialBarberos: any[], services: any[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { features } = usePlan();
 
   // Existing modals
   const [selectedBarber,   setSelectedBarber]   = useState<any>(null);
@@ -121,6 +123,12 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (features.maxBarbers !== -1 && initialBarberos.length >= features.maxBarbers) {
+      toast.error(
+        `Has alcanzado el límite de ${features.maxBarbers} barbero del plan Básico. Actualiza a Filo Pro para añadir barberos ilimitados.`
+      );
+      return;
+    }
     const formData = new FormData(e.currentTarget);
     const form = e.currentTarget;
     startTransition(async () => {

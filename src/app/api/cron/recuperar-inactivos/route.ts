@@ -27,6 +27,19 @@ export async function GET(req: Request) {
 
     for (const auto of automations) {
       const bsId = auto.barbershop_id;
+
+      const { data: bsData } = await supabase
+        .from('barbershops')
+        .select('plan, subscription_status')
+        .eq('id', bsId)
+        .maybeSingle();
+      const planOk =
+        bsData?.plan === 'pro' ||
+        bsData?.plan === 'lifetime' ||
+        bsData?.subscription_status === 'trialing' ||
+        bsData?.subscription_status === 'trial';
+      if (!planOk) continue;
+
       const diasInactivo: number = (auto.config as any)?.dias_inactivo || 45;
       const fechaLimite = new Date();
       fechaLimite.setDate(fechaLimite.getDate() - diasInactivo);

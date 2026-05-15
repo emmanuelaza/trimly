@@ -11,6 +11,7 @@ import { Modal } from '@/components/ui/Modal'
 import { ConfirmModal } from '@/components/ui/ConfirmModal'
 import { cn } from '@/lib/utils'
 import { MoneyInput } from '@/components/ui/MoneyInput'
+import { usePlan } from '@/hooks/usePlan'
 import {
   createExpense, updateExpense, deleteExpense,
   type Expense, type ExpenseCategoria, type ResumenFinanciero,
@@ -75,6 +76,7 @@ const BLANK_FORM = {
 
 export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) {
   const router = useRouter()
+  const { features } = usePlan()
   const [isPending, startTransition] = useTransition()
   const [tab, setTab] = useState<'resumen' | 'gastos'>('resumen')
   const [showForm, setShowForm] = useState(false)
@@ -146,6 +148,16 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
 
   return (
     <div className="space-y-6">
+      {!features.reportesAvanzados && (
+        <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-accent/30 bg-accent/5">
+          <p className="text-sm text-text-secondary">
+            Los reportes avanzados están disponibles en el plan <span className="font-bold text-accent">Filo Pro</span>.
+          </p>
+          <a href="/dashboard/upgrade" className="shrink-0 text-sm font-bold text-accent hover:underline">
+            Ver planes →
+          </a>
+        </div>
+      )}
       <PageHeader
         title="Ingresos y Egresos"
         description="Seguimiento financiero de tu barbería"

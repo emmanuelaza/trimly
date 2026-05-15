@@ -9,6 +9,8 @@ import { ActionMenu } from '@/components/ui/ActionMenu'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MoneyInput } from '@/components/ui/MoneyInput'
+import { usePlan } from '@/hooks/usePlan'
+import { ProFeature } from '@/components/ui/ProFeature'
 import { createCupon, toggleCupon, deleteCupon, type Cupon } from '@/app/actions/cupones'
 import toast from 'react-hot-toast'
 import { cn } from '@/lib/utils'
@@ -25,6 +27,7 @@ interface CuponesClientProps {
 }
 
 export function CuponesClient({ cupones }: CuponesClientProps) {
+  const { features } = usePlan()
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<Cupon | null>(null)
   const [loading, setLoading] = useState(false)
@@ -97,6 +100,7 @@ export function CuponesClient({ cupones }: CuponesClientProps) {
   }
 
   return (
+    <ProFeature available={features.cupones} featureName="Cupones y descuentos">
     <>
       <PageHeader
         title="Cupones"
@@ -353,5 +357,6 @@ export function CuponesClient({ cupones }: CuponesClientProps) {
         loading={loading}
       />
     </>
+    </ProFeature>
   )
 }

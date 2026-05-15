@@ -14,12 +14,19 @@ export async function GET(req: Request) {
 
     const supabase = getSupabaseAdmin();
 
-    const { data: barbershops } = await supabase.from('barbershops').select('id, name, owner_id');
+    const { data: barbershops } = await supabase.from('barbershops').select('id, name, owner_id, plan, subscription_status');
     if (!barbershops) return NextResponse.json({ ok: true, skipped: 'No barbershops' });
 
     const today = new Date().toISOString().split('T')[0];
 
     for (const shop of barbershops) {
+      const planOk =
+        (shop as any).plan === 'pro' ||
+        (shop as any).plan === 'lifetime' ||
+        (shop as any).subscription_status === 'trialing' ||
+        (shop as any).subscription_status === 'trial';
+      if (!planOk) continue;
+
       const { data: automation } = await supabase
         .from('automations')
         .select('is_active')

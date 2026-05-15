@@ -37,8 +37,24 @@ export async function GET(req: Request) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app';
     let sentCount = 0;
+    const planCache = new Map<string, boolean>();
 
     for (const app of appointments) {
+      if (!planCache.has(app.barbershop_id)) {
+        const { data: bsData } = await supabase
+          .from('barbershops')
+          .select('plan, subscription_status')
+          .eq('id', app.barbershop_id)
+          .maybeSingle();
+        const planOk =
+          bsData?.plan === 'pro' ||
+          bsData?.plan === 'lifetime' ||
+          bsData?.subscription_status === 'trialing' ||
+          bsData?.subscription_status === 'trial';
+        planCache.set(app.barbershop_id, planOk);
+      }
+      if (!planCache.get(app.barbershop_id)) continue;
+
       const { data: automation } = await supabase
         .from('automations')
         .select('is_active')

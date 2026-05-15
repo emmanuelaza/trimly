@@ -11,6 +11,8 @@ import { Modal } from '@/components/ui/Modal'
 import { MoneyInput } from '@/components/ui/MoneyInput'
 import { cn } from '@/lib/utils'
 import { markAsPaid, updateBarberPaymentScheme, updateBarberServiceRate } from '@/app/actions/nomina'
+import { usePlan } from '@/hooks/usePlan'
+import { ProFeature } from '@/components/ui/ProFeature'
 import toast from 'react-hot-toast'
 import Image from 'next/image'
 
@@ -63,6 +65,7 @@ function monthLabel(iso: string) {
 export default function NominaClient({ initialLiquidation, initialHistory, period, services }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
+  const { features } = usePlan()
 
   const [activeTab,  setActiveTab]  = useState<'liquidacion' | 'historial'>('liquidacion')
   const [periodTab,  setPeriodTab]  = useState<PeriodTab>('current')
@@ -177,6 +180,7 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
   }
 
   return (
+    <ProFeature available={features.nomina} featureName="Nómina y comisiones">
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-semibold text-text-primary">Nómina</h1>
@@ -533,5 +537,6 @@ export default function NominaClient({ initialLiquidation, initialHistory, perio
         </Modal>
       )}
     </div>
+    </ProFeature>
   )
 }

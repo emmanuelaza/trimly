@@ -6,6 +6,7 @@ import { StatCard } from '@/components/ui/StatCard';
 import { toggleAutomation } from '@/app/actions/barbershops';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import { usePlan } from '@/hooks/usePlan';
 
 interface AutomationDef {
   id: string;
@@ -42,9 +43,12 @@ interface Props {
   stats: Stats;
 }
 
+const PRO_TYPES = new Set(['post_visit', 'daily_report', 'recover_inactive', 'birthday']);
+
 export default function AutomatizacionesClient({ initialAutomations, stats }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { features } = usePlan();
 
   const [activeStates, setActiveStates] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(
@@ -57,7 +61,13 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
 
   const getIsActive = (type: string) => activeStates[type] ?? false;
 
+  const isProBlocked = (type: string) => PRO_TYPES.has(type) && !features.postVisita;
+
   const handleToggle = (type: string, current: boolean) => {
+    if (!current && isProBlocked(type)) {
+      toast.error('Esta automatización es del plan Filo Pro. Actualiza para activarla.');
+      return;
+    }
     startTransition(async () => {
       try {
         setActiveStates(prev => ({ ...prev, [type]: !current }));
@@ -106,53 +116,65 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
               {items.map(item => {
                 const isActive = getIsActive(item.type);
                 const locked = isLocked(item.type);
+                const proBlocked = isProBlocked(item.type);
                 return (
                   <Card
                     key={item.id}
                     className={`p-5 flex items-start sm:items-center justify-between gap-4 border-border-strong transition-all ${
-                      isActive && !locked ? 'border-accent/30 bg-accent-muted/5' : 'hover:border-border-stronger'
+                      isActive && !locked && !proBlocked ? 'border-accent/30 bg-accent-muted/5' : 'hover:border-border-stronger'
                     }`}
                   >
-                    <div className={`flex items-start gap-4 flex-1 transition-opacity ${!isActive || locked ? 'opacity-40' : ''}`}>
+                    <div className={`flex items-start gap-4 flex-1 transition-opacity ${!isActive || locked || proBlocked ? 'opacity-40' : ''}`}>
                       <span className="text-2xl leading-none mt-1">{item.emoji}</span>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
                           <h3 className="font-semibold text-text-primary text-sm">{item.title}</h3>
-                          {item.isNew && (
+                          {item.isNew && !proBlocked && (
                             <span className="bg-accent-muted text-accent px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
                               Nuevo
                             </span>
                           )}
+                          {proBlocked && (
+                            <span className="bg-background-tertiary text-text-tertiary border border-border px-1.5 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">
+                              Pro
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-text-secondary">{item.desc}</p>
-                        {locked && (
+                        {proBlocked && (
+                          <p className="text-xs text-text-tertiary mt-1">
+                            Disponible en el plan{' '}
+                            <a href="/dashboard/upgrade" className="text-accent font-semibold hover:underline">Filo Pro →</a>
+                          </p>
+                        )}
+                        {!proBlocked && locked && (
                           <p className="text-xs text-text-tertiary mt-1">
                             Requiere activar "Confirmación al agendar"
                           </p>
                         )}
-                        {!locked && (stats.porTipo[item.type] ?? 0) > 0 && (
+                        {!proBlocked && !locked && (stats.porTipo[item.type] ?? 0) > 0 && (
                           <p className="text-xs text-accent font-medium mt-1.5">
                             {stats.porTipo[item.type]} {stats.porTipo[item.type] === 1 ? 'email enviado' : 'emails enviados'} este mes
                           </p>
                         )}
-                        {!locked && isActive && (stats.porTipo[item.type] ?? 0) === 0 && (
+                        {!proBlocked && !locked && isActive && (stats.porTipo[item.type] ?? 0) === 0 && (
                           <p className="text-xs text-text-tertiary mt-1.5">Sin actividad este mes</p>
                         )}
                       </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                      <label className={`relative inline-flex items-center ${isPending || locked ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
+                      <label className={`relative inline-flex items-center ${isPending || locked || proBlocked ? 'opacity-50 pointer-events-none' : 'cursor-pointer'}`}>
                         <input
                           type="checkbox"
                           className="sr-only peer"
-                          checked={isActive && !locked}
+                          checked={isActive && !locked && !proBlocked}
                           onChange={() => handleToggle(item.type, isActive)}
-                          disabled={isPending || locked}
+                          disabled={isPending || locked || proBlocked}
                         />
                         <div className="w-12 h-6 bg-border-strong peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-6 peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent peer-checked:after:bg-background-primary mr-2" />
                         <span className="text-xs font-medium text-text-tertiary w-14 text-right">
-                          {isActive && !locked ? 'Activo' : 'Pausado'}
+                          {isActive && !locked && !proBlocked ? 'Activo' : 'Pausado'}
                         </span>
                       </label>
                     </div>
