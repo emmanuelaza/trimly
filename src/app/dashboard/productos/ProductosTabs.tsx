@@ -58,7 +58,8 @@ export function ProductosTabs({ products, sales, barbers, appointments }: any) {
         </div>
 
         <Button onClick={handleOpenCrearModal} className="gap-2 flex-shrink-0">
-          <Plus size={16} /> Agregar producto
+          <Plus size={16} />
+          <span className="hidden sm:inline">Agregar producto</span>
         </Button>
       </div>
 
