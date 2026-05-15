@@ -21,7 +21,8 @@
       "Bash(ls -la c:\\\\\\\\trimly\\\\\\\\src\\\\\\\\app\\\\\\\\api\\\\\\\\)",
       "Bash(npx next *)",
       "Bash(sed -n '140,155p' c:/trimly/src/app/actions/barber-dashboard.ts)",
-      "Bash(sed -n '230,240p' c:/trimly/src/app/actions/barber-dashboard.ts)"
+      "Bash(sed -n '230,240p' c:/trimly/src/app/actions/barber-dashboard.ts)",
+      "Bash(echo \"exit:$?\")"
     ]
   }
 }

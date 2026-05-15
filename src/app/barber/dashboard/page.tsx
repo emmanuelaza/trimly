@@ -56,7 +56,7 @@ export default function BarberDashboardPage() {
   );
 
   const displayData = data || {
-    barber: { id: '', name: session.barberName, barbershopName: '' },
+    barber: { id: '', name: session.barberName, barbershopName: '', avatarUrl: null },
     esquema: null,
     stats: { citasHoy: 0, completadasHoy: 0, gananciasHoy: 0, proximasCitas: 0, totalGeneradoMes: 0, misGananciasMes: 0 },
     citasHoy: [],
@@ -64,18 +64,43 @@ export default function BarberDashboardPage() {
     citasCompletadas: [],
   };
 
+  const avatarUrl = displayData.barber.avatarUrl;
+  const initials = session.barberName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+
   return (
-    <div className="space-y-6 pb-20">
+    <div className="space-y-6 pb-24">
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-text-primary tracking-tight">
-            Hola, {session.barberName} ✂️
-          </h1>
-          <p className="text-sm text-text-tertiary mt-1 flex items-center gap-1.5">
-            <CalendarIcon size={13} className="text-accent" />
-            {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
-          </p>
+      <div className="flex items-center justify-between gap-3">
+        {/* Avatar + greeting */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="relative shrink-0">
+            {avatarUrl ? (
+              <Image
+                src={avatarUrl}
+                alt={session.barberName}
+                width={48}
+                height={48}
+                className="w-12 h-12 rounded-2xl object-cover border-2 border-accent/20"
+                unoptimized
+              />
+            ) : (
+              <div className="w-12 h-12 rounded-2xl bg-accent/15 border-2 border-accent/20 flex items-center justify-center">
+                <span className="text-sm font-black text-accent">{initials}</span>
+              </div>
+            )}
+            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success border-2 border-background-primary rounded-full" />
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-lg font-black text-text-primary tracking-tight leading-tight truncate">
+              Hola, {session.barberName}
+            </h1>
+            <p className="text-xs text-text-tertiary flex items-center gap-1 mt-0.5">
+              <CalendarIcon size={11} className="text-accent shrink-0" />
+              <span className="truncate">
+                {new Date().toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
+            </p>
+          </div>
         </div>
 
         <button

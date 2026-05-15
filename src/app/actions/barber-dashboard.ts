@@ -16,7 +16,7 @@ export interface BarberAppt {
 }
 
 export interface BarberDashData {
-  barber: { id: string; name: string; barbershopName: string };
+  barber: { id: string; name: string; barbershopName: string; avatarUrl: string | null };
   esquema: { type: string; percentage: number | null; fixed_amount: number | null } | null;
   stats: {
     citasHoy: number;
@@ -77,7 +77,7 @@ export async function getBarberDashboardDataByToken(
 
   const { data: barber } = await supabase
     .from("barbers")
-    .select("id, name, barbershops(name)")
+    .select("id, name, avatar_url, barbershops(name)")
     .eq("id", barberId)
     .maybeSingle();
 
@@ -165,6 +165,7 @@ export async function getBarberDashboardDataByToken(
       id: barber.id,
       name: barber.name,
       barbershopName: (barber.barbershops as any)?.name ?? "",
+      avatarUrl: (barber as any).avatar_url ?? null,
     },
     esquema: esquema
       ? {

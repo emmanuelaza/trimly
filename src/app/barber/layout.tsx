@@ -15,9 +15,9 @@ import {
 } from 'lucide-react';
 
 const barberNavItems = [
-  { href: '/barber/dashboard', label: 'Inicio', icon: Home },
-  { href: '/barber/agenda', label: 'Mi Agenda', icon: Calendar },
-  { href: '/barber/ganancias', label: 'Mis Ganancias', icon: Wallet },
+  { href: '/barber/dashboard', label: 'Inicio',    shortLabel: 'Inicio',    icon: Home },
+  { href: '/barber/agenda',    label: 'Mi Agenda', shortLabel: 'Agenda',    icon: Calendar },
+  { href: '/barber/ganancias', label: 'Ganancias', shortLabel: 'Ganancias', icon: Wallet },
 ];
 
 function getAnonClient() {
@@ -194,29 +194,36 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
           </button>
         </header>
 
-        <main className="flex-1 overflow-y-auto pb-28 md:pb-0">
+        <main className="flex-1 overflow-y-auto pb-32 md:pb-0">
           <div className="max-w-[1200px] mx-auto p-5 md:p-10">
             {children}
           </div>
         </main>
 
         {/* Mobile bottom tab bar */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background-primary/95 backdrop-blur-xl border-t border-border flex items-center justify-around px-2 py-2 pb-safe z-50">
-          {barberNavItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex flex-col items-center gap-1 p-2 transition-colors min-w-[60px] ${
-                  isActive ? 'text-accent' : 'text-text-tertiary'
-                }`}
-              >
-                <item.icon size={20} />
-                <span className="text-[10px] font-medium">{item.label.split(' ')[0]}</span>
-              </Link>
-            );
-          })}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background-primary/95 backdrop-blur-xl border-t border-border z-50"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 0px)' }}>
+          <div className="flex items-stretch justify-around px-2 py-1">
+            {barberNavItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`flex flex-col items-center justify-center gap-1 py-2 px-4 min-w-[72px] transition-colors rounded-xl ${
+                    isActive ? 'text-accent' : 'text-text-tertiary hover:text-text-secondary'
+                  }`}
+                >
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-xl transition-colors ${
+                    isActive ? 'bg-accent/15' : ''
+                  }`}>
+                    <item.icon size={20} />
+                  </div>
+                  <span className="text-[10px] font-semibold leading-none">{item.shortLabel}</span>
+                </Link>
+              );
+            })}
+          </div>
         </nav>
       </div>
 
