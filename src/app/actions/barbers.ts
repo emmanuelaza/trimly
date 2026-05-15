@@ -86,6 +86,36 @@ export async function updateBarber(id: string, formData: FormData) {
   }
 }
 
+export async function updateBarberProfile(id: string, data: {
+  name: string;
+  phone?: string;
+  email?: string;
+  specialty?: string;
+  avatar_url?: string;
+}) {
+  try {
+    if (!data.name) return { success: false, error: "El nombre es obligatorio" };
+
+    const supabase = await createClient();
+    const updates: Record<string, any> = {
+      name: data.name,
+      phone: data.phone || null,
+      email: data.email || null,
+      specialty: data.specialty || null,
+    };
+    if (data.avatar_url) updates.avatar_url = data.avatar_url;
+
+    const { error } = await supabase.from("barbers").update(updates).eq("id", id);
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath("/dashboard/equipo");
+    revalidatePath("/dashboard/nomina");
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function deleteBarber(id: string) {
   try {
     const supabase = await createClient();
