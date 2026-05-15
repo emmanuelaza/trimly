@@ -84,6 +84,7 @@ export default function BarberAgendaPage() {
   const [isFetching, setIsFetching] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [detailAppt, setDetailAppt] = useState<Appt | null>(null);
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [nuevaCitaOpen, setNuevaCitaOpen] = useState(false);
   const [, startTransition] = useTransition();
 
@@ -103,6 +104,7 @@ export default function BarberAgendaPage() {
   useEffect(() => { fetchAppts(); }, [fetchAppts]);
 
   const updateStatus = (id: string, status: 'completed' | 'no_show' | 'cancelled') => {
+    setOverrides((prev) => ({ ...prev, [id]: status }));
     setActionId(id);
     startTransition(async () => {
       const action = status === 'completed' ? completeAppointment
@@ -110,7 +112,11 @@ export default function BarberAgendaPage() {
         : cancelAppointment;
       const res = await action(id);
       setActionId(null);
-      if (!res.success) { toast.error('Error al actualizar'); return; }
+      if (!res.success) {
+        setOverrides((prev) => { const n = { ...prev }; delete n[id]; return n; });
+        toast.error('Error al actualizar');
+        return;
+      }
       const labels: Record<string, string> = { completed: 'Cita completada ✓', no_show: 'Marcada como no-show', cancelled: 'Cita cancelada' };
       toast.success(labels[status]);
       setDetailAppt(null);
@@ -206,7 +212,8 @@ export default function BarberAgendaPage() {
                 const timeStr = new Date(appt.scheduled_at).toLocaleTimeString('es-ES', {
                   hour: '2-digit', minute: '2-digit', hour12: false,
                 });
-                const isActionable = appt.status === 'confirmed' || appt.status === 'pending';
+                const status = overrides[appt.id] ?? appt.status;
+                const isActionable = status === 'confirmed' || status === 'pending';
                 return (
                   <div
                     key={appt.id}
@@ -240,8 +247,8 @@ export default function BarberAgendaPage() {
                         <span className="text-sm font-bold text-text-primary">
                           {cop(appt.price_charged ?? appt.servicePrice)}
                         </span>
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${STATUS_COLORS[appt.status] ?? 'bg-text-tertiary'}`}>
-                          {STATUS_LABELS[appt.status] ?? appt.status}
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${STATUS_COLORS[status] ?? 'bg-text-tertiary'}`}>
+                          {STATUS_LABELS[status] ?? status}
                         </span>
                       </div>
                     </div>
@@ -294,10 +301,10 @@ export default function BarberAgendaPage() {
               <div className="flex justify-between"><span className="text-text-tertiary">Servicio</span><span className="font-bold">{detailAppt.serviceName}</span></div>
               <div className="flex justify-between"><span className="text-text-tertiary">Fecha</span><span className="font-bold">{new Date(detailAppt.scheduled_at).toLocaleString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span></div>
               <div className="flex justify-between"><span className="text-text-tertiary">Precio</span><span className="font-bold">{cop(detailAppt.price_charged ?? detailAppt.servicePrice)}</span></div>
-              <div className="flex justify-between"><span className="text-text-tertiary">Estado</span><span className={`font-bold text-white text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[detailAppt.status]}`}>{STATUS_LABELS[detailAppt.status]}</span></div>
+              <div className="flex justify-between"><span className="text-text-tertiary">Estado</span><span className={`font-bold text-white text-xs px-2 py-0.5 rounded-full ${STATUS_COLORS[overrides[detailAppt.id] ?? detailAppt.status]}`}>{STATUS_LABELS[overrides[detailAppt.id] ?? detailAppt.status]}</span></div>
               {detailAppt.notes && <div className="flex justify-between"><span className="text-text-tertiary">Notas</span><span className="italic text-right max-w-[60%]">"{detailAppt.notes}"</span></div>}
             </div>
-            {(detailAppt.status === 'confirmed' || detailAppt.status === 'pending') && (
+            {((overrides[detailAppt.id] ?? detailAppt.status) === 'confirmed' || (overrides[detailAppt.id] ?? detailAppt.status) === 'pending') && (
               <div className="flex gap-2 pt-2 border-t border-border">
                 <button onClick={() => updateStatus(detailAppt.id, 'completed')} disabled={actionId === detailAppt.id} className="flex-1 flex items-center justify-center gap-2 bg-success/10 text-success font-bold py-3 rounded-xl hover:bg-success/20 min-h-[44px] text-sm"><CheckCircle2 size={16} /> Completar</button>
                 <button onClick={() => updateStatus(detailAppt.id, 'no_show')} disabled={actionId === detailAppt.id} className="flex-1 flex items-center justify-center gap-2 bg-background-tertiary text-text-secondary font-bold py-3 rounded-xl hover:bg-danger/10 hover:text-danger min-h-[44px] text-sm"><UserX size={16} /> No apareció</button>

@@ -5,7 +5,6 @@ import { Calendar, CheckCircle2, Clock, Wallet, TrendingUp, UserX } from 'lucide
 import { completeAppointment, markNoShow } from '@/app/actions/barber-dashboard';
 import type { BarberDashData, BarberAppt } from '@/app/actions/barber-dashboard';
 import toast from 'react-hot-toast';
-import { useRouter } from 'next/navigation';
 
 const cop = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(n);
@@ -65,21 +64,24 @@ function KpiCard({ label, value, icon: Icon, accent }: { label: string; value: s
 
 function AppointmentRow({
   appt,
+  statusOverride,
   showActions,
   onComplete,
   onNoShow,
   loading,
 }: {
   appt: BarberAppt;
+  statusOverride?: string;
   showActions: boolean;
   onComplete: (id: string) => void;
   onNoShow: (id: string) => void;
   loading: string | null;
 }) {
+  const status = statusOverride ?? appt.status;
   const timeStr = new Date(appt.scheduled_at).toLocaleTimeString('es-ES', {
     hour: '2-digit', minute: '2-digit', hour12: false,
   });
-  const isConfirmed = appt.status === 'confirmed' || appt.status === 'pending';
+  const isActionable = status === 'confirmed' || status === 'pending';
 
   return (
     <div className="bg-background-secondary border border-border rounded-2xl p-4 flex flex-col gap-3">
@@ -106,15 +108,15 @@ function AppointmentRow({
           <span className="text-sm font-bold text-text-primary">
             {cop(appt.price_charged ?? appt.servicePrice)}
           </span>
-          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${STATUS_COLORS[appt.status] ?? 'bg-text-tertiary'}`}>
+          <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full text-white ${STATUS_COLORS[status] ?? 'bg-text-tertiary'}`}>
             <span className="w-1.5 h-1.5 rounded-full bg-white/60" />
-            {STATUS_LABELS[appt.status] ?? appt.status}
+            {STATUS_LABELS[status] ?? status}
           </span>
         </div>
       </div>
 
       {/* Action buttons */}
-      {showActions && isConfirmed && (
+      {showActions && isActionable && (
         <div className="flex gap-2 pt-1 border-t border-border/50">
           <button
             onClick={() => onComplete(appt.id)}
@@ -138,34 +140,42 @@ function AppointmentRow({
   );
 }
 
-export default function BarberDashboardClient({ data }: { data: BarberDashData }) {
-  const router = useRouter();
+export default function BarberDashboardClient({ data, onRefresh }: { data: BarberDashData; onRefresh: () => void }) {
   const [, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
+  // optimistic status overrides: id → new status
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
+
+  const applyOverride = (id: string, status: string) =>
+    setOverrides((prev) => ({ ...prev, [id]: status }));
 
   const handleComplete = (id: string) => {
+    applyOverride(id, 'completed');
     setActionId(id);
     startTransition(async () => {
       const res = await completeAppointment(id);
       setActionId(null);
       if (res.success) {
         toast.success('Cita completada ✓');
-        router.refresh();
+        onRefresh();
       } else {
+        setOverrides((prev) => { const n = { ...prev }; delete n[id]; return n; });
         toast.error('Error al completar');
       }
     });
   };
 
   const handleNoShow = (id: string) => {
+    applyOverride(id, 'no_show');
     setActionId(id);
     startTransition(async () => {
       const res = await markNoShow(id);
       setActionId(null);
       if (res.success) {
         toast.success('Marcada como no-show');
-        router.refresh();
+        onRefresh();
       } else {
+        setOverrides((prev) => { const n = { ...prev }; delete n[id]; return n; });
         toast.error('Error al actualizar');
       }
     });
@@ -208,6 +218,7 @@ export default function BarberDashboardClient({ data }: { data: BarberDashData }
               <AppointmentRow
                 key={appt.id}
                 appt={appt}
+                statusOverride={overrides[appt.id]}
                 showActions
                 onComplete={handleComplete}
                 onNoShow={handleNoShow}
@@ -249,6 +260,7 @@ export default function BarberDashboardClient({ data }: { data: BarberDashData }
                   <AppointmentRow
                     key={appt.id}
                     appt={appt}
+                    statusOverride={overrides[appt.id]}
                     showActions={false}
                     onComplete={handleComplete}
                     onNoShow={handleNoShow}
