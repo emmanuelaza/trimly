@@ -112,7 +112,13 @@ export default function BarberDashboardPage() {
         </button>
       </div>
 
-      <BarberDashboardClient data={displayData} onRefresh={fetchData} />
+      <BarberDashboardClient
+        data={displayData}
+        onRefresh={fetchData}
+        barberId={session.barberId}
+        barbershopId={session.barbershopId}
+        barberToken={session.token}
+      />
 
       {/* Floating + button (mobile) */}
       <button

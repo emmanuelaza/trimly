@@ -235,6 +235,42 @@ export async function POST(req: Request) {
       console.error('Notification error:', notifErr);
     }
 
+    // 4b. Push notifications
+    try {
+      const admin = getSupabaseAdmin();
+      const [{ data: shop2 }, { data: service2 }, barber2Res] = await Promise.all([
+        admin.from('barbershops').select('name').eq('id', barbershopId).single(),
+        admin.from('services').select('name').eq('id', serviceId).single(),
+        barberId
+          ? admin.from('barbers').select('name').eq('id', barberId).single()
+          : Promise.resolve({ data: { name: 'Sin preferencia' } }),
+      ]);
+      const barber2 = (barber2Res as any).data;
+      const scheduledDate2 = new Date(scheduledAt);
+      const fecha2 = scheduledDate2.toLocaleDateString('es-CO', {
+        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Bogota',
+      });
+      const hora2 = scheduledDate2.toLocaleTimeString('es-CO', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota',
+      });
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
+      if (appUrl) {
+        await fetch(`${appUrl}/api/push/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            barbershopId,
+            barberId: barberId || null,
+            title: `📅 Nueva cita — ${shop2?.name || 'Barbería'}`,
+            body: `${clientName} agendó ${service2?.name || 'Servicio'} con ${barber2?.name || 'Sin preferencia'} el ${fecha2} a las ${hora2}`,
+            tag: 'nueva_cita',
+          }),
+        }).catch((e) => console.error('Push fire error:', e));
+      }
+    } catch (pushErr) {
+      console.error('Push notification error:', pushErr);
+    }
+
     // 5. Schedule post-visit via QStash
     try {
       const { Client } = await import('@upstash/qstash');

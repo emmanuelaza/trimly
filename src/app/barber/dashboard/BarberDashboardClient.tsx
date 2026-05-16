@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition, useState } from 'react';
-import { Calendar, CheckCircle2, Clock, Wallet, TrendingUp, UserX } from 'lucide-react';
+import { useTransition, useState, useEffect } from 'react';
+import { Calendar, CheckCircle2, Clock, Wallet, TrendingUp, UserX, Bell, X } from 'lucide-react';
 import { completeAppointment, markNoShow } from '@/app/actions/barber-dashboard';
 import type { BarberDashData, BarberAppt } from '@/app/actions/barber-dashboard';
 import toast from 'react-hot-toast';
@@ -140,7 +140,121 @@ function AppointmentRow({
   );
 }
 
-export default function BarberDashboardClient({ data, onRefresh }: { data: BarberDashData; onRefresh: () => void }) {
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+function BarberPushBanner({
+  barberId,
+  barbershopId,
+  barberToken,
+}: {
+  barberId: string;
+  barbershopId: string;
+  barberToken: string;
+}) {
+  const [show, setShow] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+    if (Notification.permission !== 'default') return;
+    const dismissed = localStorage.getItem(`push_banner_barber_${barberId}`);
+    if (!dismissed) setShow(true);
+  }, [barberId]);
+
+  if (!show) return null;
+
+  async function activate() {
+    setLoading(true);
+    try {
+      const reg = await navigator.serviceWorker.register('/sw.js');
+      await navigator.serviceWorker.ready;
+
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setShow(false);
+        return;
+      }
+
+      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+      if (!vapidKey) return;
+
+      const sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(vapidKey),
+      });
+
+      const subJson = sub.toJSON();
+      await fetch('/api/push/barber-subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          barberId,
+          barbershopId,
+          token: barberToken,
+          endpoint: subJson.endpoint,
+          keys_p256dh: subJson.keys?.p256dh,
+          keys_auth: subJson.keys?.auth,
+        }),
+      });
+
+      localStorage.setItem(`push_banner_barber_${barberId}`, '1');
+      setShow(false);
+      toast.success('¡Notificaciones activadas! 🔔');
+    } catch (err) {
+      console.error('Push barber error:', err);
+      toast.error('No se pudieron activar las notificaciones');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function dismiss() {
+    localStorage.setItem(`push_banner_barber_${barberId}`, '1');
+    setShow(false);
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3 mb-2 bg-accent/8 border border-accent/20 rounded-xl">
+      <div className="flex items-center gap-3 min-w-0">
+        <Bell size={17} className="text-accent shrink-0" />
+        <p className="text-sm text-text-primary font-medium leading-tight">
+          Activa las notificaciones para saber cuándo tienes una cita nueva
+        </p>
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        <button
+          onClick={activate}
+          disabled={loading}
+          className="px-3 py-1.5 bg-accent text-white text-xs font-bold rounded-lg hover:bg-accent/90 disabled:opacity-50 transition-colors min-h-[36px]"
+        >
+          {loading ? 'Activando...' : 'Activar'}
+        </button>
+        <button onClick={dismiss} className="p-1 text-text-tertiary hover:text-text-secondary rounded">
+          <X size={15} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function BarberDashboardClient({
+  data,
+  onRefresh,
+  barberId,
+  barbershopId,
+  barberToken,
+}: {
+  data: BarberDashData;
+  onRefresh: () => void;
+  barberId?: string;
+  barbershopId?: string;
+  barberToken?: string;
+}) {
   const [, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
   // optimistic status overrides: id → new status
@@ -185,6 +299,13 @@ export default function BarberDashboardClient({ data, onRefresh }: { data: Barbe
 
   return (
     <div className="space-y-8">
+      {barberId && barbershopId && barberToken && (
+        <BarberPushBanner
+          barberId={barberId}
+          barbershopId={barbershopId}
+          barberToken={barberToken}
+        />
+      )}
       {/* 4 KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KpiCard label="Citas hoy"       value={String(data.stats.citasHoy)}        icon={Calendar}      />
