@@ -39,8 +39,9 @@ export async function POST(req: Request) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const webpush = require('web-push');
+    const vapidSubject = process.env.VAPID_SUBJECT!;
     webpush.setVapidDetails(
-      process.env.VAPID_SUBJECT!,
+      vapidSubject.startsWith('mailto:') || vapidSubject.startsWith('https://') ? vapidSubject : `mailto:${vapidSubject}`,
       process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
       process.env.VAPID_PRIVATE_KEY!,
     );

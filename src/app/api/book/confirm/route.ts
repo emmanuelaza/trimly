@@ -235,37 +235,81 @@ export async function POST(req: Request) {
       console.error('Notification error:', notifErr);
     }
 
-    // 4b. Push notifications
+    // 4b. Push notifications (direct, no HTTP hop)
     try {
-      const admin = getSupabaseAdmin();
-      const [{ data: shop2 }, { data: service2 }, barber2Res] = await Promise.all([
-        admin.from('barbershops').select('name').eq('id', barbershopId).single(),
-        admin.from('services').select('name').eq('id', serviceId).single(),
-        barberId
-          ? admin.from('barbers').select('name').eq('id', barberId).single()
-          : Promise.resolve({ data: { name: 'Sin preferencia' } }),
-      ]);
-      const barber2 = (barber2Res as any).data;
-      const scheduledDate2 = new Date(scheduledAt);
-      const fecha2 = scheduledDate2.toLocaleDateString('es-CO', {
-        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Bogota',
-      });
-      const hora2 = scheduledDate2.toLocaleTimeString('es-CO', {
-        hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota',
-      });
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || '';
-      if (appUrl) {
-        await fetch(`${appUrl}/api/push/send`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            barbershopId,
-            barberId: barberId || null,
-            title: `📅 Nueva cita — ${shop2?.name || 'Barbería'}`,
-            body: `${clientName} agendó ${service2?.name || 'Servicio'} con ${barber2?.name || 'Sin preferencia'} el ${fecha2} a las ${hora2}`,
-            tag: 'nueva_cita',
-          }),
-        }).catch((e) => console.error('Push fire error:', e));
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const webpush = require('web-push');
+      if (process.env.VAPID_SUBJECT && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {
+        const vapidSubject = process.env.VAPID_SUBJECT!;
+        webpush.setVapidDetails(
+          vapidSubject.startsWith('mailto:') || vapidSubject.startsWith('https://') ? vapidSubject : `mailto:${vapidSubject}`,
+          process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+          process.env.VAPID_PRIVATE_KEY!,
+        );
+
+        const adminPush = getSupabaseAdmin();
+        const [{ data: shopP }, { data: serviceP }, barberPRes] = await Promise.all([
+          adminPush.from('barbershops').select('name').eq('id', barbershopId).single(),
+          adminPush.from('services').select('name').eq('id', serviceId).single(),
+          barberId
+            ? adminPush.from('barbers').select('name').eq('id', barberId).single()
+            : Promise.resolve({ data: { name: 'Sin preferencia' } }),
+        ]);
+        const barberP = (barberPRes as any).data;
+        const scheduledDateP = new Date(scheduledAt);
+        const fechaP = scheduledDateP.toLocaleDateString('es-CO', {
+          weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/Bogota',
+        });
+        const horaP = scheduledDateP.toLocaleTimeString('es-CO', {
+          hour: '2-digit', minute: '2-digit', timeZone: 'America/Bogota',
+        });
+        const pushTitle = `📅 Nueva cita — ${shopP?.name || 'Barbería'}`;
+        const pushBody = `${clientName} agendó ${serviceP?.name || 'Servicio'} con ${barberP?.name || 'Sin preferencia'} el ${fechaP} a las ${horaP}`;
+
+        // Owner subs (barbershop-level, exclude the booked barber)
+        const ownerQ = adminPush
+          .from('push_subscriptions')
+          .select('endpoint, keys_p256dh, keys_auth')
+          .eq('barbershop_id', barbershopId)
+          .eq('notif_nueva_cita', true);
+        if (barberId) ownerQ.neq('user_id', barberId);
+        const { data: ownerSubs } = await ownerQ;
+
+        // Barber subs
+        let barberSubs: { endpoint: string; keys_p256dh: string; keys_auth: string }[] = [];
+        if (barberId) {
+          const { data: bSubs } = await adminPush
+            .from('push_subscriptions')
+            .select('endpoint, keys_p256dh, keys_auth')
+            .eq('user_id', barberId)
+            .eq('notif_nueva_cita', true);
+          barberSubs = bSubs || [];
+        }
+
+        const firePush = async (
+          subs: { endpoint: string; keys_p256dh: string; keys_auth: string }[],
+          url: string,
+        ) => {
+          await Promise.allSettled(
+            subs.map(async (sub) => {
+              try {
+                await webpush.sendNotification(
+                  { endpoint: sub.endpoint, keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth } },
+                  JSON.stringify({ title: pushTitle, body: pushBody, url, tag: 'nueva_cita' }),
+                );
+              } catch (err: any) {
+                if (err.statusCode === 410 || err.statusCode === 404) {
+                  await adminPush.from('push_subscriptions').delete().eq('endpoint', sub.endpoint);
+                }
+              }
+            }),
+          );
+        };
+
+        await Promise.all([
+          firePush(ownerSubs || [], '/dashboard/agenda'),
+          firePush(barberSubs, '/barber/dashboard'),
+        ]);
       }
     } catch (pushErr) {
       console.error('Push notification error:', pushErr);
