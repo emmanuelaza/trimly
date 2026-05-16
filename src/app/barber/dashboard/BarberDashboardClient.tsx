@@ -147,6 +147,39 @@ function urlBase64ToUint8Array(base64String: string) {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+async function savePushSubscription(
+  barberId: string,
+  barbershopId: string,
+  barberToken: string,
+  reg: ServiceWorkerRegistration,
+): Promise<void> {
+  const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+  if (!vapidKey) throw new Error('VAPID key missing');
+
+  let sub = await reg.pushManager.getSubscription();
+  if (!sub) {
+    sub = await reg.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(vapidKey),
+    });
+  }
+
+  const subJson = sub.toJSON();
+  const res = await fetch('/api/push/barber-subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      barberId,
+      barbershopId,
+      token: barberToken,
+      endpoint: subJson.endpoint,
+      keys_p256dh: subJson.keys?.p256dh,
+      keys_auth: subJson.keys?.auth,
+    }),
+  });
+  if (!res.ok) throw new Error('Subscribe API error');
+}
+
 function BarberPushBanner({
   barberId,
   barbershopId,
@@ -161,50 +194,41 @@ function BarberPushBanner({
 
   useEffect(() => {
     if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
-    if (Notification.permission !== 'default') return;
-    const dismissed = localStorage.getItem(`push_banner_barber_${barberId}`);
-    if (!dismissed) setShow(true);
-  }, [barberId]);
+
+    if (Notification.permission === 'granted') {
+      // Re-sync on every load: ensures subscription is saved even if it was lost
+      navigator.serviceWorker.register('/sw.js').then(() =>
+        navigator.serviceWorker.ready.then((reg) =>
+          savePushSubscription(barberId, barbershopId, barberToken, reg)
+        )
+      ).catch((e) => console.error('Push re-sync error:', e));
+      return;
+    }
+
+    if (Notification.permission === 'default') {
+      const dismissed = localStorage.getItem(`push_dismissed_barber_${barberId}`);
+      if (!dismissed) setShow(true);
+    }
+  }, [barberId, barbershopId, barberToken]);
 
   if (!show) return null;
 
   async function activate() {
     setLoading(true);
     try {
-      const reg = await navigator.serviceWorker.register('/sw.js');
-      await navigator.serviceWorker.ready;
+      await navigator.serviceWorker.register('/sw.js');
+      const reg = await navigator.serviceWorker.ready;
 
       const permission = await Notification.requestPermission();
       if (permission !== 'granted') {
         setShow(false);
+        localStorage.setItem(`push_dismissed_barber_${barberId}`, '1');
         return;
       }
 
-      const vapidKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
-      if (!vapidKey) return;
-
-      const sub = await reg.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(vapidKey),
-      });
-
-      const subJson = sub.toJSON();
-      await fetch('/api/push/barber-subscribe', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          barberId,
-          barbershopId,
-          token: barberToken,
-          endpoint: subJson.endpoint,
-          keys_p256dh: subJson.keys?.p256dh,
-          keys_auth: subJson.keys?.auth,
-        }),
-      });
-
-      localStorage.setItem(`push_banner_barber_${barberId}`, '1');
+      await savePushSubscription(barberId, barbershopId, barberToken, reg);
       setShow(false);
-      toast.success('¡Notificaciones activadas! 🔔');
+      toast.success('¡Notificaciones activadas!');
     } catch (err) {
       console.error('Push barber error:', err);
       toast.error('No se pudieron activar las notificaciones');
@@ -214,7 +238,7 @@ function BarberPushBanner({
   }
 
   function dismiss() {
-    localStorage.setItem(`push_banner_barber_${barberId}`, '1');
+    localStorage.setItem(`push_dismissed_barber_${barberId}`, '1');
     setShow(false);
   }
 

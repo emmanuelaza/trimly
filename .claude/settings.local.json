@@ -23,7 +23,8 @@
       "Bash(sed -n '140,155p' c:/trimly/src/app/actions/barber-dashboard.ts)",
       "Bash(sed -n '230,240p' c:/trimly/src/app/actions/barber-dashboard.ts)",
       "Bash(echo \"exit:$?\")",
-      "Bash(node -e \"require\\('web-push'\\)\")"
+      "Bash(node -e \"require\\('web-push'\\)\")",
+      "Bash(grep -l \"push_subscriptions\" c:\\\\\\\\trimly\\\\\\\\supabase\\\\\\\\migrations\\\\\\\\*.sql)"
     ]
   }
 }

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid token' }, { status: 401 });
     }
 
-    await supabase.from('push_subscriptions').upsert(
+    const { error: upsertErr } = await supabase.from('push_subscriptions').upsert(
       {
         user_id: barberId,
         barbershop_id: barbershopId,
@@ -38,6 +38,11 @@ export async function POST(req: Request) {
       },
       { onConflict: 'user_id,endpoint' },
     );
+
+    if (upsertErr) {
+      console.error('Push subscription upsert error:', upsertErr);
+      return NextResponse.json({ error: upsertErr.message }, { status: 500 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err: any) {
