@@ -61,6 +61,8 @@ function mapAppt(a: any): BarberAppt {
 export async function getBarberDashboardDataByToken(
   barberId: string,
   token: string,
+  clientTodayStart?: string,
+  clientTodayEnd?: string,
 ): Promise<BarberDashData | null> {
   const supabase = getSupabaseAdmin();
 
@@ -90,13 +92,13 @@ export async function getBarberDashboardDataByToken(
     .maybeSingle();
 
   const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
-  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+  const todayStart = clientTodayStart ?? new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+  const todayEnd = clientTodayEnd ?? new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
   const mesStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const en7dias = new Date(now);
+  const en7dias = new Date(clientTodayEnd ? new Date(clientTodayEnd) : now);
   en7dias.setDate(en7dias.getDate() + 7);
   en7dias.setHours(23, 59, 59, 999);
-  const mananaStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).toISOString();
+  const mananaStart = new Date(new Date(todayEnd).getTime() + 1).toISOString();
 
   const [
     { data: citasHoyRaw },

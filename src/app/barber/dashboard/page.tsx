@@ -18,7 +18,10 @@ export default function BarberDashboardPage() {
     if (!session) return;
     setIsFetching(true);
     import('@/app/actions/barber-dashboard').then(async (actions) => {
-      const result = await actions.getBarberDashboardDataByToken(session.barberId, session.token);
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).toISOString();
+      const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).toISOString();
+      const result = await actions.getBarberDashboardDataByToken(session.barberId, session.token, todayStart, todayEnd);
       setData(result);
       setIsFetching(false);
     });
