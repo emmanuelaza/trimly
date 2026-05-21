@@ -92,14 +92,18 @@ export function usePlan() {
         .maybeSingle()
 
       if (bs) {
-        const planType = (bs.plan || 'basic') as PlanType
-        const isTrial =
-          bs.subscription_status === 'trialing' ||
-          bs.subscription_status === 'trial'
-        const effectivePlan: PlanType = isTrial ? 'pro' : planType
-        setPlan(planType)
+        const effectivePlan =
+          bs.subscription_status === 'trialing'
+            ? 'pro'
+            : (bs.plan as PlanType) || 'basic'
+        setPlan(effectivePlan)
         setStatus(bs.subscription_status as PlanStatus)
         setFeatures(PLAN_FEATURES[effectivePlan])
+
+        console.log('Plan:', bs.plan)
+        console.log('Status:', bs.subscription_status)
+        console.log('Effective:', effectivePlan)
+        console.log('Features:', PLAN_FEATURES[effectivePlan])
       }
       setLoading(false)
     }
