@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
+import { TrialBanner } from '@/components/ui/TrialBanner'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
@@ -298,22 +299,7 @@ export function DashboardLayoutClient({
         )}
       >
         {/* TRIAL BANNER */}
-        {isTrial && (
-          <div className="bg-primary/10 border-b border-primary/20 px-4 py-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              <p className="text-xs font-bold text-primary uppercase tracking-wider">
-                Prueba gratuita · Quedan {trialDaysLeft} días
-              </p>
-            </div>
-            <Link
-              href="/dashboard/billing"
-              className="text-[10px] font-black bg-primary text-text-inverse px-3 py-1 rounded-full hover:scale-105 transition-all"
-            >
-              VER PLANES
-            </Link>
-          </div>
-        )}
+        <TrialBanner />
 
         {/* TOPBAR */}
         <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-border bg-background-2 sticky top-0 z-20">

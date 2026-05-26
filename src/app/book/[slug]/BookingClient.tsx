@@ -665,7 +665,7 @@ export default function BookingClient({ barbershop, services, barbers, confirmat
       {/* Fixed Footer for Back Button */}
       {step > 1 && !finished && (
         <div className="fixed bottom-0 left-0 w-full p-8 bg-background-primary/80 backdrop-blur-md border-t border-border flex justify-center z-40">
-          <button 
+          <button
             onClick={handleBack}
             className="flex items-center gap-2 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors tracking-widest"
           >
@@ -673,6 +673,20 @@ export default function BookingClient({ barbershop, services, barbers, confirmat
           </button>
         </div>
       )}
+
+      {/* Trimly badge */}
+      <div className="flex justify-center pb-6 pt-2">
+        <a
+          href="https://trimlyapp-phi.vercel.app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 text-xs text-text-muted hover:text-primary transition-colors"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-icon.png" className="w-4 h-4" alt="Trimly" />
+          Sistema certificado por Trimly
+        </a>
+      </div>
     </div>
   );
 }

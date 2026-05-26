@@ -93,34 +93,52 @@ const TESTIMONIALS = [
   },
 ];
 
-const PLANS = [
+const WA = '573016315482';
+const MSG_BASICO = encodeURIComponent(
+  'Hola Emmanuel, quiero activar la Licencia Básica de Trimly por $499.000'
+);
+const MSG_PRO = encodeURIComponent(
+  'Hola Emmanuel, quiero activar la Licencia Pro de Trimly por $999.999'
+);
+
+const LICENSES = [
   {
-    id: 'basico',
-    name: 'BÁSICO',
-    tagline: 'Para barberías que están comenzando.',
-    price: '$29.900',
-    period: '/mes',
-    features: ['Agenda online', '1 barbero', 'Recordatorios básicos', 'Reportes básicos', 'Soporte por WhatsApp'],
+    id: 'basic',
+    name: 'LICENCIA BÁSICA',
+    tagline: 'Para barberías que están empezando',
+    price: '$499.000',
+    msg: MSG_BASICO,
+    features: [
+      '1 barbero incluido',
+      'Agenda online 24/7',
+      'Link de reservas personalizado',
+      'Confirmación y recordatorio automático',
+      'Hasta 100 citas por mes',
+      'Licencia de por vida',
+      'Garantía de 7 días',
+    ],
     popular: false,
   },
   {
     id: 'pro',
-    name: 'PRO',
+    name: 'LICENCIA PRO',
     badge: 'Más popular',
-    tagline: 'Para barberías que quieren crecer.',
-    price: '$79.900',
-    period: '/mes',
-    features: ['Todo lo del plan Básico', 'Barberos ilimitados', 'Recordatorios avanzados', 'Productos y stock', 'Cupones y descuentos', 'Reportes avanzados'],
+    tagline: 'Para barberías serias sin límites',
+    price: '$999.999',
+    msg: MSG_PRO,
+    features: [
+      'Barberos ilimitados',
+      'Todo lo de la licencia básica',
+      'Citas ilimitadas',
+      'Nómina y comisiones',
+      'Todas las automatizaciones',
+      'Reportes y métricas avanzadas',
+      'Cupones y referidos',
+      'Soporte prioritario',
+      'Funciones futuras incluidas',
+      'Garantía de 7 días',
+    ],
     popular: true,
-  },
-  {
-    id: 'lifetime',
-    name: 'LIFETIME',
-    tagline: 'Paga una vez y úsalo para siempre.',
-    price: '$559.000',
-    period: 'pago único',
-    features: ['Todo lo del plan Pro', 'Todas las funciones futuras', 'Sin pagos mensuales', 'Transferible'],
-    popular: false,
   },
 ];
 
@@ -487,28 +505,45 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
-              Planes simples y transparentes
+              Una sola vez. Para siempre.
             </h2>
+            <p className="text-text-muted mt-3 max-w-xl mx-auto">
+              Sin mensualidades. Sin sorpresas. Pagas una vez y Trimly es tuyo de por vida.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-            {PLANS.map((plan) => (
-              <div key={plan.id} className={cn('rounded-2xl p-7 flex flex-col gap-5', plan.popular ? 'bg-white border-2 border-primary shadow-lg shadow-primary/10' : 'bg-white border border-border')}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start max-w-3xl mx-auto">
+            {LICENSES.map((lic) => (
+              <div
+                key={lic.id}
+                className={cn(
+                  'rounded-2xl p-7 flex flex-col gap-5 relative',
+                  lic.popular
+                    ? 'bg-white border-2 border-primary shadow-lg shadow-primary/10'
+                    : 'bg-white border border-border'
+                )}
+              >
+                {lic.badge && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-bold px-4 py-1 rounded-full whitespace-nowrap">
+                    {lic.badge}
+                  </span>
+                )}
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-black text-text-muted uppercase tracking-widest">{plan.name}</span>
-                    {plan.badge && <span className="bg-primary text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{plan.badge}</span>}
-                  </div>
-                  <p className="text-xs text-text-muted">{plan.tagline}</p>
+                  <span className="text-xs font-black text-text-muted uppercase tracking-widest">
+                    {lic.name}
+                  </span>
+                  <p className="text-xs text-text-muted mt-0.5">{lic.tagline}</p>
                 </div>
 
                 <div>
-                  <span className="text-3xl font-display font-bold text-text-primary">{plan.price}</span>
-                  <span className="text-sm text-text-muted ml-1">{plan.period}</span>
+                  <span className={cn('text-3xl font-display font-bold', lic.popular ? 'text-primary' : 'text-text-primary')}>
+                    {lic.price}
+                  </span>
+                  <span className="text-sm text-text-muted ml-1">único pago</span>
                 </div>
 
                 <ul className="space-y-2.5 flex-1">
-                  {plan.features.map((f) => (
+                  {lic.features.map((f) => (
                     <li key={f} className="flex items-center gap-2.5 text-sm text-text-secondary">
                       <Check size={14} className="text-primary flex-shrink-0" />
                       {f}
@@ -516,8 +551,22 @@ export default function LandingPage() {
                   ))}
                 </ul>
 
-                <Link href="/registro" className={cn('flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all', plan.popular ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-glow' : 'bg-background-tertiary text-text-primary hover:bg-background-4 border border-border')}>
-                  Regístrate gratis
+                <a
+                  href={`https://wa.me/${WA}?text=${lic.msg}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    'flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-bold transition-all',
+                    lic.popular
+                      ? 'bg-primary text-white hover:bg-primary-dark shadow-sm hover:shadow-glow'
+                      : 'bg-background-tertiary text-text-primary hover:bg-background-4 border border-border'
+                  )}
+                >
+                  Activar por WhatsApp
+                </a>
+
+                <Link href="/registro" className="text-center text-xs text-text-muted hover:text-primary transition-colors">
+                  Probar gratis 3 días →
                 </Link>
               </div>
             ))}
@@ -526,9 +575,9 @@ export default function LandingPage() {
           {/* Trust badges */}
           <div className="flex flex-wrap justify-center gap-8 mt-10">
             {[
-              { Icon: CreditCard, text: 'Sin tarjeta de crédito',       sub: 'No te pediremos tarjeta' },
-              { Icon: Shield,     text: 'Prueba gratis',                 sub: 'Con el plan Básico' },
-              { Icon: Ban,        text: 'Cancela cuando quieras',        sub: 'Sin permanencias' },
+              { Icon: CreditCard, text: 'Pago único sin mensualidades', sub: 'Pagas una vez, es tuyo para siempre' },
+              { Icon: Shield,     text: 'Garantía de 7 días',           sub: 'Si no estás satisfecho, te devolvemos' },
+              { Icon: Ban,        text: 'Soporte en español',            sub: 'Configuración asistida incluida' },
             ].map(({ Icon, text, sub }) => (
               <div key={text} className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary-bg flex items-center justify-center flex-shrink-0">

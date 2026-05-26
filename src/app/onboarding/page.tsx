@@ -164,6 +164,21 @@ export default function OnboardingPage() {
           </div>
           {copied && <p className="text-xs text-accent font-bold -mt-4">✓ Link copiado</p>}
 
+          <div className="bg-primary/8 border border-primary/20 rounded-xl p-5 text-center">
+            <p className="font-semibold text-text-primary">🎁 Tu configuración asistida incluida</p>
+            <p className="text-sm text-text-muted mt-1">
+              Escríbenos por WhatsApp y te ayudamos a configurar todo en menos de 10 minutos.
+            </p>
+            <a
+              href={`https://wa.me/573016315482?text=${encodeURIComponent('Hola Emmanuel, acabo de registrarme en Trimly y quiero ayuda con la configuración')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-3 px-4 py-2 bg-[#25D366] text-white text-sm font-semibold rounded-lg"
+            >
+              Solicitar configuración asistida 💬
+            </a>
+          </div>
+
           <div className="flex flex-col gap-3">
             <Button variant="secondary" className="w-full" onClick={() => window.open(`https://${bookingUrl}`, '_blank')}>
               <ExternalLink size={16} /> Ver mi página pública
