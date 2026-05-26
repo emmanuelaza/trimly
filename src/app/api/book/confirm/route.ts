@@ -315,6 +315,41 @@ export async function POST(req: Request) {
       console.error('Push notification error:', pushErr);
     }
 
+    // 4c. OneSignal push notification
+    try {
+      const scheduledDateOS = new Date(scheduledAt);
+      const fechaOS = scheduledDateOS.toLocaleDateString('es-CO', {
+        weekday: 'long', day: 'numeric', month: 'long',
+        timeZone: 'America/Bogota',
+      });
+      const horaOS = scheduledDateOS.toLocaleTimeString('es-CO', {
+        hour: '2-digit', minute: '2-digit',
+        timeZone: 'America/Bogota',
+      });
+
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app';
+
+      const { data: shopOS } = await getSupabaseAdmin()
+        .from('barbershops')
+        .select('owner_id')
+        .eq('id', barbershopId)
+        .single();
+
+      await fetch(`${appUrl}/api/push/onesignal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerUserId: shopOS?.owner_id,
+          barberUserId: barberId || null,
+          title: '📅 Nueva cita agendada',
+          body: `${clientName} agendó el ${fechaOS} a las ${horaOS}`,
+          url: '/dashboard/agenda',
+        }),
+      });
+    } catch (osErr) {
+      console.error('OneSignal notify error:', osErr);
+    }
+
     // 5. Schedule post-visit via QStash
     try {
       const { Client } = await import('@upstash/qstash');

@@ -34,6 +34,33 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${plusJakartaSans.variable} ${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        <script
+          src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js"
+          defer
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              window.OneSignalDeferred = window.OneSignalDeferred || [];
+              OneSignalDeferred.push(async function(OneSignal) {
+                await OneSignal.init({
+                  appId: "b2d99d08-461f-42cd-ab77-46cd1ce60963",
+                  notifyButton: { enable: false },
+                  promptOptions: {
+                    slidedown: {
+                      prompts: [{
+                        type: "push",
+                        autoPrompt: false,
+                      }]
+                    }
+                  }
+                });
+              });
+            `
+          }}
+        />
+      </head>
       <body className="bg-background-primary text-text-primary selection:bg-accent/15 transition-colors duration-300">
         <ToasterProvider />
         {children}

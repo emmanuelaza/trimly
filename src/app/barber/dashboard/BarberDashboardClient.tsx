@@ -281,8 +281,17 @@ export default function BarberDashboardClient({
 }) {
   const [, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
-  // optimistic status overrides: id → new status
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+
+  // Identify barber in OneSignal when they already have push permission
+  useEffect(() => {
+    if (!barberId || typeof window === 'undefined') return
+    const OneSignal = (window as any).OneSignal
+    if (!OneSignal) return
+    OneSignal.login(barberId)
+    OneSignal.User.addTag('role', 'barber')
+    if (barbershopId) OneSignal.User.addTag('barbershop_id', barbershopId)
+  }, [barberId, barbershopId])
 
   const applyOverride = (id: string, status: string) =>
     setOverrides((prev) => ({ ...prev, [id]: status }));

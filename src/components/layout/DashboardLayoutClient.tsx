@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils'
 import { MiloPanel } from '@/components/milo/MiloPanel'
 import { TrialBanner } from '@/components/ui/TrialBanner'
+import { PushBanner } from '@/components/notifications/PushBanner'
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo'
 import miloImg from '@/assets/milo.png'
 
@@ -300,6 +301,8 @@ export function DashboardLayoutClient({
       >
         {/* TRIAL BANNER */}
         <TrialBanner />
+        {/* PUSH NOTIFICATIONS BANNER */}
+        {userId && <PushBanner userId={userId} />}
 
         {/* TOPBAR */}
         <header className="h-14 flex-shrink-0 flex items-center justify-between px-4 md:px-6 border-b border-border bg-background-2 sticky top-0 z-20">
