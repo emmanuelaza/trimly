@@ -321,7 +321,7 @@ export default function LandingPage() {
             <Link href="/login" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">
               Iniciar sesión
             </Link>
-            <Link href="/registro" className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-all shadow-sm hover:shadow-glow">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-dark transition-all shadow-sm hover:shadow-glow">
               Regístrate gratis
             </Link>
           </div>
@@ -342,7 +342,7 @@ export default function LandingPage() {
               <Link href="/login" className="block text-center py-2.5 text-sm font-medium text-text-secondary hover:text-primary transition-colors">
                 Iniciar sesión
               </Link>
-              <Link href="/registro" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 bg-primary text-white text-sm font-bold py-3 rounded-xl hover:bg-primary-dark transition-all">
+              <Link href="/register" onClick={() => setMobileOpen(false)} className="flex items-center justify-center gap-2 bg-primary text-white text-sm font-bold py-3 rounded-xl hover:bg-primary-dark transition-all">
                 Regístrate gratis <ArrowRight size={16} />
               </Link>
             </div>
@@ -369,7 +369,7 @@ export default function LandingPage() {
           Tus clientes reservan solos, reciben recordatorios automáticos y tú solo llegas a cortar.
         </p>
 
-        <Link href="/registro" className="inline-flex items-center gap-2.5 bg-primary text-white text-base font-bold px-8 py-4 rounded-xl hover:bg-primary-dark transition-all shadow-md hover:shadow-glow">
+        <Link href="/register" className="inline-flex items-center gap-2.5 bg-primary text-white text-base font-bold px-8 py-4 rounded-xl hover:bg-primary-dark transition-all shadow-md hover:shadow-glow">
           Regístrate gratis <Rocket size={18} />
         </Link>
 
@@ -565,7 +565,7 @@ export default function LandingPage() {
                   Activar por WhatsApp
                 </a>
 
-                <Link href="/registro" className="text-center text-xs text-text-muted hover:text-primary transition-colors">
+                <Link href="/register" className="text-center text-xs text-text-muted hover:text-primary transition-colors">
                   Probar gratis 3 días →
                 </Link>
               </div>
@@ -614,7 +614,7 @@ export default function LandingPage() {
             <p className="text-primary-light text-sm">Empieza hoy gratis. Sin riesgos. Sin tarjeta.</p>
           </div>
           <div className="flex flex-col items-center gap-2 flex-shrink-0">
-            <Link href="/registro" className="inline-flex items-center gap-2 bg-white text-primary text-sm font-bold px-8 py-4 rounded-xl hover:bg-primary-bg transition-all shadow-md">
+            <Link href="/register" className="inline-flex items-center gap-2 bg-white text-primary text-sm font-bold px-8 py-4 rounded-xl hover:bg-primary-bg transition-all shadow-md">
               Regístrate gratis <ArrowRight size={16} />
             </Link>
             <p className="text-primary-light text-xs">En 2 minutos estás listo</p>

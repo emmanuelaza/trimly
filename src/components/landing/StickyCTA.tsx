@@ -18,7 +18,7 @@ export function StickyCTA() {
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden px-4 pb-4 pt-2 bg-gradient-to-t from-background-primary via-background-primary/95 to-transparent">
       <Link
-        href="/registro"
+        href="/register"
         className="flex items-center justify-center gap-2 w-full py-4 rounded-xl bg-primary text-background-primary font-bold text-sm tracking-wide shadow-glow"
       >
         Empieza gratis hoy <ArrowRight size={16} />
