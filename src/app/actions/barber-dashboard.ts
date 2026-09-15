@@ -1,6 +1,7 @@
 "use server";
 
 import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
+import { requireActiveLicense } from "./utils";
 
 export interface BarberAppt {
   id: string;
@@ -391,6 +392,9 @@ export async function createBarberAppointment(
     durationMinutes: number;
   },
 ) {
+  const license = await requireActiveLicense(barbershopId);
+  if (!license.ok) return { success: false as const, error: license.error };
+
   const supabase = getSupabaseAdmin();
   const { data: tokenValid } = await supabase
     .from("barber_tokens")
