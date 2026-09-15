@@ -558,9 +558,9 @@ const miloFlow: Record<string, MiloNode> = {
   },
   reportes_metricas: {
     id: 'reportes_metricas',
-    message: "📈 *Métricas* es una sección exclusiva del plan *Filo Pro*\n\nOfrece estadísticas avanzadas e inteligentes como:\n📊 Tendencias de crecimiento\n🔔 Alertas cuando algo baja\n⭐ Tu barbero más productivo\n💡 Sugerencias de mejora basadas en tus datos\n\nSi estás en plan Básico ve a *Mis planes* para conocer el Filo Pro.",
+    message: "📈 *Métricas* ofrece estadísticas avanzadas e inteligentes como:\n📊 Tendencias de crecimiento\n🔔 Alertas cuando algo baja\n⭐ Tu barbero más productivo\n💡 Sugerencias de mejora basadas en tus datos\n\nEstá incluida en tu Licencia Trimly.",
     options: [
-      { label: "¿Qué incluye el plan Filo Pro?", nextNode: 'plan_pro' },
+      { label: "¿Qué incluye la Licencia Trimly?", nextNode: 'plan_licencia' },
       { label: "Tengo otra duda sobre reportes", nextNode: 'reportes_inicio' },
       { label: "Ya entendí ✓", nextNode: 'final_gracias' },
     ]
@@ -707,11 +707,9 @@ const miloFlow: Record<string, MiloNode> = {
   },
   config_planes: {
     id: 'config_planes',
-    message: "Para ver tu plan actual y las opciones disponibles:\n\n1️⃣ Ve a *Configuración*\n2️⃣ Toca la pestaña *'Mis planes'*\n\nAhí ves:\n📦 Tu plan actual con sus beneficios\n⚡ Los tres planes disponibles: Básico, Filo Pro y Lifetime\n🔼 El botón para mejorar tu plan\n\nPara activar o cambiar un plan escríbenos y te ayudamos en menos de 24h.",
+    message: "Para ver el estado de tu licencia:\n\n1️⃣ Ve a *Configuración*\n2️⃣ Toca la pestaña *'Mis planes'*\n\nAhí ves:\n📦 Tu licencia actual y sus beneficios\n🔼 El botón para activarla\n\nPara activar tu licencia escríbenos y te ayudamos en menos de 24h.",
     options: [
-      { label: "¿Qué incluye el plan Básico?", nextNode: 'plan_basico' },
-      { label: "¿Qué incluye el Filo Pro?", nextNode: 'plan_pro' },
-      { label: "¿Qué es el plan Lifetime?", nextNode: 'plan_lifetime' },
+      { label: "¿Qué incluye la Licencia Trimly?", nextNode: 'plan_licencia' },
       { label: "Tengo otra duda sobre configuración", nextNode: 'config_inicio' },
     ]
   },
@@ -726,38 +724,19 @@ const miloFlow: Record<string, MiloNode> = {
   },
 
   // ─── PLANES ────────────────────────────────────────────────────────────────
-  plan_basico: {
-    id: 'plan_basico',
-    message: "📦 *Plan Básico — $29.900/mes*\n\n✅ 1 barbero incluido\n✅ Agenda online activa 24/7\n✅ Link de reservas personalizado\n✅ Recordatorios automáticos\n✅ Hasta 100 citas por mes\n\nPerfecto para empezar a digitalizar tu barbería.",
+  plan_licencia: {
+    id: 'plan_licencia',
+    message: "🔥 *Licencia Trimly — $399.000 pago único*\n\n✅ Barberos ilimitados\n✅ Citas ilimitadas\n✅ Agenda online 24/7\n✅ Link de reservas personalizado\n✅ Reportes y métricas avanzadas\n✅ Automatizaciones completas\n✅ Nómina y comisiones\n✅ Soporte prioritario\n\nPagas una sola vez y es tuya de por vida. Sin mensualidades, sin renovaciones, sin sorpresas. Incluye todas las funciones nuevas que se agreguen en el futuro 💡",
     options: [
-      { label: "¿Qué incluye el Filo Pro?", nextNode: 'plan_pro' },
-      { label: "¿Cómo cambio de plan?", nextNode: 'config_planes' },
-      { label: "Ya entendí ✓", nextNode: 'final_gracias' },
-    ]
-  },
-  plan_pro: {
-    id: 'plan_pro',
-    message: "⚡ *Plan Filo Pro — $79.900/mes*\n\n✅ Todo el plan Básico\n✅ Barberos ilimitados\n✅ Citas ilimitadas\n✅ Reportes avanzados\n✅ Métricas e inteligencia del negocio\n✅ Automatizaciones completas\n✅ Nómina y comisiones\n✅ Soporte prioritario",
-    options: [
-      { label: "¿Qué es el plan Lifetime?", nextNode: 'plan_lifetime' },
-      { label: "¿Cómo activo este plan?", nextNode: 'plan_activar' },
-      { label: "Ya entendí ✓", nextNode: 'final_gracias' },
-    ]
-  },
-  plan_lifetime: {
-    id: 'plan_lifetime',
-    message: "🔥 *Plan Lifetime — $559.000 pago único*\n\nPagas una sola vez y tienes el Filo Pro para siempre.\nSin mensualidades, sin renovaciones, sin sorpresas.\n\nTambién incluye todas las funciones nuevas que se agreguen en el futuro 💡",
-    options: [
-      { label: "¿Cómo activo este plan?", nextNode: 'plan_activar' },
-      { label: "Ver comparación de planes", nextNode: 'config_planes' },
+      { label: "¿Cómo la activo?", nextNode: 'plan_activar' },
       { label: "Ya entendí ✓", nextNode: 'final_gracias' },
     ]
   },
   plan_activar: {
     id: 'plan_activar',
-    message: "Para activar o cambiar tu plan:\n\n1️⃣ Ve a *Configuración → Mis planes*\n2️⃣ Toca *'Mejorar plan'* o selecciona el plan que quieres\n3️⃣ Se abre un mensaje para contactarnos\n4️⃣ Escríbenos a *soporte@trimlyapp.co*\n\n¡En menos de 24 horas tu plan está activo! 🚀",
+    message: "Para activar tu licencia:\n\n1️⃣ Ve a *Configuración → Mis planes*\n2️⃣ Toca *'Activar licencia'*\n3️⃣ Se abre un mensaje para contactarnos\n4️⃣ Escríbenos a *soporte@trimlyapp.co*\n\n¡En menos de 24 horas tu licencia está activa! 🚀",
     options: [
-      { label: "Tengo otra duda sobre los planes", nextNode: 'config_planes' },
+      { label: "Tengo otra duda sobre mi licencia", nextNode: 'config_planes' },
       { label: "Quiero preguntar otra cosa", nextNode: 'inicio' },
       { label: "Ya entendí ✓", nextNode: 'final_gracias' },
     ]

@@ -20,7 +20,7 @@ export function TrialBanner() {
         {trialDaysLeft === 0
           ? '⚠️ Tu prueba vence hoy'
           : `⏳ Te quedan ${trialDaysLeft} día${trialDaysLeft !== 1 ? 's' : ''} de prueba gratis`}
-        {' '}— Tienes acceso completo al plan Pro
+        {' '}— Tienes acceso completo a Trimly
       </p>
       <Link
         href="/dashboard/planes"

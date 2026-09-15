@@ -17,12 +17,11 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
     notFound();
   }
 
-  const isFiloPro = !barbershop.subscription_status ||
+  const hasBookingAccess = !barbershop.subscription_status ||
     barbershop.subscription_status === 'trialing' ||
-    barbershop.subscription_status === 'active' ||
-    barbershop.plan === 'pro';
+    barbershop.subscription_status === 'active';
 
-  if (!isFiloPro) {
+  if (!hasBookingAccess) {
     return (
       <div className="min-h-screen bg-background-primary flex flex-col items-center justify-center p-6 text-center">
         <div className="w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center mb-6 text-accent">
@@ -33,7 +32,7 @@ export default async function BookingPage({ params }: { params: Promise<{ slug: 
           Esta barbería actualmente no tiene habilitada la función de reservas en línea.
         </p>
         <a href="/login" className="text-xs font-bold text-accent uppercase tracking-widest hover:underline">
-          ¿Eres el dueño? Activa Filo Pro
+          ¿Eres el dueño? Activa tu licencia
         </a>
       </div>
     );

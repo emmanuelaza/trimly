@@ -41,14 +41,14 @@ const mainNavItems = [
   { href: '/dashboard/cupones', label: 'Cupones', icon: Tag },
   { href: '/dashboard/resenas', label: 'Reseñas', icon: Star },
   { href: '/dashboard/reportes', label: 'Reportes', icon: BarChart3 },
-  { href: '/dashboard/metricas', label: 'Métricas', icon: TrendingUp, filoProOnly: true },
+  { href: '/dashboard/metricas', label: 'Métricas', icon: TrendingUp },
 ];
 
 const secondaryNavItems = [
   { href: '/dashboard/sedes', label: 'Sedes', icon: Building2 },
   { href: '/dashboard/referidos', label: 'Referidos', icon: Gift, badge: 'Nuevo' },
   { href: '/dashboard/equipo', label: 'Equipo', icon: UserCircle },
-  { href: '/dashboard/billing', label: 'Mis planes', icon: CreditCard },
+  { href: '/dashboard/planes', label: 'Mis planes', icon: CreditCard },
   { href: '/dashboard/pagina', label: 'Mi página', icon: TrendingUp },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: Settings },
 ];
@@ -63,7 +63,7 @@ const sectionTooltips: Record<string, string> = {
   '/dashboard/productos': 'Controla tu inventario y ventas',
   '/dashboard/nomina': 'Controla los pagos a tus barberos',
   '/dashboard/cupones': 'Descuentos para tus clientes',
-  '/dashboard/billing': 'Tu suscripción y planes de Trimly',
+  '/dashboard/planes': 'Tu suscripción y planes de Trimly',
   '/dashboard/resenas': 'Opiniones de tus clientes',
   '/dashboard/automatizaciones': 'Mensajes automáticos para tus clientes',
   '/dashboard/reportes': 'Exporta tus datos a PDF o Excel',
@@ -83,7 +83,7 @@ export const Sidebar = ({ negocio, userName = "Owner", isFiloPro = true }: { neg
 
   const NavItemRender = ({ item }: { item: any }) => {
     const isLocked = item.filoProOnly && !isFiloPro;
-    const targetHref = isLocked ? '/dashboard/billing' : item.href;
+    const targetHref = isLocked ? '/dashboard/planes' : item.href;
     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
     const tooltipText = sectionTooltips[item.href];
     
@@ -192,7 +192,7 @@ export const BottomNav = ({ isFiloPro = true, negocio = "Trimly", userName = "Ow
 
   const NavLink = ({ item, onClick }: { item: any, onClick?: () => void }) => {
     const isLocked = item.filoProOnly && !isFiloPro;
-    const targetHref = isLocked ? '/dashboard/billing' : item.href;
+    const targetHref = isLocked ? '/dashboard/planes' : item.href;
     const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
 
     return (

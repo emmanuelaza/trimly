@@ -151,10 +151,10 @@ export default function FinanzasClient({ resumen, expenses, mesFiltro }: Props) 
       {!features.reportesAvanzados && (
         <div className="flex items-center justify-between gap-4 p-4 rounded-xl border border-accent/30 bg-accent/5">
           <p className="text-sm text-text-secondary">
-            Los reportes avanzados están disponibles en el plan <span className="font-bold text-accent">Filo Pro</span>.
+            Los reportes avanzados están disponibles al activar tu <span className="font-bold text-accent">Licencia Trimly</span>.
           </p>
-          <a href="/dashboard/upgrade" className="shrink-0 text-sm font-bold text-accent hover:underline">
-            Ver planes →
+          <a href="/dashboard/planes" className="shrink-0 text-sm font-bold text-accent hover:underline">
+            Activar licencia →
           </a>
         </div>
       )}

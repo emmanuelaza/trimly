@@ -94,48 +94,30 @@ const TESTIMONIALS = [
 ];
 
 const WA = '573016315482';
-const MSG_BASICO = encodeURIComponent(
-  'Hola Emmanuel, quiero activar la Licencia Básica de Trimly por $499.000'
-);
-const MSG_PRO = encodeURIComponent(
-  'Hola Emmanuel, quiero activar la Licencia Pro de Trimly por $999.999'
+const MSG_LICENCIA = encodeURIComponent(
+  'Hola Emmanuel, quiero activar la Licencia Trimly por $399.000'
 );
 
 const LICENSES = [
   {
-    id: 'basic',
-    name: 'LICENCIA BÁSICA',
-    tagline: 'Para barberías que están empezando',
-    price: '$499.000',
-    msg: MSG_BASICO,
+    id: 'trimly',
+    name: 'LICENCIA TRIMLY',
+    badge: 'Pago único',
+    tagline: 'Todo el sistema, sin límites',
+    price: '$399.000',
+    msg: MSG_LICENCIA,
     features: [
-      '1 barbero incluido',
+      'Barberos ilimitados',
       'Agenda online 24/7',
       'Link de reservas personalizado',
       'Confirmación y recordatorio automático',
-      'Hasta 100 citas por mes',
-      'Licencia de por vida',
-      'Garantía de 7 días',
-    ],
-    popular: false,
-  },
-  {
-    id: 'pro',
-    name: 'LICENCIA PRO',
-    badge: 'Más popular',
-    tagline: 'Para barberías serias sin límites',
-    price: '$999.999',
-    msg: MSG_PRO,
-    features: [
-      'Barberos ilimitados',
-      'Todo lo de la licencia básica',
       'Citas ilimitadas',
       'Nómina y comisiones',
       'Todas las automatizaciones',
       'Reportes y métricas avanzadas',
       'Cupones y referidos',
       'Soporte prioritario',
-      'Funciones futuras incluidas',
+      'Licencia de por vida',
       'Garantía de 7 días',
     ],
     popular: true,
@@ -512,7 +494,7 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 gap-6 items-start max-w-sm mx-auto">
             {LICENSES.map((lic) => (
               <div
                 key={lic.id}
