@@ -41,31 +41,38 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ]);
 
   const bShop = bShopRes.data;
-
-  // Auto-expire trials that have ended
   const ahora = new Date();
-  if (
-    (bShop?.subscription_status === 'trial' || bShop?.subscription_status === 'trialing') &&
-    bShop?.trial_ends_at &&
-    new Date(bShop.trial_ends_at) < ahora
-  ) {
-    await supabase
+
+  const isActive = bShop?.subscription_status === 'active';
+  const wasTrialing =
+    bShop?.subscription_status === 'trialing' || bShop?.subscription_status === 'trial';
+  const trialEndsAtDate = bShop?.trial_ends_at ? new Date(bShop.trial_ends_at) : null;
+  const trialVencido = trialEndsAtDate ? trialEndsAtDate < ahora : false;
+
+  // El estado que se muestra se calcula siempre en vivo a partir de
+  // trial_ends_at, sin depender de que este update de "expired" se haya
+  // aplicado a tiempo — así nunca queda desincronizado con la realidad.
+  if (wasTrialing && trialVencido) {
+    const { error: expireError } = await supabase
       .from('barbershops')
       .update({ subscription_status: 'expired' })
       .eq('id', barbershopId)
       .lt('trial_ends_at', ahora.toISOString());
-    bShop.subscription_status = 'expired';
+    if (expireError) console.error('Error auto-expiring trial:', expireError);
   }
 
-  const isTrial =
-    bShop?.subscription_status === 'trialing' ||
-    bShop?.subscription_status === 'trial';
+  const planStatus: 'trialing' | 'active' | 'expired' = isActive
+    ? 'active'
+    : wasTrialing && !trialVencido
+    ? 'trialing'
+    : 'expired';
 
-  const trialDaysLeft = (isTrial && bShop?.trial_ends_at)
-    ? Math.max(0, Math.ceil(
-        (new Date(bShop.trial_ends_at).getTime() - ahora.getTime()) /
-        (1000 * 60 * 60 * 24)
-      ))
+  const trialDaysLeft = (planStatus === 'trialing' && trialEndsAtDate)
+    ? Math.max(0, Math.ceil((trialEndsAtDate.getTime() - ahora.getTime()) / (1000 * 60 * 60 * 24)))
+    : 0;
+
+  const trialHoursLeft = (planStatus === 'trialing' && trialEndsAtDate)
+    ? Math.max(0, Math.ceil((trialEndsAtDate.getTime() - ahora.getTime()) / (1000 * 60 * 60)))
     : 0;
 
   return (
@@ -73,8 +80,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <DashboardLayoutClient
         negocio={negocio}
         userName={user.user_metadata?.full_name || "Owner"}
-        isTrial={isTrial}
+        planStatus={planStatus}
         trialDaysLeft={trialDaysLeft}
+        trialHoursLeft={trialHoursLeft}
         barbershopId={barbershopId}
         userId={user.id}
       >
