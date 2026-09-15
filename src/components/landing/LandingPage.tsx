@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo';
 import { StickyCTA } from '@/components/landing/StickyCTA';
-import { useScrollFadeVisible } from '@/components/landing/useScrollFade';
+import { useScrollReveal } from '@/components/landing/useScrollFade';
 
 // ─── Inline assets ─────────────────────────────────────────────────────────────
 
@@ -288,14 +288,19 @@ export default function LandingPage() {
   const testimoniosRef = useRef<HTMLElement>(null);
   const preciosRef = useRef<HTMLElement>(null);
   const faqRef = useRef<HTMLElement>(null);
-  const ctaRef = useRef<HTMLElement>(null);
+  const ctaTextRef = useRef<HTMLDivElement>(null);
+  const ctaButtonRef = useRef<HTMLDivElement>(null);
 
-  const funcionesFade = useScrollFadeVisible(funcionesRef);
-  const beneficiosFade = useScrollFadeVisible(beneficiosRef);
-  const testimoniosFade = useScrollFadeVisible(testimoniosRef);
-  const preciosFade = useScrollFadeVisible(preciosRef);
-  const faqFade = useScrollFadeVisible(faqRef);
-  const ctaFade = useScrollFadeVisible(ctaRef);
+  // Cada sección entra según su propia forma: una cuadrícula de tarjetas
+  // sube, una fila horizontal entra por el lado, una tarjeta centrada
+  // crece, y el CTA final (dos columnas) se arma desde ambos lados.
+  const funcionesFade = useScrollReveal(funcionesRef, 'up');
+  const beneficiosFade = useScrollReveal(beneficiosRef, 'left');
+  const testimoniosFade = useScrollReveal(testimoniosRef, 'right');
+  const preciosFade = useScrollReveal(preciosRef, 'scale');
+  const faqFade = useScrollReveal(faqRef, 'up');
+  const ctaTextFade = useScrollReveal(ctaTextRef, 'left');
+  const ctaButtonFade = useScrollReveal(ctaButtonRef, 'right');
 
 
   return (
@@ -601,16 +606,16 @@ export default function LandingPage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section ref={ctaRef} className={`max-w-6xl mx-auto px-4 pb-16 ${ctaFade}`}>
+      <section className="max-w-6xl mx-auto px-4 pb-16">
         <div className="bg-primary rounded-3xl px-8 py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
-          <div className="flex-1 text-center md:text-left">
+          <div ref={ctaTextRef} className={`flex-1 text-center md:text-left ${ctaTextFade}`}>
             <Image src="/logo_trimly-removebg-preview.png" alt="Trimly" width={56} height={56} className="mx-auto md:mx-0 mb-4" loading="lazy" />
             <h2 className="text-2xl md:text-3xl font-display font-bold text-white leading-tight mb-2">
               Tu barbería puede ser<br />la próxima historia de éxito
             </h2>
             <p className="text-primary-light text-sm">Empieza hoy gratis. Sin riesgos. Sin tarjeta.</p>
           </div>
-          <div className="flex flex-col items-center gap-2 flex-shrink-0">
+          <div ref={ctaButtonRef} className={`flex flex-col items-center gap-2 flex-shrink-0 ${ctaButtonFade}`}>
             <Link href="/register" className="inline-flex items-center gap-2 bg-white text-primary text-sm font-bold px-8 py-4 rounded-xl hover:bg-primary-bg transition-all shadow-md">
               Regístrate gratis <ArrowRight size={16} />
             </Link>
