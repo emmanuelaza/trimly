@@ -1,7 +1,8 @@
 import { getAppointments } from '@/app/actions/appointments';
 import { getBarbershop } from '@/app/actions/barbershops';
+import { getClients } from '@/app/actions/clients';
 import Link from 'next/link';
-import { Plus, Clock, CheckCircle2, ChevronRight, BarChart3, Link2, Calendar, Users, DollarSign } from 'lucide-react';
+import { Plus, Clock, CheckCircle2, ChevronRight, BarChart3, Link2, Calendar, Users, DollarSign, AlertTriangle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -28,7 +29,7 @@ export default async function DashboardHome() {
   const barbershop = await getBarbershop();
   const barbershopName = barbershop?.name?.split(' ')[0] || 'Dueño';
 
-  const allCitas = await getAppointments();
+  const [allCitas, clientes] = await Promise.all([getAppointments(), getClients()]);
   const todayStr = getTodayString();
   const now = new Date();
 
@@ -66,6 +67,36 @@ export default async function DashboardHome() {
     day: 'numeric',
     month: 'long',
   }).format(now);
+
+  // ── Resumen de los últimos 7 días (datos reales, no simulados) ──
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - (6 - i));
+    return getLocalDay(d.toISOString());
+  });
+
+  const citasCompletadasByDay = new Map<string, { citas: number; ingresos: number }>();
+  for (const c of allCitas as any[]) {
+    if (c.status !== 'completed') continue;
+    const day = getLocalDay(c.scheduled_at);
+    const entry = citasCompletadasByDay.get(day) || { citas: 0, ingresos: 0 };
+    entry.citas += 1;
+    entry.ingresos += Number(c.price_charged) || 0;
+    citasCompletadasByDay.set(day, entry);
+  }
+
+  const weekData = last7Days.map(day => citasCompletadasByDay.get(day) || { citas: 0, ingresos: 0 });
+  const ingresosSemana = weekData.reduce((acc, d) => acc + d.ingresos, 0);
+  const citasSemana = weekData.reduce((acc, d) => acc + d.citas, 0);
+  const maxIngresoSemana = Math.max(1, ...weekData.map(d => d.ingresos));
+  const dayLabels = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
+
+  // ── Clientes inactivos (45+ días sin visitar) ──
+  const clientesInactivos = (clientes as any[]).filter((c: any) => {
+    if (!c.last_visit) return false;
+    const dias = Math.floor((now.getTime() - new Date(c.last_visit).getTime()) / (1000 * 3600 * 24));
+    return dias >= 45;
+  }).length;
 
   return (
     <div className="space-y-6 pb-2">
@@ -211,37 +242,67 @@ export default async function DashboardHome() {
         {/* PANEL LATERAL — 40% */}
         <div className="lg:col-span-2 space-y-4 animate-slideUp stagger-4">
 
-          {/* Resumen semanal */}
+          {/* Resumen semanal (últimos 7 días, datos reales) */}
           <Card padding="sm">
             <p className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
               Resumen semanal
             </p>
-            <div className="flex items-end justify-between h-20 gap-1 mb-2">
-              {[35, 65, 45, 90, 55, 30, 10].map((h, i) => (
-                <div key={i} className="flex-1 bg-background-tertiary rounded-t-sm relative group h-full">
-                  <div
-                    className={`absolute bottom-0 left-0 right-0 rounded-t-sm transition-all ${i === 3 ? 'bg-primary' : 'bg-border-strong group-hover:bg-primary/60'}`}
-                    style={{ height: `${h}%` }}
-                  />
+            {citasSemana === 0 ? (
+              <p className="text-xs text-text-muted py-6 text-center">
+                Aún no tienes citas completadas esta semana.
+              </p>
+            ) : (
+              <>
+                <div className="flex items-end justify-between h-20 gap-1 mb-2">
+                  {weekData.map((d, i) => {
+                    const h = Math.round((d.ingresos / maxIngresoSemana) * 100);
+                    const isToday = i === weekData.length - 1;
+                    return (
+                      <div key={i} className="flex-1 bg-background-tertiary rounded-t-sm relative group h-full" title={formatCOP(d.ingresos)}>
+                        <div
+                          className={`absolute bottom-0 left-0 right-0 rounded-t-sm transition-all ${isToday ? 'bg-primary' : 'bg-border-strong group-hover:bg-primary/60'}`}
+                          style={{ height: `${Math.max(h, d.ingresos > 0 ? 6 : 0)}%` }}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-between text-[10px] text-text-muted font-mono mb-3">
-              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-                <span key={i}>{d}</span>
-              ))}
-            </div>
+                <div className="flex justify-between text-[10px] text-text-muted font-mono mb-3">
+                  {last7Days.map((day, i) => (
+                    <span key={i}>{dayLabels[new Date(day + 'T00:00:00').getDay()]}</span>
+                  ))}
+                </div>
+              </>
+            )}
             <div className="pt-3 border-t border-border space-y-1.5">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-text-muted">Ingresos</span>
-                <span className="font-semibold text-text-primary">{formatCOP(ingresosHoy)}</span>
+                <span className="text-text-muted">Ingresos (7 días)</span>
+                <span className="font-semibold text-text-primary">{formatCOP(ingresosSemana)}</span>
               </div>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-text-muted">Citas</span>
-                <span className="font-semibold text-text-primary">{citasHoy.length}</span>
+                <span className="text-text-muted">Citas (7 días)</span>
+                <span className="font-semibold text-text-primary">{citasSemana}</span>
               </div>
             </div>
           </Card>
+
+          {/* Alerta de clientes inactivos */}
+          {clientesInactivos > 0 && (
+            <Link href="/dashboard/retencion" className="block">
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-warning/8 border border-warning/20 hover:border-warning/40 transition-colors">
+                <div className="w-8 h-8 rounded-lg bg-warning/15 flex items-center justify-center flex-shrink-0">
+                  <AlertTriangle size={15} className="text-warning" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-text-primary">
+                    {clientesInactivos} cliente{clientesInactivos !== 1 ? 's' : ''} sin volver hace 45+ días
+                  </p>
+                  <p className="text-xs text-text-muted">Toca para recuperarlos</p>
+                </div>
+                <ChevronRight size={16} className="text-text-tertiary flex-shrink-0" />
+              </div>
+            </Link>
+          )}
 
           {/* Acciones rápidas */}
           <Card padding="sm">

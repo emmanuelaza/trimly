@@ -73,7 +73,8 @@ export default function ServiciosClient({ initialServices }: { initialServices: 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {initialServices.length === 0 && (
           <div className="col-span-full py-12 border border-dashed border-border rounded-xl text-center">
-            <p className="text-sm text-text-tertiary">No hay servicios registrados aún.</p>
+            <p className="text-sm text-text-tertiary">Aún no tienes servicios.</p>
+            <p className="text-xs text-text-tertiary/70 mt-1">Agrega el primero arriba para que tus clientes puedan reservarlo 👆</p>
           </div>
         )}
         {initialServices.map((s: any) => (
