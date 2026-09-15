@@ -51,22 +51,12 @@ export default function Home() {
                 "applicationCategory": "BusinessApplication",
                 "operatingSystem": "Web",
                 "description": "Plataforma de gestión para barberías colombianas. Agenda online, automatizaciones y reportes.",
-                "offers": [
-                  {
-                    "@type": "Offer",
-                    "name": "Plan Básico",
-                    "price": "29900",
-                    "priceCurrency": "COP",
-                    "billingIncrement": "month"
-                  },
-                  {
-                    "@type": "Offer",
-                    "name": "Plan Filo Pro",
-                    "price": "79900",
-                    "priceCurrency": "COP",
-                    "billingIncrement": "month"
-                  }
-                ],
+                "offers": {
+                  "@type": "Offer",
+                  "name": "Licencia Trimly",
+                  "price": "399000",
+                  "priceCurrency": "COP"
+                },
                 "aggregateRating": {
                   "@type": "AggregateRating",
                   "ratingValue": "4.9",

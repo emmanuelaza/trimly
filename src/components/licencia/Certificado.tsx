@@ -5,12 +5,11 @@ import { Download } from 'lucide-react';
 
 interface Props {
   barbershopName: string;
-  plan: string;
   licenseNumber: string | null;
   activatedAt: string | null;
 }
 
-export function Certificado({ barbershopName, plan, licenseNumber, activatedAt }: Props) {
+export function Certificado({ barbershopName, licenseNumber, activatedAt }: Props) {
   const cardRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = async () => {
@@ -58,14 +57,8 @@ export function Certificado({ barbershopName, plan, licenseNumber, activatedAt }
           <p className="font-mono text-primary text-base font-bold mb-3">{licenseNumber}</p>
         )}
 
-        <span
-          className={`inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4 ${
-            plan === 'pro'
-              ? 'bg-primary/20 text-primary border border-primary/30'
-              : 'bg-gray-700/50 text-gray-300 border border-gray-600/30'
-          }`}
-        >
-          {plan === 'pro' ? 'Licencia Pro' : 'Licencia Básica'}
+        <span className="inline-block text-xs font-bold px-4 py-1.5 rounded-full mb-4 bg-primary/20 text-primary border border-primary/30">
+          Licencia Trimly
         </span>
 
         {activationDate && (

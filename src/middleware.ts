@@ -41,7 +41,7 @@ export async function middleware(request: NextRequest) {
 
     // 1. Proteger Dashboard (Solo Dueños necesitan Auth de Supabase)
     // El sistema de barberos ahora usa Links Mágicos y localStorage, no Supabase Auth
-    if (!user && path.startsWith('/dashboard') && path !== '/dashboard/billing') {
+    if (!user && path.startsWith('/dashboard') && path !== '/dashboard/planes') {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
@@ -75,12 +75,12 @@ export async function middleware(request: NextRequest) {
         }
 
         // Subscription check (only if onboarding is done and in dashboard)
-        if (barbershop.onboarding_completed && path.startsWith('/dashboard') && !path.startsWith('/dashboard/billing')) {
+        if (barbershop.onboarding_completed && path.startsWith('/dashboard') && !path.startsWith('/dashboard/planes')) {
           const isTrialActive = barbershop.subscription_status === 'trialing' && new Date(barbershop.trial_ends_at) > new Date()
           const isActive = barbershop.subscription_status === 'active'
 
           if (!isActive && !isTrialActive) {
-            return NextResponse.redirect(new URL('/dashboard/billing?expired=true', request.url))
+            return NextResponse.redirect(new URL('/dashboard/planes?expired=true', request.url))
           }
         }
       } else {

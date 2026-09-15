@@ -65,7 +65,7 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
 
   const handleToggle = (type: string, current: boolean) => {
     if (!current && isProBlocked(type)) {
-      toast.error('Esta automatización es del plan Filo Pro. Actualiza para activarla.');
+      toast.error('Activa tu licencia Trimly para usar esta automatización.');
       return;
     }
     startTransition(async () => {
@@ -143,8 +143,8 @@ export default function AutomatizacionesClient({ initialAutomations, stats }: Pr
                         <p className="text-sm text-text-secondary">{item.desc}</p>
                         {proBlocked && (
                           <p className="text-xs text-text-tertiary mt-1">
-                            Disponible en el plan{' '}
-                            <a href="/dashboard/upgrade" className="text-accent font-semibold hover:underline">Filo Pro →</a>
+                            Disponible al{' '}
+                            <a href="/dashboard/planes" className="text-accent font-semibold hover:underline">activar tu licencia →</a>
                           </p>
                         )}
                         {!proBlocked && locked && (

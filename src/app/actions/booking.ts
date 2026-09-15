@@ -32,7 +32,7 @@ export async function getBarbershopBySlug(slug: string) {
 }
 
 /**
- * Fetch barbershop plan to verify access
+ * Verifica si la barbería tiene acceso (licencia activa o prueba vigente)
  */
 export async function getBarbershopPlan(barbershopId: string) {
   const { createClient } = await import('@supabase/supabase-js');
@@ -43,22 +43,11 @@ export async function getBarbershopPlan(barbershopId: string) {
 
   const { data: bShop } = await adminAuthClient
     .from('barbershops')
-    .select('*')
+    .select('subscription_status')
     .eq('id', barbershopId)
     .maybeSingle();
 
-  const isTrial = bShop?.subscription_status === 'trialing';
-
-  const { data: sub } = await adminAuthClient
-    .from('subscriptions')
-    .select('plan_type')
-    .eq('barbershop_id', barbershopId)
-    .eq('status', 'active')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  return isTrial || bShop?.plan === 'pro' || sub?.plan_type === 'pro' || sub?.plan_type === 'filo_pro' || sub?.plan_type === 'anual' || sub?.plan_type === 'lifetime';
+  return bShop?.subscription_status === 'trialing' || bShop?.subscription_status === 'active';
 }
 
 /**

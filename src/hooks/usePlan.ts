@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
-export type PlanType = 'basic' | 'pro'
 export type PlanStatus = 'trialing' | 'active' | 'expired'
 
 export interface PlanFeatures {
@@ -22,43 +21,25 @@ export interface PlanFeatures {
   garantia: boolean
 }
 
-const PLAN_FEATURES: Record<PlanType, PlanFeatures> = {
-  basic: {
-    maxBarbers: 1,
-    maxCitasPerMonth: 100,
-    reportesAvanzados: false,
-    reporteDiario: false,
-    recuperarInactivos: false,
-    cumpleanos: false,
-    postVisita: false,
-    nomina: false,
-    cupones: false,
-    referidos: false,
-    metricas: false,
-    soportePrioritario: false,
-    garantia: true,
-  },
-  pro: {
-    maxBarbers: -1,
-    maxCitasPerMonth: -1,
-    reportesAvanzados: true,
-    reporteDiario: true,
-    recuperarInactivos: true,
-    cumpleanos: true,
-    postVisita: true,
-    nomina: true,
-    cupones: true,
-    referidos: true,
-    metricas: true,
-    soportePrioritario: true,
-    garantia: true,
-  },
+// Licencia única: todas las funciones disponibles sin distinción de plan.
+const FULL_FEATURES: PlanFeatures = {
+  maxBarbers: -1,
+  maxCitasPerMonth: -1,
+  reportesAvanzados: true,
+  reporteDiario: true,
+  recuperarInactivos: true,
+  cumpleanos: true,
+  postVisita: true,
+  nomina: true,
+  cupones: true,
+  referidos: true,
+  metricas: true,
+  soportePrioritario: true,
+  garantia: true,
 }
 
 export function usePlan() {
-  const [plan, setPlan] = useState<PlanType>('basic')
   const [status, setStatus] = useState<PlanStatus>('trialing')
-  const [features, setFeatures] = useState<PlanFeatures>(PLAN_FEATURES.pro)
   const [trialEndsAt, setTrialEndsAt] = useState<Date | null>(null)
   const [licenseNumber, setLicenseNumber] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -71,7 +52,7 @@ export function usePlan() {
 
       const { data: bs } = await supabase
         .from('barbershops')
-        .select('plan, subscription_status, trial_ends_at, license_number, license_activated_at')
+        .select('subscription_status, trial_ends_at, license_number')
         .eq('owner_id', session.user.id)
         .single()
 
@@ -79,17 +60,9 @@ export function usePlan() {
         const ahora = new Date()
         const trialDate = bs.trial_ends_at ? new Date(bs.trial_ends_at) : null
         const trialVencido = trialDate ? trialDate < ahora : false
-
-        const planType = (bs.plan || 'basic') as PlanType
         const rawStatus = bs.subscription_status as PlanStatus
 
-        // During trialing with valid trial → full PRO access
-        const effectivePlan =
-          rawStatus === 'trialing' && !trialVencido ? 'pro' : planType
-
-        setPlan(planType)
         setStatus(trialVencido && rawStatus === 'trialing' ? 'expired' : rawStatus)
-        setFeatures(PLAN_FEATURES[effectivePlan])
         setTrialEndsAt(trialDate)
         setLicenseNumber(bs.license_number || '')
       }
@@ -103,9 +76,8 @@ export function usePlan() {
     : 0
 
   return {
-    plan,
     status,
-    features,
+    features: FULL_FEATURES,
     loading,
     trialDaysLeft,
     licenseNumber,

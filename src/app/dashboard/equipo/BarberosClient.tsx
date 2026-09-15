@@ -125,7 +125,7 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
     e.preventDefault();
     if (features.maxBarbers !== -1 && initialBarberos.length >= features.maxBarbers) {
       toast.error(
-        `Has alcanzado el límite de ${features.maxBarbers} barbero del plan Básico. Actualiza a Filo Pro para añadir barberos ilimitados.`
+        `Has alcanzado el límite de ${features.maxBarbers} barbero. Activa tu licencia Trimly para añadir barberos ilimitados.`
       );
       return;
     }
