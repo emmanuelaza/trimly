@@ -211,7 +211,8 @@ export default function BarberosClient({ initialBarberos, services }: { initialB
           {initialBarberos.length === 0 && (
             <div className="py-20 border border-dashed border-border rounded-xl flex flex-col items-center justify-center text-center">
               <UserCheck size={32} className="text-text-tertiary mb-3 opacity-20" />
-              <p className="text-sm text-text-secondary">No hay miembros registrados aún.</p>
+              <p className="text-sm text-text-secondary">Aún no tienes barberos.</p>
+              <p className="text-xs text-text-tertiary mt-1">Agrega el primero en el formulario de la izquierda 👈</p>
             </div>
           )}
 
