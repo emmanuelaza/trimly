@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo';
 import { StickyCTA } from '@/components/landing/StickyCTA';
+import { useScrollFadeVisible } from '@/components/landing/useScrollFade';
 
 // ─── Inline assets ─────────────────────────────────────────────────────────────
 
@@ -282,6 +283,19 @@ function DashboardMockup() {
 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const funcionesRef = useRef<HTMLElement>(null);
+  const beneficiosRef = useRef<HTMLElement>(null);
+  const testimoniosRef = useRef<HTMLElement>(null);
+  const preciosRef = useRef<HTMLElement>(null);
+  const faqRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLElement>(null);
+
+  const funcionesFade = useScrollFadeVisible(funcionesRef);
+  const beneficiosFade = useScrollFadeVisible(beneficiosRef);
+  const testimoniosFade = useScrollFadeVisible(testimoniosRef);
+  const preciosFade = useScrollFadeVisible(preciosRef);
+  const faqFade = useScrollFadeVisible(faqRef);
+  const ctaFade = useScrollFadeVisible(ctaRef);
 
 
   return (
@@ -387,7 +401,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ── */}
-      <section id="funciones" className="max-w-6xl mx-auto px-4 py-16">
+      <section id="funciones" ref={funcionesRef} className={`max-w-6xl mx-auto px-4 py-16 ${funcionesFade}`}>
         <div className="text-center mb-12">
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Todo lo que necesitas</p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
@@ -400,7 +414,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── BENEFITS ── */}
-      <section id="beneficios" className="bg-background-secondary border-y border-border py-16">
+      <section id="beneficios" ref={beneficiosRef} className={`bg-background-secondary border-y border-border py-16 ${beneficiosFade}`}>
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Por qué Trimly</p>
@@ -422,7 +436,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── TESTIMONIALS (infinite scroll carousel) ── */}
-      <section id="testimonios" className="py-16 overflow-hidden">
+      <section id="testimonios" ref={testimoniosRef} className={`py-16 overflow-hidden ${testimoniosFade}`}>
         <div className="text-center mb-10 px-4">
           <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Barberos que ya crecen con Trimly</p>
           <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
@@ -484,7 +498,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section id="precios" className="bg-background-secondary border-y border-border py-16">
+      <section id="precios" ref={preciosRef} className={`bg-background-secondary border-y border-border py-16 ${preciosFade}`}>
         <div className="max-w-6xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
@@ -577,7 +591,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="max-w-3xl mx-auto px-4 py-16">
+      <section id="faq" ref={faqRef} className={`max-w-3xl mx-auto px-4 py-16 ${faqFade}`}>
         <div className="text-center mb-10">
           <h2 className="text-3xl font-display font-bold text-text-primary">Preguntas frecuentes</h2>
         </div>
@@ -587,7 +601,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FINAL CTA ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-16">
+      <section ref={ctaRef} className={`max-w-6xl mx-auto px-4 pb-16 ${ctaFade}`}>
         <div className="bg-primary rounded-3xl px-8 py-12 md:py-16 flex flex-col md:flex-row items-center gap-8">
           <div className="flex-1 text-center md:text-left">
             <Image src="/logo_trimly-removebg-preview.png" alt="Trimly" width={56} height={56} className="mx-auto md:mx-0 mb-4" loading="lazy" />
