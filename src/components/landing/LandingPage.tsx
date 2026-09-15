@@ -29,6 +29,7 @@ const ColombiaFlag = () => (
 // ─── Data ──────────────────────────────────────────────────────────────────────
 
 const NAV_LINKS = [
+  { href: '#como-funciona', label: 'Cómo funciona' },
   { href: '#funciones',   label: 'Funciones' },
   { href: '#beneficios',  label: 'Beneficios' },
   { href: '#testimonios', label: 'Testimonios' },
@@ -43,6 +44,12 @@ const FEATURES = [
   { icon: Users,       title: 'Clientes y equipo en un solo lugar', desc: 'Gestiona barberos, comisiones y permisos sin enredos.' },
   { icon: ShoppingBag, title: 'Inventario y productos',             desc: 'Controla tu stock y nunca te quedes sin lo esencial.' },
   { icon: Star,        title: 'Reseñas y fidelización',             desc: 'Convierte cada cliente feliz en tu mejor promotor.' },
+];
+
+const STEPS = [
+  { n: '01', title: 'Regístrate gratis', desc: 'Crea tu cuenta en 2 minutos. Sin tarjeta, sin compromiso.' },
+  { n: '02', title: 'Configura tu barbería', desc: 'Agrega tus servicios, horarios y barberos — todo en un mismo lugar.' },
+  { n: '03', title: 'Comparte tu link', desc: 'Tus clientes reservan solos, a cualquier hora, sin escribirte.' },
 ];
 
 const BENEFITS = [
@@ -283,6 +290,7 @@ function DashboardMockup() {
 
 export default function LandingPage() {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pasosRef = useRef<HTMLElement>(null);
   const funcionesRef = useRef<HTMLElement>(null);
   const beneficiosRef = useRef<HTMLElement>(null);
   const testimoniosRef = useRef<HTMLElement>(null);
@@ -294,6 +302,7 @@ export default function LandingPage() {
   // Cada sección entra según su propia forma: una cuadrícula de tarjetas
   // sube, una fila horizontal entra por el lado, una tarjeta centrada
   // crece, y el CTA final (dos columnas) se arma desde ambos lados.
+  const pasosFade = useScrollReveal(pasosRef, 'up');
   const funcionesFade = useScrollReveal(funcionesRef, 'up');
   const beneficiosFade = useScrollReveal(beneficiosRef, 'left');
   const testimoniosFade = useScrollReveal(testimoniosRef, 'right');
@@ -400,6 +409,25 @@ export default function LandingPage() {
                 <span className="text-[10px] font-bold text-primary">{brand[0]}</span>
               </div>
               <span className="text-sm font-medium">{brand}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ── CÓMO FUNCIONA ── */}
+      <section id="como-funciona" ref={pasosRef} className={`max-w-6xl mx-auto px-4 py-16 ${pasosFade}`}>
+        <div className="text-center mb-12">
+          <p className="text-xs font-bold text-primary uppercase tracking-widest mb-3">Así de fácil</p>
+          <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary tracking-tight">
+            Tres pasos y listo
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8">
+          {STEPS.map((s) => (
+            <div key={s.n} className="text-center md:text-left">
+              <p className="font-display text-4xl font-light text-primary/40 mb-3">{s.n}</p>
+              <h3 className="text-base font-bold text-text-primary mb-2">{s.title}</h3>
+              <p className="text-sm text-text-muted leading-relaxed">{s.desc}</p>
             </div>
           ))}
         </div>
