@@ -1,17 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { usePlan } from '@/hooks/usePlan'
 
-export function TrialBanner() {
-  const { loading, isTrialing, isExpired, trialDaysLeft, trialHoursLeft } = usePlan()
-  // Mientras carga el estado real, no mostramos nada — evita el falso
-  // "vence en menos de 1 hora" que se veía un instante antes de tener los
-  // datos reales de la barbería.
-  if (loading) return null
-  if (!isTrialing && !isExpired) return null
+interface TrialBannerProps {
+  planStatus: 'trialing' | 'active' | 'expired'
+  trialDaysLeft: number
+  trialHoursLeft: number
+}
 
-  if (isExpired) {
+export function TrialBanner({ planStatus, trialDaysLeft, trialHoursLeft }: TrialBannerProps) {
+  if (planStatus === 'active') return null
+
+  if (planStatus === 'expired') {
     return (
       <div className="flex items-center justify-between gap-3 px-4 py-3 mb-4 rounded-xl border bg-danger/8 border-danger/20 text-danger">
         <p className="text-sm font-medium">

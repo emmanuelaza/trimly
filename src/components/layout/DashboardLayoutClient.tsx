@@ -84,8 +84,9 @@ interface DashboardLayoutClientProps {
   children: React.ReactNode
   negocio: string
   userName: string
-  isTrial: boolean
+  planStatus: 'trialing' | 'active' | 'expired'
   trialDaysLeft: number
+  trialHoursLeft: number
   barbershopId?: string
   userId?: string
 }
@@ -94,8 +95,9 @@ export function DashboardLayoutClient({
   children,
   negocio,
   userName,
-  isTrial,
+  planStatus,
   trialDaysLeft,
+  trialHoursLeft,
   barbershopId,
   userId,
 }: DashboardLayoutClientProps) {
@@ -300,7 +302,11 @@ export function DashboardLayoutClient({
         )}
       >
         {/* TRIAL BANNER */}
-        <TrialBanner />
+        <TrialBanner
+          planStatus={planStatus}
+          trialDaysLeft={trialDaysLeft}
+          trialHoursLeft={trialHoursLeft}
+        />
         {/* PUSH NOTIFICATIONS BANNER */}
         {userId && <PushBanner userId={userId} />}
 
