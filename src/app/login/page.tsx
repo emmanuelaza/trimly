@@ -29,7 +29,13 @@ export default function LoginPage() {
     });
 
     if (signInError) {
-      toast.error(signInError.message);
+      if (signInError.message.toLowerCase().includes("invalid login credentials")) {
+        toast.error("Email o contraseña incorrectos. Si aún no tienes cuenta, créala gratis abajo.");
+      } else if (signInError.message.toLowerCase().includes("email not confirmed")) {
+        toast.error("Confirma tu email antes de iniciar sesión — revisa tu bandeja de entrada.");
+      } else {
+        toast.error(signInError.message);
+      }
       setIsLoading(false);
       return;
     }

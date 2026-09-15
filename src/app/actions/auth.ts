@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/serviceRole";
 import { slugify } from "@/lib/utils";
 
 export async function signUpAction(formData: FormData) {
@@ -24,12 +25,25 @@ export async function signUpAction(formData: FormData) {
 
   if (signUpError) return { success: false, error: signUpError.message };
 
+  // Supabase devuelve un usuario "decoy" sin identidades cuando el email ya
+  // está registrado (para no filtrar qué correos existen). Si no detectamos
+  // esto, seguiríamos creando una barbería duplicada para una cuenta que ya
+  // existe, y esa duplicada quedaría con onboarding sin terminar para siempre.
+  if (user && user.identities && user.identities.length === 0) {
+    return { success: false, error: "Ya existe una cuenta con este correo. Inicia sesión en su lugar." };
+  }
+
   if (user) {
     const randomSuffix = Math.random().toString(36).substring(2, 7);
     const slug = `${slugify(businessName || 'mi-barberia')}-${randomSuffix}`;
     const whatsapp = formData.get("whatsapp") as string;
 
-    const { error: insertError } = await supabase.from('barbershops').insert({
+    // Usamos el cliente admin (no el de sesión) porque si el proyecto exige
+    // confirmar el email, todavía no hay sesión activa aquí y el insert con
+    // RLS fallaría en silencio, dejando al usuario sin barbería y atrapado
+    // en onboarding para siempre en su primer login real.
+    const admin = getSupabaseAdmin();
+    const { error: insertError } = await admin.from('barbershops').insert({
       owner_id: user.id,
       name: businessName || 'Mi Barbería',
       slug: slug,
@@ -39,7 +53,7 @@ export async function signUpAction(formData: FormData) {
 
     if (insertError) {
       console.error("Error creating barbershop on signup:", insertError);
-      // No bloqueamos el registro si falla el insert, el fallback en acciones lo reparará
+      return { success: false, error: "No pudimos terminar de crear tu barbería. Intenta de nuevo o contáctanos." };
     }
   }
 
