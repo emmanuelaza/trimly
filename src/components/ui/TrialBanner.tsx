@@ -4,43 +4,46 @@ import Link from 'next/link'
 import { usePlan } from '@/hooks/usePlan'
 
 export function TrialBanner() {
-  const { isTrialing, isExpired, trialDaysLeft } = usePlan()
+  const { isTrialing, isExpired, trialDaysLeft, trialHoursLeft } = usePlan()
   if (!isTrialing && !isExpired) return null
 
   if (isExpired) {
     return (
       <div className="flex items-center justify-between gap-3 px-4 py-3 mb-4 rounded-xl border bg-danger/8 border-danger/20 text-danger">
         <p className="text-sm font-medium">
-          🔒 Tu prueba terminó — tus datos y clientes siguen aquí, pero necesitas activar tu licencia para seguir agendando citas nuevas
+          🔒 Tu prueba gratuita terminó — tus datos y clientes siguen aquí, pero no puedes agendar citas nuevas hasta activar tu licencia
         </p>
         <Link
           href="/dashboard/planes"
           className="text-sm font-semibold whitespace-nowrap hover:underline flex-shrink-0"
         >
-          Activar licencia →
+          Activar por $399.000 →
         </Link>
       </div>
     )
   }
 
-  const color =
-    trialDaysLeft <= 1
-      ? 'bg-danger/8 border-danger/20 text-danger'
-      : 'bg-warning/8 border-warning/20 text-warning'
+  const isLastDay = trialDaysLeft <= 1
 
   return (
     <div
-      className={`flex items-center justify-between gap-3 px-4 py-3 mb-4 rounded-xl border ${color}`}
+      className={`flex items-center justify-between gap-3 px-4 py-3 mb-4 rounded-xl border ${
+        isLastDay
+          ? 'bg-danger/8 border-danger/20 text-danger'
+          : 'bg-warning/8 border-warning/20 text-warning'
+      }`}
     >
       <p className="text-sm font-medium">
-        {trialDaysLeft === 0
-          ? '⚠️ Tu prueba vence hoy'
+        {isLastDay
+          ? trialHoursLeft <= 1
+            ? '⚠️ Tu prueba vence en menos de 1 hora'
+            : `⚠️ Tu prueba vence en ${trialHoursLeft} horas`
           : `⏳ Te quedan ${trialDaysLeft} día${trialDaysLeft !== 1 ? 's' : ''} de prueba gratis`}
-        {' '}— Tienes acceso completo a Trimly
+        {' '}— tienes acceso completo a Trimly mientras tanto
       </p>
       <Link
         href="/dashboard/planes"
-        className="text-sm font-semibold whitespace-nowrap hover:underline"
+        className="text-sm font-semibold whitespace-nowrap hover:underline flex-shrink-0"
       >
         Activar licencia →
       </Link>

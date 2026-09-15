@@ -75,11 +75,16 @@ export function usePlan() {
     ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
     : 0
 
+  const trialHoursLeft = trialEndsAt
+    ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / (1000 * 60 * 60)))
+    : 0
+
   return {
     status,
     features: FULL_FEATURES,
     loading,
     trialDaysLeft,
+    trialHoursLeft,
     licenseNumber,
     isTrialing: status === 'trialing',
     isActive: status === 'active',
