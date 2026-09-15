@@ -74,15 +74,11 @@ export async function middleware(request: NextRequest) {
           return NextResponse.redirect(new URL('/dashboard', request.url))
         }
 
-        // Subscription check (only if onboarding is done and in dashboard)
-        if (barbershop.onboarding_completed && path.startsWith('/dashboard') && !path.startsWith('/dashboard/planes')) {
-          const isTrialActive = barbershop.subscription_status === 'trialing' && new Date(barbershop.trial_ends_at) > new Date()
-          const isActive = barbershop.subscription_status === 'active'
-
-          if (!isActive && !isTrialActive) {
-            return NextResponse.redirect(new URL('/dashboard/planes?expired=true', request.url))
-          }
-        }
+        // Nota: cuando la prueba/licencia vence, NO redirigimos a la fuerza.
+        // El dueño conserva acceso de solo lectura a todo el dashboard (ver sus
+        // datos, clientes, reportes) — el banner persistente le pide activar
+        // su licencia, y las acciones que crean valor nuevo (citas, etc.) se
+        // bloquean en el propio server action, no aquí.
       } else {
         // Si no hay barbería y no es barbero, forzar onboarding si intenta entrar al dashboard
         if (path.startsWith('/dashboard')) {

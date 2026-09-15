@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { getBarbershopId } from "./utils";
+import { getBarbershopId, requireActiveLicense } from "./utils";
 
 import { buildScheduledAt as buildLocalScheduledAt, getTodayString } from "@/lib/dateUtils";
 
@@ -36,6 +36,9 @@ export async function getAppointments() {
  */
 export async function createAppointment(formData: FormData) {
   try {
+    const license = await requireActiveLicense();
+    if (!license.ok) return { success: false, error: license.error };
+
     const barbershopId = await getBarbershopId();
     if (!barbershopId) return { success: false, error: "No se encontró el ID de la barbería" };
 

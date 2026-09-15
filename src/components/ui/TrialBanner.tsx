@@ -4,8 +4,24 @@ import Link from 'next/link'
 import { usePlan } from '@/hooks/usePlan'
 
 export function TrialBanner() {
-  const { isTrialing, trialDaysLeft } = usePlan()
-  if (!isTrialing) return null
+  const { isTrialing, isExpired, trialDaysLeft } = usePlan()
+  if (!isTrialing && !isExpired) return null
+
+  if (isExpired) {
+    return (
+      <div className="flex items-center justify-between gap-3 px-4 py-3 mb-4 rounded-xl border bg-danger/8 border-danger/20 text-danger">
+        <p className="text-sm font-medium">
+          🔒 Tu prueba terminó — tus datos y clientes siguen aquí, pero necesitas activar tu licencia para seguir agendando citas nuevas
+        </p>
+        <Link
+          href="/dashboard/planes"
+          className="text-sm font-semibold whitespace-nowrap hover:underline flex-shrink-0"
+        >
+          Activar licencia →
+        </Link>
+      </div>
+    )
+  }
 
   const color =
     trialDaysLeft <= 1
