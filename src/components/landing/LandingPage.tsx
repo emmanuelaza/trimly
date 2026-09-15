@@ -9,7 +9,8 @@ import {
   Clock, DollarSign, SmilePlus, TrendingUp,
   CreditCard, Shield, Ban, Rocket,
   Camera, Tv, MessageCircle, Music2,
-  MapPin, Heart,
+  MapPin, Heart, LayoutDashboard, Scissors, Zap,
+  Tag, CheckCircle2, Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { TrimlyLogo } from '@/components/ui/TrimlyLogo';
@@ -183,102 +184,162 @@ function FeatureCard({ icon: Icon, title, desc }: { icon: React.ElementType; tit
 }
 
 function DashboardMockup() {
+  const navPrincipal = [
+    { label: 'Inicio', icon: LayoutDashboard, active: true },
+    { label: 'Agenda', icon: Calendar },
+    { label: 'Clientes', icon: Users },
+    { label: 'Ingresos', icon: BarChart3 },
+  ];
+  const navGestion = [
+    { label: 'Servicios', icon: Scissors },
+    { label: 'Productos', icon: ShoppingBag },
+    { label: 'Automatizaciones', icon: Zap },
+    { label: 'Cupones', icon: Tag },
+    { label: 'Pases', icon: CreditCard },
+    { label: 'Reseñas', icon: Star },
+  ];
+
+  const stats = [
+    { label: 'Ingresos hoy', value: '$438.000', sub: '+22% vs ayer', icon: DollarSign, tone: 'success' as const },
+    { label: 'Citas hoy', value: '11', sub: '6 completadas', icon: Calendar, tone: 'primary' as const },
+    { label: 'Pendientes', value: '3', sub: 'por completar', icon: Clock, tone: 'warning' as const },
+    { label: 'Completadas', value: '6', sub: 'de 11 total', icon: CheckCircle2, tone: 'success' as const },
+  ];
+
   const appointments = [
-    { name: 'Carlos M.', time: '10:00', service: 'Corte clásico', status: 'Confirmada' },
-    { name: 'Mario G.',  time: '11:30', service: 'Barba',         status: 'Pendiente' },
-    { name: 'Juan P.',   time: '13:00', service: 'Corte + Barba', status: 'Completada' },
+    { time: '10:00', name: 'Carlos M.', service: 'Corte clásico', status: 'Confirmada' },
+    { time: '11:30', name: 'Mario G.',  service: 'Barba',         status: 'Pendiente' },
+    { time: '13:00', name: 'Juan P.',   service: 'Corte + Barba', status: 'Completada' },
+    { time: '15:30', name: 'Andrés R.', service: 'Corte clásico', status: 'Confirmada' },
   ];
 
-  const hours = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00'];
-  const days  = ['Lun\n10', 'Mar\n11', 'Mié\n12', 'Jue\n13', 'Vie\n14', 'Sáb\n15', 'Dom\n16'];
-
-  const blocks: { col: number; row: number; color: string }[] = [
-    { col: 0, row: 1, color: 'bg-primary/20' },
-    { col: 1, row: 1, color: 'bg-success/20' },
-    { col: 1, row: 2, color: 'bg-success/15' },
-    { col: 2, row: 2, color: 'bg-warning/20' },
-    { col: 3, row: 3, color: 'bg-primary/15' },
-    { col: 4, row: 1, color: 'bg-success/20' },
-    { col: 4, row: 3, color: 'bg-primary/20' },
-    { col: 5, row: 4, color: 'bg-warning/15' },
-  ];
+  const toneClasses: Record<string, string> = {
+    success: 'bg-success/10 text-success',
+    primary: 'bg-primary-bg text-primary',
+    warning: 'bg-warning/10 text-warning',
+  };
 
   return (
-    <div className="w-full max-w-3xl mx-auto bg-white border border-border rounded-2xl shadow-lg shadow-black/8 overflow-hidden">
-      {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-border">
-        <TrimlyLogo size={24} textClassName="text-sm" />
-        <span className="ml-auto text-sm font-semibold text-text-primary">Hola, Don Pedro</span>
-        <div className="w-8 h-8 rounded-full bg-primary-bg flex items-center justify-center text-xs font-bold text-primary">DP</div>
+    <div className="w-full max-w-3xl mx-auto bg-white border border-border rounded-2xl shadow-lg shadow-black/8 overflow-hidden flex text-left">
+      {/* Sidebar */}
+      <div className="hidden sm:flex w-40 flex-shrink-0 flex-col border-r border-border py-4 px-2.5">
+        <div className="px-1.5 mb-4">
+          <TrimlyLogo size={16} textClassName="text-xs" />
+        </div>
+        <p className="text-[8px] font-bold text-text-muted uppercase tracking-wider px-1.5 mb-1.5">Principal</p>
+        <div className="space-y-0.5 mb-3">
+          {navPrincipal.map((item) => (
+            <div
+              key={item.label}
+              className={cn(
+                'flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-[10px] font-medium',
+                item.active ? 'bg-primary-bg text-primary font-semibold' : 'text-text-secondary'
+              )}
+            >
+              <item.icon size={11} />
+              {item.label}
+            </div>
+          ))}
+        </div>
+        <p className="text-[8px] font-bold text-text-muted uppercase tracking-wider px-1.5 mb-1.5">Gestión</p>
+        <div className="space-y-0.5">
+          {navGestion.map((item) => (
+            <div key={item.label} className="flex items-center gap-1.5 px-1.5 py-1.5 rounded-lg text-[10px] font-medium text-text-secondary">
+              <item.icon size={11} />
+              {item.label}
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-px bg-border">
-        {[
-          { label: 'Ingresos hoy', value: '$187.000', sub: '+12% vs ayer', pos: true },
-          { label: 'Citas hoy',    value: '8',        sub: '5 completadas', pos: null },
-          { label: 'Clientes nuevos', value: '5',     sub: '+8% vs ayer',  pos: true },
-        ].map((s) => (
-          <div key={s.label} className="bg-white px-4 py-3">
-            <p className="text-[10px] text-text-muted font-medium mb-0.5">{s.label}</p>
-            <p className="text-lg font-bold text-text-primary leading-none">{s.value}</p>
-            <p className={cn('text-[10px] font-medium mt-0.5', s.pos === true ? 'text-success' : 'text-text-muted')}>{s.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Calendar + appointments */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] divide-y md:divide-y-0 md:divide-x divide-border">
-        {/* Calendar */}
-        <div className="p-4">
-          <p className="text-xs font-bold text-text-primary mb-3">Mayo 10 - 16</p>
-          <div className="grid grid-cols-[40px_repeat(7,1fr)] gap-0.5 mb-1">
-            <div />
-            {days.map((d) => (
-              <div key={d} className="text-center">
-                <p className="text-[9px] text-text-muted font-medium leading-tight whitespace-pre-line">{d}</p>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-0.5">
-            {hours.map((h, rowIdx) => (
-              <div key={h} className="grid grid-cols-[40px_repeat(7,1fr)] gap-0.5 items-center h-6">
-                <span className="text-[9px] text-text-muted font-mono text-right pr-1.5">{h}</span>
-                {days.map((_, colIdx) => {
-                  const block = blocks.find((b) => b.col === colIdx && b.row === rowIdx);
-                  return <div key={colIdx} className={cn('h-5 rounded', block ? block.color : '')} />;
-                })}
-              </div>
-            ))}
-          </div>
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+          <p className="text-[10px] text-text-muted">Trimly &gt; Inicio</p>
+          <Bell size={13} className="text-text-muted" />
         </div>
 
-        {/* Appointments */}
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-text-primary">Próximas citas</span>
-            <span className="text-[10px] text-primary">Ver todas</span>
+        <div className="p-5">
+          <div className="flex items-center justify-between mb-4 gap-3">
+            <div>
+              <p className="text-base font-bold text-text-primary">Buenas tardes, Don Pedro ✂️</p>
+              <p className="text-[11px] text-text-muted mt-0.5">Martes, 16 de septiembre · 11 citas hoy</p>
+            </div>
+            <div className="flex items-center gap-1 bg-primary text-white text-[10px] font-bold px-3 py-2 rounded-lg flex-shrink-0">
+              <Plus size={11} /> Nueva cita
+            </div>
           </div>
-          <div className="space-y-3">
-            {appointments.map((apt) => (
-              <div key={apt.name} className="flex items-start gap-2">
-                <div className="w-7 h-7 rounded-full bg-primary-bg flex items-center justify-center text-[9px] font-bold text-primary flex-shrink-0">
-                  {apt.name.split(' ').map((n) => n[0]).join('')}
+
+          {/* Stats */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+            {stats.map((s) => (
+              <div key={s.label} className="bg-background-secondary border border-border rounded-xl p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-[9px] text-text-muted font-medium">{s.label}</p>
+                  <div className={cn('w-5 h-5 rounded-md flex items-center justify-center', toneClasses[s.tone])}>
+                    <s.icon size={10} />
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-semibold text-text-primary truncate">{apt.name}</p>
-                  <p className="text-[10px] text-text-muted truncate">{apt.time} · {apt.service}</p>
-                </div>
-                <span className={cn(
-                  'text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0',
-                  apt.status === 'Confirmada' && 'bg-success/10 text-success',
-                  apt.status === 'Pendiente'  && 'bg-warning/10 text-warning',
-                  apt.status === 'Completada' && 'bg-background-tertiary text-text-muted',
-                )}>
-                  {apt.status}
-                </span>
+                <p className="text-base font-bold text-text-primary leading-none">{s.value}</p>
+                <p className="text-[9px] text-text-muted mt-1">{s.sub}</p>
               </div>
             ))}
+          </div>
+
+          {/* Agenda + resumen */}
+          <div className="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-3">
+            <div className="border border-border rounded-xl p-3.5">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-[11px] font-bold text-text-primary">Agenda de hoy</span>
+                <span className="text-[9px] text-primary font-semibold">Ver completa</span>
+              </div>
+              <div className="space-y-2.5">
+                {appointments.map((apt) => (
+                  <div key={apt.time} className="flex items-center gap-2.5">
+                    <span className="text-[9px] text-text-muted font-mono w-9 flex-shrink-0">{apt.time}</span>
+                    <div className="w-6 h-6 rounded-full bg-primary-bg flex items-center justify-center text-[8px] font-bold text-primary flex-shrink-0">
+                      {apt.name.split(' ').map((n) => n[0]).join('')}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-semibold text-text-primary truncate">{apt.name}</p>
+                      <p className="text-[9px] text-text-muted truncate">{apt.service}</p>
+                    </div>
+                    <span className={cn(
+                      'text-[8px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0',
+                      apt.status === 'Confirmada' && 'bg-success/10 text-success',
+                      apt.status === 'Pendiente' && 'bg-warning/10 text-warning',
+                      apt.status === 'Completada' && 'bg-background-tertiary text-text-muted',
+                    )}>
+                      {apt.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="border border-border rounded-xl p-3.5">
+              <p className="text-[9px] font-bold text-text-muted uppercase tracking-wider mb-2">Resumen semanal</p>
+              <div className="flex items-end justify-between h-14 gap-0.5 mb-2">
+                {[35, 55, 45, 90, 70, 60, 30].map((h, i) => (
+                  <div key={i} className="flex-1 bg-background-tertiary rounded-t-sm relative h-full">
+                    <div
+                      className={cn('absolute bottom-0 left-0 right-0 rounded-t-sm', i === 3 ? 'bg-primary' : 'bg-border-strong')}
+                      style={{ height: `${h}%` }}
+                    />
+                  </div>
+                ))}
+              </div>
+              <div className="pt-2 border-t border-border space-y-1">
+                <div className="flex items-center justify-between text-[9px]">
+                  <span className="text-text-muted">Ingresos</span>
+                  <span className="font-semibold text-text-primary">$2.1M</span>
+                </div>
+                <div className="flex items-center justify-between text-[9px]">
+                  <span className="text-text-muted">Citas</span>
+                  <span className="font-semibold text-text-primary">54</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
