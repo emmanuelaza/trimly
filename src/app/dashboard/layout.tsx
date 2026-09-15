@@ -7,6 +7,7 @@ import { getServices } from '@/app/actions/services';
 import { Suspense } from 'react';
 import { MiloWelcome } from '@/components/milo/MiloWelcome';
 import { DashboardLayoutClient } from '@/components/layout/DashboardLayoutClient';
+import { OneSignalScript } from '@/components/notifications/OneSignalScript';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -77,6 +78,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <>
+      <OneSignalScript />
       <DashboardLayoutClient
         negocio={negocio}
         userName={user.user_metadata?.full_name || "Owner"}

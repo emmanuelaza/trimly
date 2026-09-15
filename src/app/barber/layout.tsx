@@ -13,6 +13,7 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { OneSignalScript } from '@/components/notifications/OneSignalScript';
 
 const barberNavItems = [
   { href: '/barber/dashboard', label: 'Inicio',    shortLabel: 'Inicio',    icon: Home },
@@ -146,6 +147,7 @@ export default function BarberLayout({ children }: { children: React.ReactNode }
 
   return (
     <div className="flex min-h-screen bg-background-primary overflow-hidden">
+      <OneSignalScript />
       {/* Sidebar — Desktop */}
       <aside className="hidden md:flex flex-col w-[240px] bg-background-primary border-r border-border">
         <div className="px-6 py-8 border-b border-border">
