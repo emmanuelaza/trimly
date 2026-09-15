@@ -4,7 +4,11 @@ import Link from 'next/link'
 import { usePlan } from '@/hooks/usePlan'
 
 export function TrialBanner() {
-  const { isTrialing, isExpired, trialDaysLeft, trialHoursLeft } = usePlan()
+  const { loading, isTrialing, isExpired, trialDaysLeft, trialHoursLeft } = usePlan()
+  // Mientras carga el estado real, no mostramos nada — evita el falso
+  // "vence en menos de 1 hora" que se veía un instante antes de tener los
+  // datos reales de la barbería.
+  if (loading) return null
   if (!isTrialing && !isExpired) return null
 
   if (isExpired) {

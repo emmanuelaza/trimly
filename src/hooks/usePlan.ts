@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
 
 export type PlanStatus = 'trialing' | 'active' | 'expired'
@@ -45,18 +46,21 @@ export function usePlan() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function loadPlan() {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { setLoading(false); return }
+    const supabase = createClient()
+    let cancelled = false
 
-      const { data: bs } = await supabase
+    async function loadPlan(userId: string) {
+      const { data: bs, error } = await supabase
         .from('barbershops')
         .select('subscription_status, trial_ends_at, license_number')
-        .eq('owner_id', session.user.id)
-        .single()
+        .eq('owner_id', userId)
+        .maybeSingle()
 
-      if (bs) {
+      if (cancelled) return
+
+      if (error) {
+        console.error('Error loading plan:', error)
+      } else if (bs) {
         const ahora = new Date()
         const trialDate = bs.trial_ends_at ? new Date(bs.trial_ends_at) : null
         const trialVencido = trialDate ? trialDate < ahora : false
@@ -68,7 +72,23 @@ export function usePlan() {
       }
       setLoading(false)
     }
-    loadPlan()
+
+    // Justo después de registrarse/iniciar sesión (navegación del lado del
+    // cliente, sin recarga completa), la sesión puede tardar un instante en
+    // propagarse. onAuthStateChange nos avisa apenas esté lista, en vez de
+    // quedarnos con el estado inicial (trialing, sin fecha) para siempre.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: Session | null) => {
+      if (session) {
+        loadPlan(session.user.id)
+      } else {
+        setLoading(false)
+      }
+    })
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
   }, [])
 
   const trialDaysLeft = trialEndsAt
