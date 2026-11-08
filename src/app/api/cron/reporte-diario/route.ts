@@ -105,6 +105,22 @@ export async function GET(req: Request) {
         subject: `📈 Reporte Diario: ${shop.name}`,
         html,
       });
+
+      try {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://trimlyapp-phi.vercel.app';
+        await fetch(`${appUrl}/api/push/onesignal`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ownerUserId: shop.owner_id,
+            title: `📈 Reporte diario — ${shop.name}`,
+            body: `${totalCitas} citas · ${ingresosFormatted} en ingresos hoy. Servicio estrella: ${mostPopular}.`,
+            url: '/dashboard/reportes',
+          }),
+        });
+      } catch (pushErr) {
+        console.error('Daily report push error:', pushErr);
+      }
     }
 
     return NextResponse.json({ ok: true });
